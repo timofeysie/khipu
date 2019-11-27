@@ -24,13 +24,9 @@ describe('LoginComponent', () => {
         CoreModule
       ],
       schemas: [CUSTOM_ELEMENTS_SCHEMA],
-      providers: [
-        Platform,
-        LoadingController,
-      ],
+      providers: [Platform, LoadingController],
       declarations: [LoginComponent]
-    })
-    .compileComponents();
+    }).compileComponents();
   }));
 
   beforeEach(() => {

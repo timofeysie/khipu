@@ -20,11 +20,7 @@ import { QuoteService } from './quote.service';
     Angulartics2Module,
     HomeRoutingModule
   ],
-  entryComponents: [
-    HomeComponent
-  ],
-  declarations: [
-    HomeComponent
-  ]
+  entryComponents: [HomeComponent],
+  declarations: [HomeComponent]
 })
-export class HomeModule { }
+export class HomeModule {}

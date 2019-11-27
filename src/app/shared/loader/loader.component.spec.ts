@@ -13,8 +13,7 @@ describe('LoaderComponent', () => {
       schemas: [CUSTOM_ELEMENTS_SCHEMA],
       imports: [IonicModule.forRoot()],
       declarations: [LoaderComponent]
-    })
-    .compileComponents();
+    }).compileComponents();
   }));
 
   beforeEach(() => {

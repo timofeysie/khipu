@@ -16,22 +16,14 @@ describe('ShellComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      imports: [
-        RouterTestingModule,
-        TranslateModule.forRoot(),
-        IonicModule.forRoot(),
-        CoreModule
-      ],
+      imports: [RouterTestingModule, TranslateModule.forRoot(), IonicModule.forRoot(), CoreModule],
       providers: [
         { provide: AuthenticationService, useClass: MockAuthenticationService },
         { provide: CredentialsService, useClass: MockCredentialsService }
       ],
       schemas: [CUSTOM_ELEMENTS_SCHEMA],
-      declarations: [
-        ShellComponent
-      ]
-  })
-    .compileComponents();
+      declarations: [ShellComponent]
+    }).compileComponents();
   }));
 
   beforeEach(() => {

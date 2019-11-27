@@ -16,12 +16,13 @@ const log = new Logger('App');
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent implements OnInit, OnDestroy {
-
-  constructor(private router: Router,
-              private activatedRoute: ActivatedRoute,
-              private titleService: Title,
-              private translateService: TranslateService,
-              private i18nService: I18nService) { }
+  constructor(
+    private router: Router,
+    private activatedRoute: ActivatedRoute,
+    private titleService: Title,
+    private translateService: TranslateService,
+    private i18nService: I18nService
+  ) {}
 
   ngOnInit() {
     // Setup logger
@@ -30,7 +31,6 @@ export class AppComponent implements OnInit, OnDestroy {
     }
 
     log.debug('init');
-
 
     // Setup translations
     this.i18nService.init(environment.defaultLanguage, environment.supportedLanguages);
@@ -57,11 +57,9 @@ export class AppComponent implements OnInit, OnDestroy {
           this.titleService.setTitle(this.translateService.instant(title));
         }
       });
-
   }
 
   ngOnDestroy() {
     this.i18nService.destroy();
   }
-
 }

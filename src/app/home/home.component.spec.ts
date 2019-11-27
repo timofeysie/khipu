@@ -16,19 +16,18 @@ describe('HomeComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-        imports: [
-          IonicModule.forRoot(),
-          RouterTestingModule,
-          Angulartics2Module.forRoot(),
-          CoreModule,
-          SharedModule,
-          HttpClientTestingModule
-        ],
-        schemas: [CUSTOM_ELEMENTS_SCHEMA],
-        declarations: [HomeComponent],
-        providers: [QuoteService]
-      })
-      .compileComponents();
+      imports: [
+        IonicModule.forRoot(),
+        RouterTestingModule,
+        Angulartics2Module.forRoot(),
+        CoreModule,
+        SharedModule,
+        HttpClientTestingModule
+      ],
+      schemas: [CUSTOM_ELEMENTS_SCHEMA],
+      declarations: [HomeComponent],
+      providers: [QuoteService]
+    }).compileComponents();
   }));
 
   beforeEach(() => {

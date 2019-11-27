@@ -11,12 +11,7 @@ describe('AppComponent', () => {
   beforeEach(async(() => {
     TestBed.configureTestingModule({
       schemas: [CUSTOM_ELEMENTS_SCHEMA],
-      imports: [
-        IonicModule.forRoot(),
-        RouterTestingModule,
-        TranslateModule.forRoot(),
-        CoreModule
-      ],
+      imports: [IonicModule.forRoot(), RouterTestingModule, TranslateModule.forRoot(), CoreModule],
       declarations: [AppComponent],
       providers: []
     }).compileComponents();

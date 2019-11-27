@@ -12,15 +12,16 @@ import { AuthenticationService, CredentialsService, I18nService } from '@app/cor
   styleUrls: ['./shell.component.scss']
 })
 export class ShellComponent {
-
-  constructor(private router: Router,
-              private translateService: TranslateService,
-              private platform: Platform,
-              private alertController: AlertController,
-              private actionSheetController: ActionSheetController,
-              private authenticationService: AuthenticationService,
-              private credentialsService: CredentialsService,
-              private i18nService: I18nService) { }
+  constructor(
+    private router: Router,
+    private translateService: TranslateService,
+    private platform: Platform,
+    private alertController: AlertController,
+    private actionSheetController: ActionSheetController,
+    private authenticationService: AuthenticationService,
+    private credentialsService: CredentialsService,
+    private i18nService: I18nService
+  ) {}
 
   async showProfileActions() {
     let createdActionSheet: any;
@@ -55,7 +56,7 @@ export class ShellComponent {
     }
 
     const actionSheetOptions: ActionSheetOptions = {
-      header: (this.username || undefined),
+      header: this.username || undefined,
       buttons
     };
 
@@ -69,8 +70,7 @@ export class ShellComponent {
   }
 
   private logout() {
-    this.authenticationService.logout()
-      .subscribe(() => this.router.navigate(['/login'], { replaceUrl: true }));
+    this.authenticationService.logout().subscribe(() => this.router.navigate(['/login'], { replaceUrl: true }));
   }
 
   get isWeb(): boolean {
@@ -102,5 +102,4 @@ export class ShellComponent {
     });
     alertController.present();
   }
-
 }

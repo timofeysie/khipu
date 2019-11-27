@@ -10,11 +10,10 @@ describe('AboutComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-        imports: [IonicModule.forRoot()],
-        schemas: [CUSTOM_ELEMENTS_SCHEMA],
-        declarations: [AboutComponent]
-      })
-      .compileComponents();
+      imports: [IonicModule.forRoot()],
+      schemas: [CUSTOM_ELEMENTS_SCHEMA],
+      declarations: [AboutComponent]
+    }).compileComponents();
   }));
 
   beforeEach(() => {

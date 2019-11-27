@@ -3,7 +3,50 @@
 This project was generated with [ngX-Rocket](https://github.com/ngx-rocket/generator-ngx-rocket/)
 version 7.1.0
 
+
 # Getting started
+
+```
+$ ngx new
+          __   __
+ _ _  __ _\ \./ / ____ ____ ____ _  _ ____ ___
+| ' \/ _` |>   <  |--< [__] |___ |-:_ |===  |
+|_||_\__, /_/°\_\ ENTERPRISE APP STARTER -~*=>
+     |___/ v7.1.0
+? What is the name of your app? khipu
+? What kind of app do you want to create? Web app, Desktop app (using Electron)
+? Do you want a progressive web app? (with manifest and service worker) Yes
+? Which desktop platform do you want to support? (Press <space> to select, <a> to toggle all, <i> to invert selection)Windows, macOS, Linux
+? Which UI framework do you want? Ionic (more mobile-oriented)
+? Which kind of layout do you want? Side menu with split panels (more app-oriented)
+? Do you want authentication? Yes
+? Do you want lazy loading? Yes
+? Do you want analytics support (with Angulartics2)? Yes
+? What analytics provider are you using? Other
+? Do you want additional tools? Prettier (automatic code formatting), Hads (markdown-based doc system), Jest (Delightful JavaScript Testing)
+? Do you want additional libraries? Lodash (collection & general utilities), Moment.js (date management)
+```
+
+## WIP
+
+Working on the service worker setup right now.
+```
+ngsw-config.json
+```
+
+In the app.module.ts file:
+```
+ServiceWorkerModule.register('./ngsw-worker.js', { enabled: environment.production }),
+```
+
+But where is this file?  It's in the served source after running:
+```
+npm run serve:sw
+```
+
+
+
+## Original README
 
 1. Go to project folder and install dependencies:
  ```sh
