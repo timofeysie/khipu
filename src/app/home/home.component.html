@@ -1,0 +1,31 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title><span translate>Home</span></ion-title>
+  </ion-toolbar>
+</ion-header>
+<ion-content>
+  <ion-card text-center>
+    <img class="logo" src="assets/ngx-rocket-logo.png" alt="angular logo"/>
+    <ion-card-content>
+      <ion-card-title>
+        <span translate>Hello world !</span>
+      </ion-card-title>
+      <p>
+        <app-loader [isLoading]="isLoading"></app-loader>
+        <q [hidden]="isLoading">{{quote}}</q>
+      </p>
+      <p>
+        <button
+          ion-button
+          angulartics2On="click"
+          angularticsAction="Click button below quote"
+          [angularticsCategory]="quote">
+          Click me to send an Analytics event
+        </button>
+      </p>
+    </ion-card-content>
+  </ion-card>
+</ion-content>

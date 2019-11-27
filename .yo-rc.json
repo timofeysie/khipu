@@ -1,0 +1,41 @@
+{
+  "generator-ngx-rocket": {
+    "version": "7.1.0",
+    "props": {
+      "location": "path",
+      "strict": false,
+      "skipInstall": false,
+      "skipQuickstart": false,
+      "initGit": true,
+      "appName": "khipu",
+      "target": [
+        "web",
+        "electron"
+      ],
+      "pwa": true,
+      "desktop": [
+        "windows",
+        "mac",
+        "linux"
+      ],
+      "ui": "ionic",
+      "layout": "side-menu",
+      "auth": true,
+      "lazy": true,
+      "angulartics": true,
+      "analyticsProvider": "other",
+      "tools": [
+        "prettier",
+        "hads",
+        "jest"
+      ],
+      "utility": [
+        "lodash",
+        "moment"
+      ],
+      "projectName": "khipu",
+      "packageManager": "npm",
+      "mobile": []
+    }
+  }
+}

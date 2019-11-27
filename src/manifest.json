@@ -1,0 +1,21 @@
+{
+  "name": "khipu",
+  "short_name": "khipu",
+  "theme_color": "#488aff",
+  "background_color": "#488aff",
+  "scope": "/",
+  "start_url": "/",
+  "display": "standalone",
+  "icons": [
+    {
+      "src": "assets/ngx-rocket-logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "assets/ngx-rocket-logo@192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}
