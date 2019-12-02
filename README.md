@@ -27,7 +27,35 @@ $ ngx new
 ? Do you want additional libraries? Lodash (collection & general utilities), Moment.js (date management)
 ```
 
-## WIP
+
+## AD B2C Implicit Grant Flow
+
+Currently the redirect uri is set to jwt.ms which will just display the JWT and let you deconsctuct it.
+Next, use the Capacitor Browser plugin to open the login dialog and redirect to extract the jwt from the redirected window which will involve changing the settings on the Azure portal.
+
+Getting some kind of issue running currently:
+```
+/Users/tim/repos/khipu/node_modules/@angular/cli/bin/postinstall/analytics-prompt.js:8
+(async () => {
+       ^
+SyntaxError: Unexpected token (
+    at Object.exports.runInThisContext (vm.js:76:16)
+    at Module._compile (module.js:542:28)
+    at Object.Module._extensions..js (module.js:579:10)
+    at Module.load (module.js:487:32)
+    at tryModuleLoad (module.js:446:12)
+    at Function.Module._load (module.js:438:3)
+    at Module.require (module.js:497:17)
+    at require (internal/module.js:20:19)
+    at Object.<anonymous> (/Users/tim/repos/khipu/node_modules/@angular/cli/bin/postinstall/script.js:5:1)
+    at Module._compile (module.js:570:32)
+⸨                 ░⸩ ⠋ postinstall: info lifecycle @angular/cli@8.1.3~postinstall: Failed to exec postinstall script
+```
+
+
+
+
+## The Service Worker
 
 Working on the service worker setup right now.
 ```

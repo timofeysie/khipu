@@ -34,6 +34,21 @@ export class AuthenticationService {
     return of(data);
   }
 
+  b2cLogin(context: LoginContex) {
+    const testURI = `https://khipub2c.b2clogin.com/khipub2c.onmicrosoft.com/oauth2/v2.0/authorize?
+      p=B2C_1_signupsignin1
+      &client_id=a40400a8-48a8-486b-936c-99aeba95a1e7
+      &nonce=defaultNonce
+      &redirect_uri=https%3A%2F%2Fjwt.ms
+      &scope=openid
+      &response_type=id_token
+      &prompt=login`.replace(/ /g,'');
+    Browser.open({ url: testURI });
+    Browser.addListener('browserFinished', (info: any) => {
+      console.log('browserFinished');
+    });
+  }
+
   /**
    * Logs out the user and clear credentials.
    * @return True if the user was logged out successfully.

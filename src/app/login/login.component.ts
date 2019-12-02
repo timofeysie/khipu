@@ -38,6 +38,10 @@ export class LoginComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {}
 
+  async b2cLogin() {
+    const login$ = this.authenticationService.btcLogin(this.loginForm.value);
+  }
+
   async login() {
     this.isLoading = true;
     const login$ = this.authenticationService.login(this.loginForm.value);
