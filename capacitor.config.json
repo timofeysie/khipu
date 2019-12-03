@@ -1,0 +1,8 @@
+{
+  "appId": "com.curchod.khuipu",
+  "appName": "App",
+  "bundledWebRuntime": false,
+  "npmClient": "npm",
+  "webDir": "www",
+  "cordova": {}
+}

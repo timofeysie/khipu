@@ -52,6 +52,32 @@ SyntaxError: Unexpected token (
 ⸨                 ░⸩ ⠋ postinstall: info lifecycle @angular/cli@8.1.3~postinstall: Failed to exec postinstall script
 ```
 
+That was from npm i.  and then:
+```
+> npm run env -s && ng serve --proxy-config proxy.conf.js
+The "@angular/compiler-cli" package was not properly installed.
+Error: The "@angular/compiler-cli" package was not properly installed.
+    at Object.<anonymous> (/Users/tim/.nvm/versions/node/v6.9.2/lib/node_modules/@angular/cli/node_modules/@ngtools/webpack/src/index.js:14:11)
+```
+
+The reason?
+```
+$ node --version
+v6.9.2
+QuinquenniumF:khipu tim$ nvm use 12
+Now using node v12.9.1 (npm v6.10.2)
+```
+
+The reason I had to run npm i again was that to clear disk space I had run:
+```
+find . -name "node_modules" -type d -prune -exec rm -rf '{}'+
+```
+
+That deleted all the node modules on this laptop!  Aliaksei Kuncevic said he freed up 7gigs of space with that.
+
+Back to business, the redirect URL is set in Azure to 8080 which is the port when running the service worker, but during development server runs on 4200, the standard Angular ng serve go-to port.
+
+Is there any reason they can't be the same?  Will it be different for Electron?
 
 
 

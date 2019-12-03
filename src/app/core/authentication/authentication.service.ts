@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
-
 import { Credentials, CredentialsService } from './credentials.service';
+import { Plugins } from '@capacitor/core';
 
 export interface LoginContext {
   username: string;
@@ -34,7 +34,7 @@ export class AuthenticationService {
     return of(data);
   }
 
-  b2cLogin(context: LoginContex) {
+  b2cLogin(context: LoginContext) {
     const testURI = `https://khipub2c.b2clogin.com/khipub2c.onmicrosoft.com/oauth2/v2.0/authorize?
       p=B2C_1_signupsignin1
       &client_id=a40400a8-48a8-486b-936c-99aeba95a1e7
@@ -42,9 +42,9 @@ export class AuthenticationService {
       &redirect_uri=https%3A%2F%2Fjwt.ms
       &scope=openid
       &response_type=id_token
-      &prompt=login`.replace(/ /g,'');
-    Browser.open({ url: testURI });
-    Browser.addListener('browserFinished', (info: any) => {
+      &prompt=login`.replace(/ /g, '');
+    Plugins.Browser.open({ url: testURI });
+    Plugins.Browser.addListener('browserFinished', (info: any) => {
       console.log('browserFinished');
     });
   }
