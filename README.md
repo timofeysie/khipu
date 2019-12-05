@@ -3,9 +3,212 @@
 This project was generated with [ngX-Rocket](https://github.com/ngx-rocket/generator-ngx-rocket/)
 version 7.1.0
 
+## Table of contents
 
-# Getting started
+* [Project brief](#project-brief)
+* [Observable Store Pattern](#observable-Store-Pattern)
+* [Implement categories from a static list](#implement-categories-from-a-static-list)
+* [Ffetch a list of wikidata items for the selected category](#fetch-a-list-of-wikidata-items-for-the-selected-category)
+* [Get the page of wikipedia for the category and parse it for the list](#get-the-page-of-wikipedia-for-the-category-and-parse-it-for-the-list)
+* [Merge the two lists](#merge-the-two-lists)
+* [Create a detail page for a selected item](#create-a-detail-page-for-a-selected-item)
+* [Create a form to enter a new category](#create-a-form-to-enter-a-new-category)
+* [Determine the wikidata query to get a list of those items](#determine the wikidata query to get a list of those items)
+* [Add the category to the category list](#add-the-category-to-the-category-list)
+* [Creating the app](#creating-the-app)
+* [AD B2C Implicit Grant Flow](#aD-B2C-Implicit-Grant-Flow)
+* [The Service Worker](#the-Service-Worker)
+* [Original README](#original-README)
 
+
+## Workflow
+
+All commits messages should contain an issue number to connect the code with the feature under development.
+
+
+## Project brief
+
+This project is to create a tool that can be used in e-learning to automatically generate lists of items from Wikipedia.
+These list can then be exported and used by educators in their favorite e-learning application such as Moodle or Canvas.
+
+I have implemented most of the functionality in various projects using a variety of methods in both Angular and React so I have some example implementations of features needed for this project.
+
+Create a new feature branch for each issue and include the issue number in each commit.  Add API comments to all classes and functions.
+
+The basic view components will be:
+```
+Categories
+Items
+Details
+Options
+```
+
+Use the Observable Store Pattern detailed below to manage the state of the app as a replacement for state management with Redux.
+
+
+## Observable Store Pattern
+
+There is a brief overview of the pattern [here](https://blog.angular-university.io/how-to-build-angular2-apps-using-rxjs-observable-data-services-pitfalls-to-avoid/)
+
+And a fuller architecture based article using the above is [here](https://georgebyte.com/scalable-angular-app-architecture/)
+
+
+### Some notes on the pattern
+
+A service that uses the pattern might look like this:
+```
+onAddTodo(description) {
+    this.todoStore.addTodo(newTodo)
+        .subscribe(
+            res => {},
+            err => {
+                this.uiStateStore.endBackendAction();
+            }
+        );
+}
+```
+
+Smart components of the application where the store is injected do not have any state variables
+
+Actions are methods made available by the stores.
+
+Don't expose the subject directly to store clients, instead, expose an observable.  This is to prevent the service clients from themselves emitting store values directly instead of calling action methods and therefore bypassing the store.
+
+The subject is an event bus.
+
+It should be impossible to modify the state without notifying listeners about the change.
+
+Split the state into smaller chunks. A good way to split the properties is to group them by feature and extract these groups into separate state objects, managed by corresponding stores.
+
+There are two types of stores that emerge from splitting:
+global stores that contain globally used state, (a singleton listed as a provider in a module)
+component stores that contain the states used by a single component (not singletons, subscriptions must be cleaned up)
+
+Proxy component with no biz logic can use the async pipe
+```
+<li *ngFor="let candidate of (store.state$ | async).candidates">
+```
+
+
+Another article based on the above is [here](https://georgebyte.com/state-management-in-angular-with-observable-store-services/)
+
+
+
+## Implement categories from a static list
+
+Create a categories component to view the list.
+
+A category has the following properties:
+```
+category
+language
+wdt
+wd
+```
+
+The language should be the setting from the i18n selector pre-existing in the app.  There are two predetermined categories to start:
+```
+name=fallacies
+wdt=P31
+wd=Q186150
+
+name=cognitive_bias
+wdt=P31
+wd=Q1127759
+```
+
+This project has a hardwired category of "cognitive biases" which has a lot of the other functionality that this project will require.
+
+
+# Fetch a list of wikidata items for the selected category
+
+Create an Items component to display the list of items for a category.
+
+Categories can be used to construct a sparql query can be created like this:
+```
+        SELECT ?${category} ?${category}Label ?${category}Description WHERE {
+            SERVICE wikibase:label {
+                bd:serviceParam wikibase:language "[AUTO_LANGUAGE],${language}".
+            }
+            ?${category} wdt:${wdt} wd:${wd}.
+        }
+        LIMIT 1000
+const url = wdk.sparqlQuery(sparql);
+```
+
+This will construct a url that will return a result with properties like this.
+```
+"head":{
+      "vars":[
+         "fallacies",
+         "fallaciesLabel",
+         "fallaciesDescription"
+      ]
+   },
+   "results":{
+      "bindings":[
+         {
+            "fallacies":{
+               "type":"uri",
+               "value":"http://www.wikidata.org/entity/Q295150"
+            },
+            "fallaciesLabel":{
+               "xml:lang":"en",
+               "type":"literal",
+               "value":"ecological fallacy"
+            },
+            "fallaciesDescription":{
+               "xml:lang":"en",
+               "type":"literal",
+               "value":"logical fallacy"
+            }
+         },
+```
+Source: [the Strumosa pipe project](https://github.com/timofeysie/strumosa-pipe#the-items-api).  This is a NodeJS project hosted on Azure and works to get a list of items for a particular category.
+
+However, I would like this project to create it's own API calls to Wikidata and Wikipedia, using a proxy if necessary to avoid CORS issues.  I would rather not have to maintain a server to support the app.
+
+
+## Get the page of wikipedia for the category and parse it for the list
+
+Parsing the Wikipedia category page can be done to create another list with more items (some duplicates) which are grouped by category.  I only have experience doing this with the particular "cognitive bias" category, so there may be some differences for other categories.
+
+
+## Merge the two lists
+
+Each list should retain a flag indicating which list they came from, and if they appear on both lists so they can be styled accordingly.
+
+
+## Create a detail page for a selected item
+
+Create a details page to show the details of an item selected.
+
+An item can be used to get a detail page from Wikipedia.
+Wikidata will also hold a list of languages available for each item.  This property can be used to get translated pages.
+
+Detail pages also contain preamble icons with warnings which need to be captures and shown as collapsable icons under the description.
+https://github.com/timofeysie/strumosa-pipe#the-items-api
+
+
+## Create a form to enter a new category
+
+This will just be a simple input to let the user enter a new category.  It will end up being a SPARQL query such as 'list of <category>' where <category> is a plural word such as "cognitive biases" or "fallacies".
+
+The input will be then used for the next section to determine the code for the category.
+
+
+## Determine the wikidata query to get a list of those items
+
+Just as the category name of fallacies uses the wd=Q186150, cognitive_bias has wd=Q1127759.  The user should be able to enter a name and the app determine the Q<code> if it exists.
+
+add the category to the category list
+
+Add new categories to the list of categories.
+
+
+## Creating the app
+
+These are the answers to the questions asked by the [ngX-Rocket CLI](https://github.com/ngx-rocket/generator-ngx-rocket/) when creating the app.
 ```
 $ ngx new
           __   __
