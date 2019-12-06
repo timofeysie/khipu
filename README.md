@@ -23,8 +23,23 @@ version 7.1.0
 
 ## Workflow
 
-All commits messages should contain an issue number to connect the code with the feature under development.
-
+Here is a brief of the CLI commands for using the project.
+```
+npm start // Run development server on `http://localhost:4200/`
+npm run serve:sw // Run test server with service worker enabled on `http://localhost:4200/index.html`
+npm run build [-- --configuration=production] // Lint code and build web app for production (with [AOT) in `dist/` folder
+npm test // Run unit tests via [Karma](https://karma-runner.github.io) in watch mode
+npm run test:ci // Lint code and run unit tests once for continuous integration
+npm run e2e // Run e2e tests using [Protractor](http://www.protractortest.org)
+npm run lint //  Lint code
+npm run translations:extract // Extract strings from code and templates to `src/app/translations/template.json`
+npm run docs //  Display project documentation and coding guides
+npm run prettier
+npm run electron:build   // Build desktop app
+npm run electron:run     // Run app on electron
+npm run electron:package // Package the app
+http-server -p 8080 -c-1 dist // run the PWA (after a build)
+```
 
 ## Project brief
 
@@ -44,6 +59,10 @@ Options
 ```
 
 Use the Observable Store Pattern detailed below to manage the state of the app as a replacement for state management with Redux.
+
+I will be playing around with the OAuth login which relates to what I am doing at work.
+
+I will also doing the layout styles and theme.  The project is setup to use the Ionic UI components so you can create basic layouts using Ionic components such as list: https://ionicframework.com/docs/api/list
 
 
 ## Observable Store Pattern
@@ -118,6 +137,8 @@ wd=Q1127759
 ```
 
 This project has a hardwired category of "cognitive biases" which has a lot of the other functionality that this project will require.
+
+The lists will need to have pagination, with the number of items per page configured in an options page.  The initial categories list will be short,  so it's OK to wait until the items lists to implement this, but be aware that this will be part of the state.
 
 
 # Fetch a list of wikidata items for the selected category
