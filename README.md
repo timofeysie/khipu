@@ -60,6 +60,8 @@ Options
 
 Use the Observable Store Pattern detailed below to manage the state of the app as a replacement for state management with Redux.
 
+Use the presentation container patter.  Container components access the data store, and the presenter components uses Input/Output annotations to get and display data and pass user actions back to the container.
+
 I will be playing around with the OAuth login which relates to what I am doing at work.
 
 I will also doing the layout styles and theme.  The project is setup to use the Ionic UI components so you can create basic layouts using Ionic components such as list: https://ionicframework.com/docs/api/list
