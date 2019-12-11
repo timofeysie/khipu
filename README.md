@@ -44,9 +44,10 @@ http-server -p 8080 -c-1 dist // run the PWA (after a build)
 ## Project brief
 
 This project is to create a tool that can be used in e-learning to automatically generate lists of items from Wikipedia.
-These list can then be exported and used by educators in their favorite e-learning application such as Moodle or Canvas.
 
-I have implemented most of the functionality in various projects using a variety of methods in both Angular and React so I have some example implementations of features needed for this project.
+These list can then be exported and used by educators in their favourite e-learning application such as Moodle or Canvas.
+
+I have implemented most of the functionality in various other projects using a variety of methods in both Angular and React so I have some example implementations of features needed for this project.
 
 Create a new feature branch for each issue and include the issue number in each commit.  Add API comments to all classes and functions.
 
@@ -60,7 +61,7 @@ Options
 
 Use the Observable Store Pattern detailed below to manage the state of the app as a replacement for state management with Redux.
 
-Use the presentation container patter.  Container components access the data store, and the presenter components uses Input/Output annotations to get and display data and pass user actions back to the container.
+Use the presentation container pattern.  Container components access the data store, and the presenter components uses Input/Output annotations to get and display data and pass user actions back to the container.
 
 I will be playing around with the OAuth login which relates to what I am doing at work.
 
