@@ -7,7 +7,7 @@
 import { env } from './.env';
 
 export const environment = {
-  production: true,
+  production: false,
   hmr: false,
   version: env.npm_package_version,
   serverUrl: 'https://api.chucknorris.io',
