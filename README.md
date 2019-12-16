@@ -13,7 +13,7 @@ version 7.1.0
 * [Merge the two lists](#merge-the-two-lists)
 * [Create a detail page for a selected item](#create-a-detail-page-for-a-selected-item)
 * [Create a form to enter a new category](#create-a-form-to-enter-a-new-category)
-* [Determine the wikidata query to get a list of those items](#determine the wikidata query to get a list of those items)
+* [Determine the wikidata query to get a list of those items](#determine-the-wikidata-query-to-get-a-list-of-those-items)
 * [Add the category to the category list](#add-the-category-to-the-category-list)
 * [Creating the app](#creating-the-app)
 * [AD B2C Implicit Grant Flow](#aD-B2C-Implicit-Grant-Flow)
@@ -70,12 +70,22 @@ I will also doing the layout styles and theme.  The project is setup to use the
 
 ## Observable Store Pattern
 
+[Issue #12](https://github.com/timofeysie/khipu/issues/12) has been opened to apply this pattern to the list of items (Issue #4).
+
 There is a brief overview of the pattern [here](https://blog.angular-university.io/how-to-build-angular2-apps-using-rxjs-observable-data-services-pitfalls-to-avoid/)
 
 And a fuller architecture based article using the above is [here](https://georgebyte.com/scalable-angular-app-architecture/)
 
+The categories directory can be the start of a feature directory which will hold the item list feature.  This will include:
 
-### Some notes on the pattern
+* create a items directory inside (with the observable state and presenter/container patterns)
+* create a service with a RxJs subject
+* create a container that uses the service to get the list of items
+* create a presentation component to display data from the container via @Input/@Output
+* create a view class to sync with the state store via the router url 
+
+
+### Some previous notes on the pattern
 
 A service that uses the pattern might look like this:
 ```
