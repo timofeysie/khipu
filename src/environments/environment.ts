@@ -9,6 +9,7 @@
 // Note that as usual, any environment variables you expose through it will end up in your
 // bundle, and you should not use it for any sensitive information like passwords or keys.
 import { env } from './.env';
+import { Category } from '@app/core/interfaces/categories';
 
 export const environment = {
   production: false,
@@ -18,6 +19,11 @@ export const environment = {
   defaultLanguage: 'en-US',
   supportedLanguages: ['en-US', 'fr-FR']
 };
+
+export const categoriesList: Category[] = [
+  { name: 'fallacies', language: '', wd: 'Q186150', wdt: 'P31' },
+  { name: 'cognitive_bias', language: '', wd: 'P31', wdt: 'Q1127759' }
+];
 
 /*
  * For easier debugging in development mode, you can import the following file
