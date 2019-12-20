@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ItemsStore } from '../items.store';
+import { ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'app-items-container',
@@ -8,7 +9,9 @@ import { ItemsStore } from '../items.store';
   providers: [ItemsStore]
 })
 export class ItemsContainerComponent implements OnInit {
-  constructor(private store: ItemsStore) {}
+  constructor(private store: ItemsStore, private activeRoute: ActivatedRoute) {}
 
-  ngOnInit() {}
+  ngOnInit() {
+    console.log(this.activeRoute.queryParams);
+  }
 }

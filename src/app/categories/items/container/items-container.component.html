@@ -1,1 +1,9 @@
-<p *ngFor="let item of (store.state$ | async).items">{{ item.name }}</p>
+<ion-content>
+  <ion-card text-center>
+    <ion-card-content>
+      <ion-list *ngFor="let item of (store.state$ | async).items">
+        <app-items [item]="item"></app-items>
+      </ion-list>
+    </ion-card-content>
+  </ion-card>
+</ion-content>
