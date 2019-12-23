@@ -11,9 +11,17 @@
     <ion-card-content>
       <ion-list *ngFor="let category of categoriesList">
         <ion-item>
+<<<<<<< HEAD
           <ion-label routerLink="/categories/items" [state]="{ id: 2 }" routerLinkActive="active">{{
             category.name
           }}</ion-label>
+=======
+          <ion-label
+            routerLink="/categories/{{ category.name }}/{{ category.wdt }}/{{ category.wd }}/items"
+            routerLinkActive="active"
+            >{{ category.name }}</ion-label
+          >
+>>>>>>> e043ee3bf7588420ccf7530fffac1d07a77291f9
         </ion-item>
       </ion-list>
     </ion-card-content>
