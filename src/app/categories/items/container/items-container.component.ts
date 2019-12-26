@@ -10,8 +10,13 @@ import { Category } from '@app/core/interfaces/categories';
   providers: [ItemsStore]
 })
 export class ItemsContainerComponent implements OnInit {
+  category: Category;
   constructor(private store: ItemsStore, private activatedRoute: ActivatedRoute) {
-    this.activatedRoute.params.subscribe((category: Category) => this.store.fetchList(category));
+    this.activatedRoute.params.subscribe((category: Category) => {
+      this.category = category;
+      console.log(this.category);
+      this.store.fetchList(category, this.store.state.currentPage);
+    });
   }
 
   ngOnInit() {}
