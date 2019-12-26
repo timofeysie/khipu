@@ -1,13 +1,11 @@
 export interface Item {
-  id: number;
+  categoryType?: string;
   name: string;
+  type: string;
+  uri: string;
 }
 
-const initItems: Item[] = [
-  { id: 1, name: 'item -1' },
-  { id: 2, name: 'item -2' },
-  { id: 3, name: 'item -3' }
-];
+const initItems: Item[] = [];
 
 export class ItemsState {
   items: Item[] = initItems;

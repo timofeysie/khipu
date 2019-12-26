@@ -12,7 +12,9 @@
       <ion-list *ngFor="let category of categoriesList">
         <ion-item>
           <ion-label
-            routerLink="/categories/{{ category.name }}/{{ category.wdt }}/{{ category.wd }}/items"
+            routerLink="/categories/{{ category.name }}/{{ category.wdt }}/{{ category.wd }}/{{
+              category.language
+            }}/items"
             routerLinkActive="active"
             >{{ category.name }}</ion-label
           >
