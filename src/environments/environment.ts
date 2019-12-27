@@ -21,8 +21,8 @@ export const environment = {
 };
 
 export const categoriesList: Category[] = [
-  { name: 'fallacies', language: '', wd: 'Q186150', wdt: 'P31' },
-  { name: 'cognitive_bias', language: '', wd: 'P31', wdt: 'Q1127759' }
+  { name: 'fallacies', language: 'en', wd: 'Q186150', wdt: 'P31' },
+  { name: 'cognitive_bias', language: 'en', wd: 'Q1127759', wdt: 'P31' }
 ];
 
 /*
