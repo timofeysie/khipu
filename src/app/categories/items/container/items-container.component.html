@@ -6,13 +6,9 @@
       </ion-list>
     </ion-card-content>
 
-    <button
-      ion-button
-      *ngIf="store.state.currentPage > 0"
-      (click)="store.fetchList(category, store.state.currentPage - 1)"
-    >
+    <ion-button *ngIf="store.state.currentPage > 0" (click)="store.fetchList(category, store.state.currentPage - 1)">
       Prev
-    </button>
-    <button ion-button (click)="store.fetchList(category, store.state.currentPage + 1)">Next</button>
+    </ion-button>
+    <ion-button (click)="store.fetchList(category, store.state.currentPage + 1)">Next</ion-button>
   </ion-card>
 </ion-content>
