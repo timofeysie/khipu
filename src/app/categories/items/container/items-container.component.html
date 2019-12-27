@@ -3,7 +3,7 @@
       <ion-buttons slot="start">
         <ion-menu-button></ion-menu-button>
       </ion-buttons>
-      <ion-title><span translate>Category</span></ion-title>
+      <ion-title><span translate>{{ category.name }}</span></ion-title>
     </ion-toolbar>
   </ion-header>
 
@@ -20,10 +20,12 @@
 <ion-footer>
     <ion-toolbar>
         <ion-button *ngIf="store.state.currentPage > 0" 
+            slot="start"
             (click)="store.fetchList(category, store.state.currentPage - 1)">
             Prev
           </ion-button>
-          <ion-button (click)="store.fetchList(category, store.state.currentPage + 1)">
+          <ion-button slot="end"
+            (click)="store.fetchList(category, store.state.currentPage + 1)">
               Next</ion-button>
     </ion-toolbar>
 </ion-footer>
