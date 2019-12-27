@@ -1,6 +1,7 @@
 export interface Item {
   categoryType?: string;
-  name: string;
+  label: string;
+  description: string;
   type: string;
   uri: string;
 }
