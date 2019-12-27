@@ -4,14 +4,15 @@ import { Observable } from 'rxjs';
 import { Item } from './items.store.state';
 import { Category } from '@app/core/interfaces/categories';
 import { map, tap } from 'rxjs/operators';
+import { environment } from '@env/environment';
 declare function require(name: string): any;
 
 @Injectable()
 export class ItemsListEndpoint {
   constructor(private httpClient: HttpClient) {}
 
-  listItems(category: Category): Observable<any> {
-    const url = this.generateUrl(category);
+  listItems(category: Category, currentPage: number): Observable<any> {
+    const url = this.generateUrl(category, currentPage);
 
     return this.httpClient.get<any[]>(url).pipe(
       map(response => {
@@ -20,7 +21,7 @@ export class ItemsListEndpoint {
     );
   }
 
-  generateUrl(category: Category): string {
+  generateUrl(category: Category, currentPage: number): string {
     const wbk = require('wikibase-sdk')({
       instance: 'https://query.wikidata.org/sparql',
       sparqlEndpoint: 'https://query.wikidata.org/sparql'
@@ -33,7 +34,9 @@ export class ItemsListEndpoint {
                 }
                 ?${category.name} wdt:${category.wdt} wd:${category.wd}.
             }
-            LIMIT 1000`;
+            ORDER BY (LCASE(?label))
+            LIMIT ${environment.paginationItemsPerPage}
+            OFFSET ${currentPage}`;
     return wbk.sparqlQuery(sparql);
   }
 }

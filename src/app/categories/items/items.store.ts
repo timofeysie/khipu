@@ -9,14 +9,15 @@ import { map } from 'rxjs/operators';
 @Injectable()
 export class ItemsStore extends Store<ItemsState> {
   private reloadItems$: Subject<undefined> = new Subject();
-
+  private currentPage: number = 0;
   constructor(private itemListEndpoint: ItemsListEndpoint) {
     super(new ItemsState());
   }
 
-  fetchList(category: Category) {
+  fetchList(category: Category, currentPage: number) {
+    console.log(currentPage);
     this.itemListEndpoint
-      .listItems(category)
+      .listItems(category, currentPage)
       .pipe(
         map(inc => {
           let list: Item[] = [];
@@ -37,14 +38,15 @@ export class ItemsStore extends Store<ItemsState> {
         })
       )
       .subscribe((items: Item[]) => {
-        this.updateItemsState(items);
+        this.updateItemsState(items, currentPage);
       });
   }
 
-  updateItemsState(items: Item[]) {
+  updateItemsState(items: Item[], currentPage: number) {
     this.setState({
       ...this.state,
-      items
+      items,
+      currentPage
     });
   }
 }
