@@ -5,6 +5,7 @@
 // Note that as usual, any environment variables you expose through it will end up in your
 // bundle, and you should not use it for any sensitive information like passwords or keys.
 import { env } from './.env';
+import { Category } from '@app/core/interfaces/categories';
 
 export const environment = {
   production: false,
@@ -12,5 +13,11 @@ export const environment = {
   version: env.npm_package_version,
   serverUrl: 'https://api.chucknorris.io',
   defaultLanguage: 'en-US',
-  supportedLanguages: ['en-US', 'fr-FR']
+  supportedLanguages: ['en-US', 'fr-FR'],
+  paginationItemsPerPage: 5
 };
+
+export const categoriesList: Category[] = [
+  { name: 'fallacies', language: 'en', wd: 'Q186150', wdt: 'P31' },
+  { name: 'cognitive_bias', language: 'en', wd: 'Q1127759', wdt: 'P31' }
+];

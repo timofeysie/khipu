@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { Item } from './items.store.state';
 import { Category } from '@app/core/interfaces/categories';
 import { map, tap } from 'rxjs/operators';
+import { environment } from '@env/environment';
 declare function require(name: string): any;
 
 @Injectable()
@@ -34,7 +35,7 @@ export class ItemsListEndpoint {
                 ?${category.name} wdt:${category.wdt} wd:${category.wd}.
             }
             ORDER BY (LCASE(?label))
-            LIMIT 5
+            LIMIT ${environment.paginationItemsPerPage}
             OFFSET ${currentPage}`;
     return wbk.sparqlQuery(sparql);
   }

@@ -14,7 +14,6 @@ export class ItemsContainerComponent implements OnInit {
   constructor(private store: ItemsStore, private activatedRoute: ActivatedRoute) {
     this.activatedRoute.params.subscribe((category: Category) => {
       this.category = category;
-      console.log(this.category);
       this.store.fetchList(category, this.store.state.currentPage);
     });
   }
