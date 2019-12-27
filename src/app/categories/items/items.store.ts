@@ -22,9 +22,12 @@ export class ItemsStore extends Store<ItemsState> {
           let list: Item[] = [];
           list = inc.map((incomingItem: any) => {
             const properties = Object.keys(incomingItem);
-            let item: Item = {
+            const item: Item = {
               categoryType: properties[0],
-              name: incomingItem[properties[1]].value,
+              label: incomingItem[properties[1]].value,
+              description: incomingItem[properties[0] + 'Description']
+                ? incomingItem[properties[0] + 'Description'].value
+                : '',
               type: incomingItem[properties[1]].type,
               uri: incomingItem[properties[0]].value
             };
