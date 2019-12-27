@@ -10,7 +10,7 @@ import { Category } from '@app/core/interfaces/categories';
   providers: [ItemsStore]
 })
 export class ItemsContainerComponent implements OnInit {
-  constructor(private store: ItemsStore, private activatedRoute: ActivatedRoute) {
+  constructor(public store: ItemsStore, private activatedRoute: ActivatedRoute) {
     this.activatedRoute.params.subscribe((category: Category) => this.store.fetchList(category));
   }
 
