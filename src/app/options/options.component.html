@@ -6,15 +6,15 @@
     <ion-title><span translate>Options</span></ion-title>
   </ion-toolbar>
 </ion-header>
-<ion-content>
+<ion-content padding>
   <ion-card text-center>
     <ion-card-content>
       <ion-card-title translate>APP_NAME</ion-card-title>
       <p><ion-icon name="code"></ion-icon> <span translate>Version</span> {{ version }}</p>
     </ion-card-content>
   </ion-card>
-  <ion-list *ngIf="isWeb" color="primary" lines="none" no-padding>
-    <ion-item lines="none" color="primary">
+  <ion-list *ngIf="isWeb" lines="none" no-padding>
+    <ion-item lines="none" color="secondary" class="selector">
       <ion-label><span translate>Language</span></ion-label>
       <ion-select [ngModel]="currentLanguage" 
         (ngModelChange)="setLanguage($event)" 
@@ -26,4 +26,6 @@
       </ion-select>
     </ion-item>
   </ion-list>
+  <ion-button color="secondary" (click)="updateCheck()">Check for Update</ion-button>
+  <p id="checkResult">{{updateCheckText}}</p>
 </ion-content>
