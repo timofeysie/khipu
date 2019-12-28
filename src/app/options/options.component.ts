@@ -2,8 +2,6 @@ import { LoadingController, Platform } from '@ionic/angular';
 import { Component, OnInit,  } from '@angular/core';
 import { environment } from '@env/environment';
 import { I18nService } from '@app/core';
-import { FormsModule } from '@angular/forms';
-import { FormGroup, FormBuilder, Validators } from '@angular/forms';
 
 @Component({
   selector: 'app-options',

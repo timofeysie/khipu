@@ -2,7 +2,7 @@ import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
 import { IonicModule } from '@ionic/angular';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { OptionsRoutingModule } from './options-routing.module';
 import { OptionsComponent } from './options.component';
 // sw-imports
@@ -13,7 +13,13 @@ import { LogUpdateService } from './services/sw/log-update.service';
 import { PromptUpdateService } from './services/sw/prompt-update.service';
 
 @NgModule({
-  imports: [CommonModule, TranslateModule, IonicModule, OptionsRoutingModule],
+  imports: [
+    CommonModule, 
+    TranslateModule, 
+    IonicModule, 
+    OptionsRoutingModule, 
+    FormsModule, 
+    ReactiveFormsModule],
   entryComponents: [OptionsComponent],
   declarations: [OptionsComponent]
 })
