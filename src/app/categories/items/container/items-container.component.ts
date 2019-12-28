@@ -11,7 +11,7 @@ import { Category } from '@app/core/interfaces/categories';
 })
 export class ItemsContainerComponent implements OnInit {
   category: Category;
-  constructor(private store: ItemsStore, private activatedRoute: ActivatedRoute) {
+  constructor(public store: ItemsStore, private activatedRoute: ActivatedRoute) {
     this.activatedRoute.params.subscribe((category: Category) => {
       this.category = category;
       this.store.fetchList(category, this.store.state.currentPage);
