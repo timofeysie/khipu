@@ -5,7 +5,6 @@ import { LoadingController, Platform } from '@ionic/angular';
 import { map } from 'rxjs/operators';
 import { forkJoin, from } from 'rxjs';
 import { finalize } from 'rxjs/operators';
-
 import { environment } from '@env/environment';
 import { Logger, I18nService, AuthenticationService, untilDestroyed } from '@app/core';
 
