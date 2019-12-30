@@ -9,7 +9,7 @@ const routes: Routes = [
     { path: 'theme', loadChildren: './features/theme/theme.module#ThemeModule' },
     {
       path: 'categories',
-      loadChildren: './features/category-item-details/category-item-details.module#CategoriesModule'
+      loadChildren: './features/category-item-details/category-item-details.module#CategoryItemDetailsModule'
     }
   ]),
   // Fallback when no prior route is matched
