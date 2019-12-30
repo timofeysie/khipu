@@ -7,12 +7,13 @@ import { ItemsContainerComponent } from './items/container/items-container.compo
 import { ItemsComponent } from './items/components/items.component';
 import { ItemsListEndpoint } from './items/items.endpoint';
 import { CategoryItemDetailsRoutingModule } from './category-item-details-routing.module';
-import { CategoriesComponent } from './categories/container/categories.component';
+import { CategoriesContainerComponent } from './categories/container/categories-container.component';
+import { CategoryComponent } from './categories/components/category.component';
 
 @NgModule({
   imports: [CommonModule, TranslateModule, IonicModule, CategoryItemDetailsRoutingModule],
-  entryComponents: [CategoriesComponent],
-  declarations: [CategoriesComponent, ItemsContainerComponent, ItemsComponent],
+  entryComponents: [CategoriesContainerComponent],
+  declarations: [CategoriesContainerComponent, CategoryComponent, ItemsContainerComponent, ItemsComponent],
   providers: [ItemsListEndpoint]
 })
-export class CategoriesModule {}
+export class CategoryItemDetailsModule {}
