@@ -7,19 +7,13 @@ import { OptionsRoutingModule } from './options-routing.module';
 import { OptionsComponent } from './options.component';
 // sw-imports
 import { ServiceWorkerModule } from '@angular/service-worker';
-import { environment } from '../../environments/environment';
+import { environment } from '../../../environments/environment';
 import { CheckForUpdateService } from './services/sw/check-for-update.service';
 import { LogUpdateService } from './services/sw/log-update.service';
 import { PromptUpdateService } from './services/sw/prompt-update.service';
 
 @NgModule({
-  imports: [
-    CommonModule, 
-    TranslateModule, 
-    IonicModule, 
-    OptionsRoutingModule, 
-    FormsModule, 
-    ReactiveFormsModule],
+  imports: [CommonModule, TranslateModule, IonicModule, OptionsRoutingModule, FormsModule, ReactiveFormsModule],
   entryComponents: [OptionsComponent],
   declarations: [OptionsComponent]
 })

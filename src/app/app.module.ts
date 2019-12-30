@@ -11,12 +11,11 @@ import { Angulartics2Module } from 'angulartics2';
 import { environment } from '@env/environment';
 import { CoreModule } from '@app/core';
 import { SharedModule } from '@app/shared';
-import { HomeModule } from './home/home.module';
 import { ShellModule } from './shell/shell.module';
-import { LoginModule } from './login/login.module';
 import { AppComponent } from './app.component';
 import { AppRoutingModule } from './app-routing.module';
-import { CategoriesComponent } from './categories/categories.component';
+import { HomeModule } from './features/home/home.module';
+import { LoginModule } from './features/login/login.module';
 
 @NgModule({
   imports: [

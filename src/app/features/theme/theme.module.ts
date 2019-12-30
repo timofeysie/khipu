@@ -9,8 +9,6 @@ import { ThemeComponent } from './theme.component';
 @NgModule({
   imports: [CommonModule, TranslateModule, IonicModule, ThemeRoutingModule, FormsModule],
   entryComponents: [ThemeComponent],
-  declarations: [
-    ThemeComponent
-  ]
+  declarations: [ThemeComponent]
 })
 export class ThemeModule {}
