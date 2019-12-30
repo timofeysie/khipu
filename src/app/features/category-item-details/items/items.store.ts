@@ -1,10 +1,10 @@
 import { Injectable } from '@angular/core';
-import { Store } from '../../store';
 import { ItemsState, Item } from './items.store.state';
 import { Subject } from 'rxjs';
 import { Category } from '@app/core/interfaces/categories';
 import { ItemsListEndpoint } from './items.endpoint';
 import { map } from 'rxjs/operators';
+import { Store } from '@app/store';
 
 @Injectable()
 export class ItemsStore extends Store<ItemsState> {

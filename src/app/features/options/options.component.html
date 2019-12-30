@@ -16,16 +16,13 @@
   <ion-list *ngIf="isWeb" lines="none" no-padding>
     <ion-item lines="none" color="secondary" class="selector">
       <ion-label><span translate>Language</span></ion-label>
-      <ion-select [ngModel]="currentLanguage" 
-        (ngModelChange)="setLanguage($event)" 
-        interface="popover">
-        <ion-select-option *ngFor="let language of languages" 
-            [value]="language">
-            {{ language }}
+      <ion-select [ngModel]="currentLanguage" (ngModelChange)="setLanguage($event)" interface="popover">
+        <ion-select-option *ngFor="let language of languages" [value]="language">
+          {{ language }}
         </ion-select-option>
       </ion-select>
     </ion-item>
   </ion-list>
   <ion-button color="secondary" (click)="updateCheck()">Check for Update</ion-button>
-  <p id="checkResult">{{updateCheckText}}</p>
+  <p id="checkResult">{{ updateCheckText }}</p>
 </ion-content>

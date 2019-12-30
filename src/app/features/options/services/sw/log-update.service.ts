@@ -3,10 +3,9 @@ import { SwUpdate } from '@angular/service-worker';
 
 // #docregion sw-update
 @Injectable({
-    providedIn: 'root'
+  providedIn: 'root'
 })
 export class LogUpdateService {
-
   constructor(updates: SwUpdate) {
     updates.available.subscribe(event => {
       console.log('current version is', event.current);

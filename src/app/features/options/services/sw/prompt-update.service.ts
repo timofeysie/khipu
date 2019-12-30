@@ -7,10 +7,9 @@ function promptUser(event: any): boolean {
 
 // #docregion sw-activate
 @Injectable({
-    providedIn: 'root'
-  })
+  providedIn: 'root'
+})
 export class PromptUpdateService {
-
   constructor(updates: SwUpdate) {
     updates.available.subscribe(event => {
       if (promptUser(event)) {
