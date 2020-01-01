@@ -20,7 +20,7 @@ With regarding the pagination with displaying items list, the results from the A
 
 To hold the current page in the items state, a property `currentPage = 0` is there in the [ItemsState](https://github.com/timofeysie/khipu/blob/dev/src/app/features/category-item-details/items/items.store.state.ts 'ItemsState') class.
 
-```
+```javascript
 export class ItemsState {
   currentPage: number = 0;
   items: Item[] = initItems;
@@ -57,7 +57,7 @@ fetchList(category: Category, currentPage: number) {
     .subscribe((items: Item[]) => {
       this.updateItemsState(items, currentPage);
     });
-}store.fetchList
+}
 ```
 
 On the subscription, (line 24) accepts new Items list and then passed into `updateItemsState` method with the current page.
@@ -80,4 +80,4 @@ and for back to previous page,
 
 `store.fetchList(category, store.state.currentPage - 1)`.
 
-At the initial state, the `currentPage` is 0 by default, when the pagination buttons working, same initial method is calling with different `currentPage` values.
+At the initial state, the `currentPage` is 0 by default, when the pagination buttons working, same initial method (`store.fetchList`) is calling with different `currentPage` values.
