@@ -1,0 +1,33 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title
+      ><span translate>{{ category.name }}</span></ion-title
+    >
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <div text-center>
+    <ion-card-content>
+      <ion-list *ngFor="let item of (store.state$ | async).items">
+        <app-items [item]="item"></app-items>
+      </ion-list>
+    </ion-card-content>
+  </div>
+</ion-content>
+
+<ion-footer>
+  <ion-toolbar>
+    <ion-button
+      *ngIf="store.state.currentPage > 0"
+      slot="start"
+      (click)="store.fetchList(category, store.state.currentPage - 1)"
+    >
+      Prev
+    </ion-button>
+    <ion-button slot="end" (click)="store.fetchList(category, store.state.currentPage + 1)"> Next</ion-button>
+  </ion-toolbar>
+</ion-footer>

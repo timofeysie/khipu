@@ -1,0 +1,304 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title><span translate>Theme</span></ion-title>
+  </ion-toolbar>
+</ion-header>
+<ion-content>
+  <ion-card text-center>
+    <ion-card-content>
+      <ion-card-title translate>APP_NAME</ion-card-title>
+      <ion-icon name="code"></ion-icon> <span translate>Version</span> {{ version }}
+    </ion-card-content>
+  </ion-card>
+
+  <ion-grid>
+    <ion-row>
+      <ion-col text-center>
+        <ion-button color="medium" (click)="changeTheme('autumn')">Autumn</ion-button>
+        <ion-button color="medium" (click)="changeTheme('night')">Dark</ion-button>
+        <ion-button color="medium" (click)="changeTheme('neon')">Neon</ion-button>
+        <ion-button color="medium" (click)="changeTheme('aisle_plus')">Aisle Plus</ion-button>
+        <ion-button color="medium" (click)="changeTheme('')">Default</ion-button>
+      </ion-col>
+    </ion-row>
+    <ion-row>
+      <ion-col class="ion-text-center">
+        <ion-button color="primary">Primary</ion-button>
+        <br />
+        <ion-checkbox color="primary ion-margin-top" checked></ion-checkbox>
+      </ion-col>
+      <ion-col class="ion-text-center">
+        <ion-button color="secondary">Secondary</ion-button>
+        <br />
+        <ion-checkbox color="secondary ion-margin-top"></ion-checkbox>
+      </ion-col>
+      <ion-col class="ion-text-center">
+        <ion-button color="tertiary">Tertiary</ion-button>
+        <br />
+        <ion-checkbox color="tertiary ion-margin-top"></ion-checkbox>
+      </ion-col>
+      <ion-col class="ion-text-center">
+        <ion-button color="medium">Medium</ion-button>
+        <br />
+        <ion-checkbox color="medium ion-margin-top" checked></ion-checkbox>
+      </ion-col>
+      <ion-col class="ion-text-center">
+        <ion-button color="dark"><span class="dark-contrast">Dark</span></ion-button>
+        <br />
+        <ion-checkbox color="dark ion-margin-top" checked></ion-checkbox>
+      </ion-col>
+    </ion-row>
+    <ion-row>
+      <!-- font size -->
+      <ion-col>
+        <ion-item lines="none">
+          <ion-range [(ngModel)]="quantum" (ionChange)="quantumChange()" min="4" max="10" step="1">
+            <ion-icon size="small" slot="start" name="radio-button-off"></ion-icon>
+            <ion-icon slot="end" name="radio-button-on"></ion-icon>
+          </ion-range>
+        </ion-item>
+      </ion-col>
+      <!-- border width -->
+      <ion-col>
+        <ion-item lines="none">
+          <ion-range [(ngModel)]="borderWidth" (ionChange)="borderWidthChange()" min="0" max="10" step="1">
+            <ion-icon size="small" slot="start" name="ios-qr-scanner"></ion-icon>
+            <ion-icon slot="end" name="md-qr-scanner"></ion-icon>
+          </ion-range>
+        </ion-item>
+      </ion-col>
+      <!-- border radius -->
+      <ion-col>
+        <ion-item lines="none">
+          <ion-range [(ngModel)]="borderRadius" (ionChange)="borderRadiusChange()" min="0" max="10" step="1">
+            <ion-icon size="small" slot="start" name="ios-square-outline"></ion-icon>
+            <ion-icon slot="end" name="md-radio-button-off"></ion-icon>
+          </ion-range>
+        </ion-item>
+      </ion-col>
+      <ion-col>
+        <!-- columns -->
+        <ion-item lines="none">
+          <ion-range [(ngModel)]="columns" (ionChange)="columnsChange()" min="1" max="6" step="1">
+            <ion-icon size="small" slot="start" name="md-menu"></ion-icon>
+            <ion-icon slot="end" name="md-grid"></ion-icon>
+          </ion-range>
+        </ion-item>
+      </ion-col>
+      <!-- gutter -->
+      <ion-col>
+        <ion-item lines="none">
+          <ion-range [(ngModel)]="gutter" (ionChange)="gutterChange()" min="1" max="15" step="2">
+            <ion-icon size="small" slot="start" name="ios-easel"></ion-icon>
+            <ion-icon slot="end" name="md-easel"></ion-icon>
+          </ion-range>
+        </ion-item>
+      </ion-col>
+    </ion-row>
+    <div class="grid" padding>
+      <div class="cell">
+        <header class="cell-header primary-bg">
+          <div class="cell-title">
+            Quantum
+          </div>
+        </header>
+        <main class="cell-content">
+          Click the buttons on the cards to set the default color scheme for the whole sample.
+        </main>
+        <div class="cell-actions">
+          <div class="ripple cell-content">Quantum {{ quantum }}</div>
+        </div>
+      </div>
+      <div class="cell">
+        <header class="cell-header">
+          <div class="cell-title">
+            Border width
+          </div>
+        </header>
+        <main class="cell-content">
+          The colors on the cards are not affected because they're individually defined at the card level, and thus
+          prioritised according to standard CSS rules.
+        </main>
+        <div class="cell-actions">
+          <div class="ripple cell-content">Border {{ borderWidth }}</div>
+        </div>
+      </div>
+      <div class="cell">
+        <header class="cell-header">
+          <div class="cell-title">
+            Border radius
+          </div>
+        </header>
+        <main class="cell-content">
+          Use the controls above to adjust some properties that affect the entire page.
+        </main>
+        <div class="cell-actions">
+          <div class="ripple cell-content">Border radius {{ borderRadius }}</div>
+        </div>
+      </div>
+      <div class="cell">
+        <header class="cell-header">
+          <div class="cell-title">
+            Number of columns
+          </div>
+        </header>
+        <main class="cell-content">
+          Every size on the page is calculated as a multiple of the spacing unit, so setting the property to a different
+          value resizes all elements.
+        </main>
+        <div class="cell-actions">
+          <div class="ripple cell-content">Columns section {{ columns }}</div>
+        </div>
+      </div>
+      <div class="cell">
+        <header class="cell-header">
+          <div class="cell-title">
+            Gutter spacing
+          </div>
+        </header>
+        <main class="cell-content">
+          Changing the number of columns is done by recalculating the relative size of cells on the grid.
+        </main>
+        <div class="cell-actions">
+          <div class="ripple cell-content">Gutter spacing {{ gutter }}</div>
+        </div>
+      </div>
+
+      <!-- color theme -->
+      <div class="cell" *ngIf="themeService">
+        <header class="cell-header">
+          <div class="cell-title">
+            Primary
+          </div>
+        </header>
+        <main class="cell-content">
+          <ion-item lines="none">
+            <ion-label>Primary value</ion-label>
+            <ion-badge slot="end">{{ themeService.getTheme().primary }}</ion-badge>
+          </ion-item>
+          <ion-item lines="none">
+            <ion-label>tint</ion-label>
+            <ion-badge slot="end" class="primary-tint-bg">{{ themeService.getTheme().primary }}</ion-badge>
+          </ion-item>
+          <ion-item lines="none">
+            <ion-label>shade</ion-label>
+            <ion-badge slot="end" class="primary-shade-bg">{{ themeService.getTheme().primary }}</ion-badge>
+          </ion-item>
+        </main>
+        <div class="cell-actions">
+          <button class="picker-button">
+            Edit this color
+            <div class="ripple"></div>
+          </button>
+        </div>
+      </div>
+
+      <div class="cell">
+        <header class="cell-header">
+          <div class="cell-title">
+            Secondary
+          </div>
+        </header>
+        <main class="cell-content">
+          <ion-item lines="none">
+            <ion-label>Secondary value</ion-label>
+            <ion-badge slot="end" color="secondary">{{ themeService.getTheme().secondary }}</ion-badge>
+          </ion-item>
+        </main>
+        <div class="cell-actions">
+          <button class="picker-button">
+            Edit this color
+            <div class="ripple"></div>
+          </button>
+        </div>
+      </div>
+
+      <div class="cell">
+        <header class="cell-header">
+          <div class="cell-title">
+            Tertiary
+          </div>
+        </header>
+        <main class="cell-content">
+          <ion-item lines="none">
+            <ion-label>Tertiary value</ion-label>
+            <ion-badge slot="end" color="tertiary">{{ themeService.getTheme().tertiary }}</ion-badge>
+          </ion-item>
+        </main>
+        <div class="cell-actions">
+          <button class="picker-button">
+            Edit this color
+            <div class="ripple"></div>
+          </button>
+        </div>
+      </div>
+
+      <div class="cell">
+        <header class="cell-header">
+          <div class="cell-title">
+            Medium
+          </div>
+        </header>
+        <main class="cell-content">
+          <ion-item lines="none">
+            <ion-label>Medium value</ion-label>
+            <ion-badge slot="end" color="medium">{{ themeService.getTheme().medium }}</ion-badge>
+          </ion-item>
+        </main>
+        <div class="cell-actions">
+          <button class="picker-button">
+            Edit this color
+            <div class="ripple"></div>
+          </button>
+        </div>
+      </div>
+
+      <div class="cell">
+        <header class="cell-header">
+          <div class="cell-title">
+            Dark
+          </div>
+        </header>
+        <main class="cell-content">
+          <ion-item lines="none">
+            <ion-label>Dark value</ion-label>
+            <ion-badge slot="end" color="dark">
+              <span class="dark-contrast">
+                {{ themeService.getTheme().dark }}
+              </span>
+            </ion-badge>
+          </ion-item>
+        </main>
+        <div class="cell-actions">
+          <button class="picker-button">
+            Edit this color
+            <div class="ripple"></div>
+          </button>
+        </div>
+      </div>
+
+      <div class="cell">
+        <header class="cell-header">
+          <div class="cell-title">
+            Warning
+          </div>
+        </header>
+        <main class="cell-content">
+          <ion-item lines="none">
+            <ion-label>Warning value</ion-label>
+            <ion-badge slot="end" color="warning">{{ themeService.getTheme().warning }}</ion-badge>
+          </ion-item>
+        </main>
+        <div class="cell-actions">
+          <button class="picker-button">
+            Edit this color
+            <div class="ripple"></div>
+          </button>
+        </div>
+      </div>
+    </div>
+  </ion-grid>
+</ion-content>
