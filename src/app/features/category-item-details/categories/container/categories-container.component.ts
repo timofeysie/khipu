@@ -9,7 +9,7 @@ import { CategoriesStore } from '../categories-store';
   providers: [CategoriesStore]
 })
 export class CategoriesContainerComponent implements OnInit {
-  constructor(private store: CategoriesStore) {}
+  constructor(public store: CategoriesStore) {}
 
   ngOnInit() {
     console.log(this.store.fetchList());

@@ -325,6 +325,53 @@ But where is this file?  It's in the served source after running:
 npm run serve:sw
 ```
 
+Deployment from the master branch was done with Firebase like this:
+```
+m$ firebase init
+     ######## #### ########  ######## ########     ###     ######  ########
+     ##        ##  ##     ## ##       ##     ##  ##   ##  ##       ##
+     ######    ##  ########  ######   ########  #########  ######  ######
+     ##        ##  ##    ##  ##       ##     ## ##     ##       ## ##
+     ##       #### ##     ## ######## ########  ##     ##  ######  ########
+You're about to initialize a Firebase project in this directory:
+  /Users/tim/repos/khipu
+? Which Firebase CLI features do you want to set up for this folder? Press Space to select features, then Enter to confirm your choices.
+Hosting: Configure and deploy Firebase Hosting sites
+=== Project Setup
+First, let's associate this project directory with a Firebase project.
+You can create multiple project aliases by running firebase use --add,
+but for now we'll just set up a default project.
+? Please select an option: Create a new project
+i  If you want to create a project in a Google Cloud organization or folder, please use "firebase projects:create" instead, and return to this command when you've created the project.
+? Please specify a unique project id (warning: cannot be modified afterward) [6-30 characters]:
+ khipu1
+? What would you like to call your project? (defaults to your project ID) khipu
+✔ Creating Google Cloud Platform project
+✔ Adding Firebase resources to Google Cloud Platform project
+🎉🎉🎉 Your Firebase project is ready! 🎉🎉🎉
+Project information:
+   - Project ID: khipu1
+   - Project Name: khipu
+Firebase console is available at
+https://console.firebase.google.com/project/khipu1/overview
+i  Using project khipu1 (khipu)
+=== Hosting Setup
+Your public directory is the folder (relative to your project directory) that
+will contain Hosting assets to be uploaded with firebase deploy. If you
+have a build process for your assets, use your build's output directory.
+? What do you want to use as your public directory? dist
+? Configure as a single-page app (rewrite all urls to /index.html)? Yes
+? File dist/index.html already exists. Overwrite? No
+i  Skipping write of dist/index.html
+i  Writing configuration info to firebase.json...
+i  Writing project information to .firebaserc...
+✔  Firebase initialization complete!
+QuinquenniumF:khipu tim$ firebase deploy
+...
+✔  Deploy complete!
+Project Console: https://console.firebase.google.com/project/khipu1/overview
+Hosting URL: https://khipu1.firebaseapp.com
+```
 
 
 ## Original README
