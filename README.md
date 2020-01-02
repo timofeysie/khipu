@@ -82,7 +82,7 @@ The categories directory can be the start of a feature directory which will hold
 * create a service with a RxJs subject
 * create a container that uses the service to get the list of items
 * create a presentation component to display data from the container via @Input/@Output
-* create a view class to sync with the state store via the router url 
+* create a view class to sync with the state store via the router url
 
 
 ### Some previous notes on the pattern
@@ -126,7 +126,7 @@ Another article based on the above is [here](https://georgebyte.com/state-manage
 
 
 
-## Implement categories from a static list
+## Issue #3: Implement categories from a static list
 
 Create a categories component to view the list.
 
@@ -154,7 +154,7 @@ This project has a hardwired category of "cognitive biases" which has a lot of t
 The lists will need to have pagination, with the number of items per page configured in an options page.  The initial categories list will be short,  so it's OK to wait until the items lists to implement this, but be aware that this will be part of the state.
 
 
-# Fetch a list of wikidata items for the selected category
+# Issue #4: Fetch a list of wikidata items for the selected category
 
 Create an Items component to display the list of items for a category.
 
@@ -203,17 +203,17 @@ Source: [the Strumosa pipe project](https://github.com/timofeysie/strumosa-pipe#
 However, I would like this project to create it's own API calls to Wikidata and Wikipedia, using a proxy if necessary to avoid CORS issues.  I would rather not have to maintain a server to support the app.
 
 
-## Get the page of wikipedia for the category and parse it for the list
+## Issue #5: Get the page of wikipedia for the category and parse it for the list
 
 Parsing the Wikipedia category page can be done to create another list with more items (some duplicates) which are grouped by category.  I only have experience doing this with the particular "cognitive bias" category, so there may be some differences for other categories.
 
 
-## Merge the two lists
+## Issue #6: Merge the two lists
 
 Each list should retain a flag indicating which list they came from, and if they appear on both lists so they can be styled accordingly.
 
 
-## Create a detail page for a selected item
+## Issue #7: Create a detail page for a selected item
 
 Create a details page to show the details of an item selected.
 
@@ -224,20 +224,27 @@ Detail pages also contain preamble icons with warnings which need to be captures
 https://github.com/timofeysie/strumosa-pipe#the-items-api
 
 
-## Create a form to enter a new category
+## Issue #8: Create a form to enter a new category
 
 This will just be a simple input to let the user enter a new category.  It will end up being a SPARQL query such as 'list of <category>' where <category> is a plural word such as "cognitive biases" or "fallacies".
 
 The input will be then used for the next section to determine the code for the category.
 
 
-## Determine the wikidata query to get a list of those items
+## Issue #9: Determine the wikidata query to get a list of those items
 
 Just as the category name of fallacies uses the wd=Q186150, cognitive_bias has wd=Q1127759.  The user should be able to enter a name and the app determine the Q<code> if it exists.
 
-add the category to the category list
+This task is to determine the API or SPARQL call needed to get the information needed (ie wd & wdt numbers needed) to then be used to get a list of items for the query.
 
-Add new categories to the list of categories.
+It is expected that this is a kind of shot in the dark if the user does not already know that such a category list already exists.  Even a Wikipedia page on the subject does not mean that it has a Wikidata equivalent list.
+
+It will be helpful to run the SPARQL query for the user and show the some info about the call, such as error messages or number of items returned before the user can then add the category to the list to avoid adding dead categories.
+
+
+## Issue #10: Add the category to the category list
+
+Add the new category to the list of categories.
 
 
 ## Creating the app
@@ -320,22 +327,34 @@ Is there any reason they can't be the same?  Will it be different for Electron?
 
 ## The Service Worker
 
-Working on the service worker setup right now.
+Working on the service worker took a while to figure out a link to the file:
 ```
 ngsw-config.json
 ```
+
+Needed to be in the angular.json config.  All the rest of the setup was complete.
+
+The problem may have been due to an error when running:
+```
+ng add @angular/pwa --project my-app
+Skipping installation: Package already installed
+ERROR! ngsw-config.json already exists.
+The Schematic workflow failed. See above.
+```
+
+After diffing a vanilla Angular project and adding the reference in the config file, the service worker is all good now.
 
 In the app.module.ts file:
 ```
 ServiceWorkerModule.register('./ngsw-worker.js', { enabled: environment.production }),
 ```
 
-But where is this file?  It's in the served source after running:
+The service worker itself is in the source directory after running:
 ```
 npm run serve:sw
 ```
 
-Deployment from the master branch was done with Firebase like this:
+To test the service worker in production the app must be hosted somewhere.  Deployment from the master branch was done with Firebase like this:
 ```
 m$ firebase init
      ######## #### ########  ######## ########     ###     ######  ########
