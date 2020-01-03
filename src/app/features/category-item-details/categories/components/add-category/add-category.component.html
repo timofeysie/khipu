@@ -1,0 +1,36 @@
+<ion-card text-center>
+  <ion-card-content>
+    <form [formGroup]="categoryAddForm">
+      <ion-item>
+        <ion-label>Category Name:</ion-label>
+        <ion-input formControlName="categoryName"></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-label>Label:</ion-label>
+        <ion-input formControlName="label"></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-label>Language:</ion-label>
+        <ion-input formControlName="language"></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-label>wdt:</ion-label>
+        <ion-input formControlName="wdt"></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-label>wd:</ion-label>
+        <ion-input formControlName="wd"></ion-input>
+      </ion-item>
+    </form>
+  </ion-card-content>
+
+  <ion-footer>
+    <ion-toolbar>
+      <ion-button color="primary" (click)="performSave()" slot="end"> Save</ion-button>
+    </ion-toolbar>
+  </ion-footer>
+</ion-card>
