@@ -15,7 +15,6 @@ export class ItemsStore extends Store<ItemsState> {
   }
 
   fetchList(category: Category, currentPage: number) {
-    console.log(currentPage);
     this.itemListEndpoint
       .listItems(category, currentPage)
       .pipe(
