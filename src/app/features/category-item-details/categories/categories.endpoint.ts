@@ -5,14 +5,14 @@ import { Category } from '@app/core/interfaces/categories.js';
 
 @Injectable()
 export class CategoriesEndpoint {
+  constructor() {
+    this.init();
+  }
+
   init() {
     if (!localStorage.getItem('categories')) {
       localStorage.setItem('categories', JSON.stringify(categories));
     }
-  }
-
-  constructor() {
-    this.init();
   }
 
   fetchList(): Observable<any> {
