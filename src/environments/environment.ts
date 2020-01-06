@@ -18,6 +18,10 @@ export const environment = {
   serverUrl: '/api',
   defaultLanguage: 'en-US',
   supportedLanguages: ['en-US', 'fr-FR'],
+  sparqlLanguages: [
+    { appLanguage: 'en-US', sparqlLanguage: 'en' },
+    { appLanguage: 'fr-FR', sparqlLanguage: 'fr' }
+  ],
   paginationItemsPerPage: 5
 };
 
