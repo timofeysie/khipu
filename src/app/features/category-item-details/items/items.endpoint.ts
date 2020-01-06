@@ -36,7 +36,7 @@ export class ItemsListEndpoint {
             }
             ORDER BY (LCASE(?label))
             LIMIT ${environment.paginationItemsPerPage}
-            OFFSET ${currentPage}`;
+            OFFSET ${currentPage * environment.paginationItemsPerPage}`;
     return wbk.sparqlQuery(sparql);
   }
 }

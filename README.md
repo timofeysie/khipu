@@ -8,7 +8,7 @@ version 7.1.0
 * [Project brief](#project-brief)
 * [Observable Store Pattern](#observable-Store-Pattern)
 * [Implement categories from a static list](#implement-categories-from-a-static-list)
-* [Ffetch a list of wikidata items for the selected category](#fetch-a-list-of-wikidata-items-for-the-selected-category)
+* [Fetch a list of wikidata items for the selected category](#fetch-a-list-of-wikidata-items-for-the-selected-category)
 * [Get the page of wikipedia for the category and parse it for the list](#get-the-page-of-wikipedia-for-the-category-and-parse-it-for-the-list)
 * [Merge the two lists](#merge-the-two-lists)
 * [Create a detail page for a selected item](#create-a-detail-page-for-a-selected-item)

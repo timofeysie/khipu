@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { categoriesList } from '@env/environment';
-import { CategoriesStore } from '../categories-store';
+import { CategoriesStore } from '../../categories-store';
 
 @Component({
   selector: 'app-categories',
@@ -12,6 +12,6 @@ export class CategoriesContainerComponent implements OnInit {
   constructor(public store: CategoriesStore) {}
 
   ngOnInit() {
-    console.log(this.store.fetchList());
+    this.store.fetchList();
   }
 }
