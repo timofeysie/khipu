@@ -12,6 +12,6 @@ export class CategoriesContainerComponent implements OnInit {
   constructor(public store: CategoriesStore) {}
 
   ngOnInit() {
-    console.log(this.store.fetchList());
+    this.store.fetchList();
   }
 }

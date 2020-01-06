@@ -10,6 +10,7 @@ export class CategoriesStore extends Store<CategoriesState> {
   }
 
   fetchList() {
+    console.log(categoriesList);
     this.state.categories = categoriesList;
   }
 }
