@@ -10,7 +10,7 @@ import { CategoriesStore } from '../../categories-store';
   providers: [CategoriesStore]
 })
 export class AddCategoryContainerComponent implements OnInit {
-  constructor(private store: CategoriesStore) {}
+  constructor(public store: CategoriesStore) {}
 
   categoryForm = new FormGroup({
     categoryName: new FormControl(''),
