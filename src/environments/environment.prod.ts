@@ -14,7 +14,11 @@ export const environment = {
   serverUrl: 'https://api.chucknorris.io',
   defaultLanguage: 'en-US',
   supportedLanguages: ['en-US', 'fr-FR'],
-  paginationItemsPerPage: 5
+  sparqlLanguages: [
+    { appLanguage: 'en-US', sparqlLanguage: 'en' },
+    { appLanguage: 'fr-FR', sparqlLanguage: 'fr' }
+  ],
+  paginationItemsPerPage: 9
 };
 
 export const categoriesList: Category[] = [
