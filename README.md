@@ -5,26 +5,27 @@ version 7.1.0
 
 ## Table of contents
 
-* [Project brief](#project-brief)
-* [Observable Store Pattern](#observable-Store-Pattern)
-* [Implement categories from a static list](#implement-categories-from-a-static-list)
-* [Ffetch a list of wikidata items for the selected category](#fetch-a-list-of-wikidata-items-for-the-selected-category)
-* [Get the page of wikipedia for the category and parse it for the list](#get-the-page-of-wikipedia-for-the-category-and-parse-it-for-the-list)
-* [Merge the two lists](#merge-the-two-lists)
-* [Create a detail page for a selected item](#create-a-detail-page-for-a-selected-item)
-* [Create a form to enter a new category](#create-a-form-to-enter-a-new-category)
-* [Determine the wikidata query to get a list of those items](#determine-the-wikidata-query-to-get-a-list-of-those-items)
-* [Add the category to the category list](#add-the-category-to-the-category-list)
-* [Creating the app](#creating-the-app)
-* [AD B2C Implicit Grant Flow](#aD-B2C-Implicit-Grant-Flow)
-* [The Service Worker](#the-Service-Worker)
-* [Original README](#original-README)
-
+- [Workflow](#workflow)
+- [Project brief](#project-brief)
+- [Observable Store Pattern](#observable-Store-Pattern)
+- [Implement categories from a static list](#implement-categories-from-a-static-list)
+- [Ffetch a list of wikidata items for the selected category](#fetch-a-list-of-wikidata-items-for-the-selected-category)
+- [Get the page of wikipedia for the category and parse it for the list](#get-the-page-of-wikipedia-for-the-category-and-parse-it-for-the-list)
+- [Merge the two lists](#merge-the-two-lists)
+- [Create a detail page for a selected item](#create-a-detail-page-for-a-selected-item)
+- [Create a form to enter a new category](#create-a-form-to-enter-a-new-category)
+- [Determine the wikidata query to get a list of those items](#determine-the-wikidata-query-to-get-a-list-of-those-items)
+- [Add the category to the category list](#add-the-category-to-the-category-list)
+- [Creating the app](#creating-the-app)
+- [AD B2C Implicit Grant Flow](#aD-B2C-Implicit-Grant-Flow)
+- [The Service Worker](#the-Service-Worker)
+- [Original README](#original-README)
 
 ## Workflow
 
 Here is a brief of the CLI commands for using the project.
-```
+
+```txt
 npm start // Run development server on `http://localhost:4200/`
 npm run serve:sw // Run test server with service worker enabled on `http://localhost:4200/index.html`
 npm run build [-- --configuration=production] // Lint code and build web app for production (with [AOT) in `dist/` folder
@@ -52,7 +53,8 @@ I have implemented most of the functionality in various other projects using a v
 Create a new feature branch for each issue and include the issue number in each commit.  Add API comments to all classes and functions.
 
 The basic view components will be:
-```
+
+```txt
 Categories
 Items
 Details
@@ -61,12 +63,11 @@ Options
 
 Use the Observable Store Pattern detailed below to manage the state of the app as a replacement for state management with Redux.
 
-Use the presentation container pattern.  Container components access the data store, and the presenter components uses Input/Output annotations to get and display data and pass user actions back to the container.
+Use the presentation container pattern. Container components access the data store, and the presenter components uses Input/Output annotations to get and display data and pass user actions back to the container.
 
 I will be playing around with the OAuth login which relates to what I am doing at work.
 
 I will also doing the layout styles and theme.  The project is setup to use the Ionic UI components so you can create basic layouts using Ionic components such as list: https://ionicframework.com/docs/api/list
-
 
 ## Observable Store Pattern
 
@@ -76,18 +77,18 @@ There is a brief overview of the pattern [here](https://blog.angular-university.
 
 And a fuller architecture based article using the above is [here](https://georgebyte.com/scalable-angular-app-architecture/)
 
-The categories directory can be the start of a feature directory which will hold the item list feature.  This will include:
+The categories directory can be the start of a feature directory which will hold the item list feature. This will include:
 
-* create a items directory inside (with the observable state and presenter/container patterns)
-* create a service with a RxJs subject
-* create a container that uses the service to get the list of items
-* create a presentation component to display data from the container via @Input/@Output
-* create a view class to sync with the state store via the router url
-
+- create a items directory inside (with the observable state and presenter/container patterns)
+- create a service with a RxJs subject
+- create a container that uses the service to get the list of items
+- create a presentation component to display data from the container via @Input/@Output
+- create a view class to sync with the state store via the router url
 
 ### Some previous notes on the pattern
 
 A service that uses the pattern might look like this:
+
 ```
 onAddTodo(description) {
     this.todoStore.addTodo(newTodo)
@@ -117,20 +118,19 @@ global stores that contain globally used state, (a singleton listed as a provide
 component stores that contain the states used by a single component (not singletons, subscriptions must be cleaned up)
 
 Proxy component with no biz logic can use the async pipe
+
 ```
 <li *ngFor="let candidate of (store.state$ | async).candidates">
 ```
 
-
 Another article based on the above is [here](https://georgebyte.com/state-management-in-angular-with-observable-store-services/)
-
-
 
 ## Issue #3: Implement categories from a static list
 
 Create a categories component to view the list.
 
 A category has the following properties:
+
 ```
 category
 language
@@ -139,6 +139,7 @@ wd
 ```
 
 The language should be the setting from the i18n selector pre-existing in the app.  There are two predetermined categories to start:
+
 ```
 name=fallacies
 wdt=P31
@@ -151,14 +152,14 @@ wd=Q1127759
 
 This project has a hardwired category of "cognitive biases" which has a lot of the other functionality that this project will require.
 
-The lists will need to have pagination, with the number of items per page configured in an options page.  The initial categories list will be short,  so it's OK to wait until the items lists to implement this, but be aware that this will be part of the state.
-
+The lists will need to have pagination, with the number of items per page configured in an options page. The initial categories list will be short, so it's OK to wait until the items lists to implement this, but be aware that this will be part of the state.
 
 # Issue #4: Fetch a list of wikidata items for the selected category
 
 Create an Items component to display the list of items for a category.
 
 Categories can be used to construct a sparql query can be created like this:
+
 ```
         SELECT ?${category} ?${category}Label ?${category}Description WHERE {
             SERVICE wikibase:label {
@@ -171,6 +172,7 @@ const url = wdk.sparqlQuery(sparql);
 ```
 
 This will construct a url that will return a result with properties like this.
+
 ```
 "head":{
       "vars":[
@@ -198,20 +200,18 @@ This will construct a url that will return a result with properties like this.
             }
          },
 ```
+
 Source: [the Strumosa pipe project](https://github.com/timofeysie/strumosa-pipe#the-items-api).  This is a NodeJS project hosted on Azure and works to get a list of items for a particular category.
 
 However, I would like this project to create it's own API calls to Wikidata and Wikipedia, using a proxy if necessary to avoid CORS issues.  I would rather not have to maintain a server to support the app.
-
 
 ## Issue #5: Get the page of wikipedia for the category and parse it for the list
 
 Parsing the Wikipedia category page can be done to create another list with more items (some duplicates) which are grouped by category.  I only have experience doing this with the particular "cognitive bias" category, so there may be some differences for other categories.
 
-
 ## Issue #6: Merge the two lists
 
 Each list should retain a flag indicating which list they came from, and if they appear on both lists so they can be styled accordingly.
-
 
 ## Issue #7: Create a detail page for a selected item
 
@@ -223,13 +223,11 @@ Wikidata will also hold a list of languages available for each item.  This prop
 Detail pages also contain preamble icons with warnings which need to be captures and shown as collapsable icons under the description.
 https://github.com/timofeysie/strumosa-pipe#the-items-api
 
-
 ## Issue #8: Create a form to enter a new category
 
-This will just be a simple input to let the user enter a new category.  It will end up being a SPARQL query such as 'list of <category>' where <category> is a plural word such as "cognitive biases" or "fallacies".
+This will just be a simple input to let the user enter a new category. It will end up being a SPARQL query such as 'list of <category>' where <category> is a plural word such as "cognitive biases" or "fallacies".
 
 The input will be then used for the next section to determine the code for the category.
-
 
 ## Issue #9: Determine the wikidata query to get a list of those items
 
@@ -237,19 +235,18 @@ Just as the category name of fallacies uses the wd=Q186150, cognitive_bias has w
 
 This task is to determine the API or SPARQL call needed to get the information needed (ie wd & wdt numbers needed) to then be used to get a list of items for the query.
 
-It is expected that this is a kind of shot in the dark if the user does not already know that such a category list already exists.  Even a Wikipedia page on the subject does not mean that it has a Wikidata equivalent list.
+It is expected that this is a kind of shot in the dark if the user does not already know that such a category list already exists. Even a Wikipedia page on the subject does not mean that it has a Wikidata equivalent list.
 
 It will be helpful to run the SPARQL query for the user and show the some info about the call, such as error messages or number of items returned before the user can then add the category to the list to avoid adding dead categories.
-
 
 ## Issue #10: Add the category to the category list
 
 Add the new category to the list of categories.
 
-
 ## Creating the app
 
 These are the answers to the questions asked by the [ngX-Rocket CLI](https://github.com/ngx-rocket/generator-ngx-rocket/) when creating the app.
+
 ```
 $ ngx new
           __   __
@@ -271,13 +268,13 @@ $ ngx new
 ? Do you want additional libraries? Lodash (collection & general utilities), Moment.js (date management)
 ```
 
-
 ## AD B2C Implicit Grant Flow
 
 Currently the redirect uri is set to jwt.ms which will just display the JWT and let you deconsctuct it.
 Next, use the Capacitor Browser plugin to open the login dialog and redirect to extract the jwt from the redirected window which will involve changing the settings on the Azure portal.
 
 Getting some kind of issue running currently:
+
 ```
 /Users/tim/repos/khipu/node_modules/@angular/cli/bin/postinstall/analytics-prompt.js:8
 (async () => {
@@ -296,7 +293,8 @@ SyntaxError: Unexpected token (
 ⸨                 ░⸩ ⠋ postinstall: info lifecycle @angular/cli@8.1.3~postinstall: Failed to exec postinstall script
 ```
 
-That was from npm i.  and then:
+That was from npm i. and then:
+
 ```
 > npm run env -s && ng serve --proxy-config proxy.conf.js
 The "@angular/compiler-cli" package was not properly installed.
@@ -305,6 +303,7 @@ Error: The "@angular/compiler-cli" package was not properly installed.
 ```
 
 The reason?
+
 ```
 $ node --version
 v6.9.2
@@ -313,28 +312,29 @@ Now using node v12.9.1 (npm v6.10.2)
 ```
 
 The reason I had to run npm i again was that to clear disk space I had run:
+
 ```
 find . -name "node_modules" -type d -prune -exec rm -rf '{}'+
 ```
 
-That deleted all the node modules on this laptop!  Aliaksei Kuncevic said he freed up 7gigs of space with that.
+That deleted all the node modules on this laptop! Aliaksei Kuncevic said he freed up 7gigs of space with that.
 
 Back to business, the redirect URL is set in Azure to 8080 which is the port when running the service worker, but during development server runs on 4200, the standard Angular ng serve go-to port.
 
-Is there any reason they can't be the same?  Will it be different for Electron?
-
-
+Is there any reason they can't be the same? Will it be different for Electron?
 
 ## The Service Worker
 
 Working on the service worker took a while to figure out a link to the file:
+
 ```
 ngsw-config.json
 ```
 
-Needed to be in the angular.json config.  All the rest of the setup was complete.
+Needed to be in the angular.json config. All the rest of the setup was complete.
 
 The problem may have been due to an error when running:
+
 ```
 ng add @angular/pwa --project my-app
 Skipping installation: Package already installed
@@ -345,16 +345,19 @@ The Schematic workflow failed. See above.
 After diffing a vanilla Angular project and adding the reference in the config file, the service worker is all good now.
 
 In the app.module.ts file:
+
 ```
 ServiceWorkerModule.register('./ngsw-worker.js', { enabled: environment.production }),
 ```
 
 The service worker itself is in the source directory after running:
+
 ```
 npm run serve:sw
 ```
 
-To test the service worker in production the app must be hosted somewhere.  Deployment from the master branch was done with Firebase like this:
+To test the service worker in production the app must be hosted somewhere. Deployment from the master branch was done with Firebase like this:
+
 ```
 m$ firebase init
      ######## #### ########  ######## ########     ###     ######  ########
@@ -402,18 +405,19 @@ Project Console: https://console.firebase.google.com/project/khipu1/overview
 Hosting URL: https://khipu1.firebaseapp.com
 ```
 
-
 ## Original README
 
 1. Go to project folder and install dependencies:
- ```sh
- npm install
- ```
+
+```sh
+npm install
+```
 
 2. Launch development server, and open `localhost:4200` in your browser:
- ```sh
- npm start
- ```
+
+```sh
+npm start
+```
 
 # Project structure
 
@@ -446,21 +450,21 @@ proxy.conf.js                backend proxy configuration
 
 Task automation is based on [NPM scripts](https://docs.npmjs.com/misc/scripts).
 
-Task                            | Description
---------------------------------|--------------------------------------------------------------------------------------
-`npm start`                     | Run development server on `http://localhost:4200/`
-`npm run serve:sw`              | Run test server on `http://localhost:4200/` with service worker enabled
-`npm run build [-- --configuration=production]` | Lint code and build web app for production (with [AOT](https://angular.io/guide/aot-compiler)) in `dist/` folder
-`npm run electron:build`        | Build desktop app
-`npm run electron:run`          | Run app on electron
-`npm run electron:package`      | Package app for all supported platforms
-`npm test`                      | Run unit tests via [Karma](https://karma-runner.github.io) in watch mode
-`npm run test:ci`               | Lint code and run unit tests once for continuous integration
-`npm run e2e`                   | Run e2e tests using [Protractor](http://www.protractortest.org)
-`npm run lint`                  | Lint code
-`npm run translations:extract`  | Extract strings from code and templates to `src/app/translations/template.json`
-`npm run docs`                  | Display project documentation and coding guides
-`npm run prettier`              | Automatically format all `.ts`, `.js` & `.scss` files
+| Task                                            | Description                                                                                                      |
+| ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `npm start`                                     | Run development server on `http://localhost:4200/`                                                               |
+| `npm run serve:sw`                              | Run test server on `http://localhost:4200/` with service worker enabled                                          |
+| `npm run build [-- --configuration=production]` | Lint code and build web app for production (with [AOT](https://angular.io/guide/aot-compiler)) in `dist/` folder |
+| `npm run electron:build`                        | Build desktop app                                                                                                |
+| `npm run electron:run`                          | Run app on electron                                                                                              |
+| `npm run electron:package`                      | Package app for all supported platforms                                                                          |
+| `npm test`                                      | Run unit tests via [Karma](https://karma-runner.github.io) in watch mode                                         |
+| `npm run test:ci`                               | Lint code and run unit tests once for continuous integration                                                     |
+| `npm run e2e`                                   | Run e2e tests using [Protractor](http://www.protractortest.org)                                                  |
+| `npm run lint`                                  | Lint code                                                                                                        |
+| `npm run translations:extract`                  | Extract strings from code and templates to `src/app/translations/template.json`                                  |
+| `npm run docs`                                  | Display project documentation and coding guides                                                                  |
+| `npm run prettier`                              | Automatically format all `.ts`, `.js` & `.scss` files                                                            |
 
 When building the application, you can specify the target configuration using the additional flag
 `--configuration <name>` (do not forget to prepend `--` to pass arguments to npm scripts).

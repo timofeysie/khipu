@@ -28,14 +28,6 @@ const themes = {
     light: '#F4EDF2',
     medium: '#B682A5',
     dark: '#34162A'
-  },
-  aisle_plus: {
-    primary: '#3a3a3a',
-    secondary: '#627ecc',
-    tertiary: '#0edd21',
-    light: '#F4EDF2',
-    medium: '#B682A5',
-    dark: '#34162A'
   }
 };
 
@@ -69,7 +61,7 @@ export class ThemeComponent implements OnInit {
     this.elementRef.nativeElement.style.setProperty('--grid-columns', this.columns);
     this.elementRef.nativeElement.style.setProperty('--margins', this.gutter + 'px');
     this.gutterChange();
-    this.events.subscribe('popoever-event', data => {
+    this.events.subscribe('popover-event', data => {
       this.slideType = data.key;
       this.themeService.slideOptions(data.key);
       this.dismissPopover();

@@ -36,12 +36,13 @@ export class ThemeService {
     this.document.documentElement.style.setProperty(name, value);
   }
 
-  private setGlobalCSS(css: string) {
-    this.document.documentElement.style.cssText = css;
+  getTheme() {
+    console.log('called');
+    return this.theme;
   }
 
-  getTheme() {
-    return this.theme;
+  private setGlobalCSS(css: string) {
+    this.document.documentElement.style.cssText = css;
   }
 
   set slideOptions(options: any) {

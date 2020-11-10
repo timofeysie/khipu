@@ -7,7 +7,7 @@
   </ion-toolbar>
 </ion-header>
 <ion-content>
-  <ion-card text-center>
+  <ion-card class="ion-text-center">
     <ion-card-content>
       <ion-card-title translate>APP_NAME</ion-card-title>
       <ion-icon name="code"></ion-icon> <span translate>Version</span> {{ version }}
@@ -16,11 +16,10 @@
 
   <ion-grid>
     <ion-row>
-      <ion-col text-center>
+      <ion-col class="ion-text-center">
         <ion-button color="medium" (click)="changeTheme('autumn')">Autumn</ion-button>
         <ion-button color="medium" (click)="changeTheme('night')">Dark</ion-button>
         <ion-button color="medium" (click)="changeTheme('neon')">Neon</ion-button>
-        <ion-button color="medium" (click)="changeTheme('aisle_plus')">Aisle Plus</ion-button>
         <ion-button color="medium" (click)="changeTheme('')">Default</ion-button>
       </ion-col>
     </ion-row>
@@ -70,6 +69,8 @@
           </ion-range>
         </ion-item>
       </ion-col>
+    </ion-row>
+    <ion-row>
       <!-- border radius -->
       <ion-col>
         <ion-item lines="none">
@@ -98,7 +99,7 @@
         </ion-item>
       </ion-col>
     </ion-row>
-    <div class="grid" padding>
+    <div class="grid ion-padding">
       <div class="cell">
         <header class="cell-header primary-bg">
           <div class="cell-title">
@@ -168,7 +169,7 @@
       </div>
 
       <!-- color theme -->
-      <div class="cell" *ngIf="themeService">
+      <div class="cell">
         <header class="cell-header">
           <div class="cell-title">
             Primary
@@ -177,15 +178,15 @@
         <main class="cell-content">
           <ion-item lines="none">
             <ion-label>Primary value</ion-label>
-            <ion-badge slot="end">{{ themeService.getTheme().primary }}</ion-badge>
+            <ion-badge slot="end">{{ themeService.theme.primary }}</ion-badge>
           </ion-item>
           <ion-item lines="none">
             <ion-label>tint</ion-label>
-            <ion-badge slot="end" class="primary-tint-bg">{{ themeService.getTheme().primary }}</ion-badge>
+            <ion-badge slot="end" class="primary-tint-bg">{{ themeService.theme.primary }}</ion-badge>
           </ion-item>
           <ion-item lines="none">
             <ion-label>shade</ion-label>
-            <ion-badge slot="end" class="primary-shade-bg">{{ themeService.getTheme().primary }}</ion-badge>
+            <ion-badge slot="end" class="primary-shade-bg">{{ themeService.theme.primary }}</ion-badge>
           </ion-item>
         </main>
         <div class="cell-actions">
@@ -205,7 +206,7 @@
         <main class="cell-content">
           <ion-item lines="none">
             <ion-label>Secondary value</ion-label>
-            <ion-badge slot="end" color="secondary">{{ themeService.getTheme().secondary }}</ion-badge>
+            <ion-badge slot="end" color="secondary">{{ themeService.theme.secondary }}</ion-badge>
           </ion-item>
         </main>
         <div class="cell-actions">
@@ -225,7 +226,7 @@
         <main class="cell-content">
           <ion-item lines="none">
             <ion-label>Tertiary value</ion-label>
-            <ion-badge slot="end" color="tertiary">{{ themeService.getTheme().tertiary }}</ion-badge>
+            <ion-badge slot="end" color="tertiary">{{ themeService.theme.tertiary }}</ion-badge>
           </ion-item>
         </main>
         <div class="cell-actions">
@@ -245,7 +246,7 @@
         <main class="cell-content">
           <ion-item lines="none">
             <ion-label>Medium value</ion-label>
-            <ion-badge slot="end" color="medium">{{ themeService.getTheme().medium }}</ion-badge>
+            <ion-badge slot="end" color="medium">{{ themeService.theme.medium }}</ion-badge>
           </ion-item>
         </main>
         <div class="cell-actions">
@@ -267,7 +268,7 @@
             <ion-label>Dark value</ion-label>
             <ion-badge slot="end" color="dark">
               <span class="dark-contrast">
-                {{ themeService.getTheme().dark }}
+                {{ themeService.theme.dark }}
               </span>
             </ion-badge>
           </ion-item>
@@ -289,7 +290,7 @@
         <main class="cell-content">
           <ion-item lines="none">
             <ion-label>Warning value</ion-label>
-            <ion-badge slot="end" color="warning">{{ themeService.getTheme().warning }}</ion-badge>
+            <ion-badge slot="end" color="warning">{{ themeService.theme.warning }}</ion-badge>
           </ion-item>
         </main>
         <div class="cell-actions">

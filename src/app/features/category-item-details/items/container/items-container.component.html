@@ -10,7 +10,7 @@
 </ion-header>
 
 <ion-content>
-  <div text-center>
+  <div class="ion-text-center">
     <ion-card-content>
       <ion-list *ngFor="let item of (store.state$ | async).items">
         <app-items [item]="item"></app-items>
