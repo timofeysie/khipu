@@ -14,10 +14,14 @@ export const environment = {
   serverUrl: 'https://api.chucknorris.io',
   defaultLanguage: 'en-US',
   supportedLanguages: ['en-US', 'fr-FR'],
-  paginationItemsPerPage: 5
+  sparqlLanguages: [
+    { appLanguage: 'en-US', sparqlLanguage: 'en' },
+    { appLanguage: 'fr-FR', sparqlLanguage: 'fr' }
+  ],
+  paginationItemsPerPage: 9
 };
 
 export const categoriesList: Category[] = [
-    { name: 'fallacies', language: 'en', wd: 'Q186150', wdt: 'P31' },
-    { name: 'cognitive_bias', language: 'en', wd: 'Q1127759', wdt: 'P31' }
+  { name: 'fallacies', label: 'Fallacies', language: 'en', wd: 'Q186150', wdt: 'P31' },
+  { name: 'cognitive_bias', label: 'Cognitive Bias', language: 'en', wd: 'Q1127759', wdt: 'P31' }
 ];

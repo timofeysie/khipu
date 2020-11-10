@@ -7,13 +7,24 @@ import { ItemsContainerComponent } from './items/container/items-container.compo
 import { ItemsComponent } from './items/components/items.component';
 import { ItemsListEndpoint } from './items/items.endpoint';
 import { CategoryItemDetailsRoutingModule } from './category-item-details-routing.module';
-import { CategoriesContainerComponent } from './categories/container/categories-container.component';
-import { CategoryComponent } from './categories/components/category.component';
+import { CategoriesContainerComponent } from './categories/container/categories-list/categories-container.component';
+import { CategoryComponent } from './categories/components/categories-list/category.component';
+import { ReactiveFormsModule } from '@angular/forms';
+import { CategoriesEndpoint } from './categories/categories.endpoint';
+import { AddCategoryContainerComponent } from './categories/container/add-category/add-category-container.component';
+import { AddCategoryComponent } from './categories/components/add-category/add-category.component';
 
 @NgModule({
-  imports: [CommonModule, TranslateModule, IonicModule, CategoryItemDetailsRoutingModule],
+  imports: [CommonModule, TranslateModule, IonicModule, CategoryItemDetailsRoutingModule, ReactiveFormsModule],
   entryComponents: [CategoriesContainerComponent],
-  declarations: [CategoriesContainerComponent, CategoryComponent, ItemsContainerComponent, ItemsComponent],
-  providers: [ItemsListEndpoint]
+  declarations: [
+    CategoriesContainerComponent,
+    CategoryComponent,
+    ItemsContainerComponent,
+    ItemsComponent,
+    AddCategoryContainerComponent,
+    AddCategoryComponent
+  ],
+  providers: [ItemsListEndpoint, CategoriesEndpoint]
 })
 export class CategoryItemDetailsModule {}
