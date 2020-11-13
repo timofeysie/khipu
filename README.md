@@ -40,6 +40,7 @@ npm run electron:build   // Build desktop app
 npm run electron:run     // Run app on electron
 npm run electron:package // Package the app
 http-server -p 8080 -c-1 dist // run the PWA (after a build)
+firebase deploy
 ```
 
 ## Project brief
@@ -87,6 +88,8 @@ The categories directory can be the start of a feature directory which will hold
 
 ### Some previous notes on the pattern
 
+ttps://en.wikipedia.org/api/rest_v1/page/summary/Basic_English#Word_lists
+
 A service that uses the pattern might look like this:
 
 ```
@@ -119,8 +122,8 @@ component stores that contain the states used by a single component (not singlet
 
 Proxy component with no biz logic can use the async pipe
 
-```
-<li *ngFor="let candidate of (store.state$ | async).candidates">
+```html
+<li *ngFor="let candidate of (store.state$ | async).candidates"></li>
 ```
 
 Another article based on the above is [here](https://georgebyte.com/state-management-in-angular-with-observable-store-services/)
@@ -131,7 +134,7 @@ Create a categories component to view the list.
 
 A category has the following properties:
 
-```
+```txt
 category
 language
 wdt
@@ -140,7 +143,7 @@ wd
 
 The language should be the setting from the i18n selector pre-existing in the app.  There are two predetermined categories to start:
 
-```
+```txt
 name=fallacies
 wdt=P31
 wd=Q186150
@@ -154,26 +157,26 @@ This project has a hardwired category of "cognitive biases" which has a lot of t
 
 The lists will need to have pagination, with the number of items per page configured in an options page. The initial categories list will be short, so it's OK to wait until the items lists to implement this, but be aware that this will be part of the state.
 
-# Issue #4: Fetch a list of wikidata items for the selected category
+## Issue #4: Fetch a list of wikidata items for the selected category
 
 Create an Items component to display the list of items for a category.
 
 Categories can be used to construct a sparql query can be created like this:
 
-```
-        SELECT ?${category} ?${category}Label ?${category}Description WHERE {
-            SERVICE wikibase:label {
-                bd:serviceParam wikibase:language "[AUTO_LANGUAGE],${language}".
-            }
-            ?${category} wdt:${wdt} wd:${wd}.
-        }
-        LIMIT 1000
+```SQL
+SELECT ?${category} ?${category}Label ?${category}Description WHERE {
+    SERVICE wikibase:label {
+         bd:serviceParam wikibase:language "[AUTO_LANGUAGE],${language}".
+    }
+    ?${category} wdt:${wdt} wd:${wd}.
+}
+LIMIT 1000
 const url = wdk.sparqlQuery(sparql);
 ```
 
 This will construct a url that will return a result with properties like this.
 
-```
+```json
 "head":{
       "vars":[
          "fallacies",
@@ -220,8 +223,29 @@ Create a details page to show the details of an item selected.
 An item can be used to get a detail page from Wikipedia.
 Wikidata will also hold a list of languages available for each item.  This property can be used to get translated pages.
 
-Detail pages also contain preamble icons with warnings which need to be captures and shown as collapsable icons under the description.
+Detail pages also contain preamble icons with warnings which need to be captures and shown as collapsible icons under the description.
 https://github.com/timofeysie/strumosa-pipe#the-items-api
+
+I'm not sure about the routing for item details. It seems strange now to have categories as the root for it.
+
+```txt
+/categories/item-details/Q295150
+```
+
+The [Conchifolia details page](https://github.com/timofeysie/conchifolia/blob/master/my-dream-app/src/app/pages/detail/detail.page.ts) uses a backendApiService.getDetail(this.title,listLanguage, false) to get the details.
+
+The only comment there is /api/detail/id/lang/leaveCaseAlone.
+
+A sample item uri looks like this: http://www.wikidata.org/entity/Q295150
+
+https://en.wikipedia.org/wiki/Ecological_fallacy
+
+It could also look like this example from Conchifolia:
+https://en.wikipedia.org/wiki/Actor-observer%20bias
+
+Some reasons to get the wikidata page first is we get a list of available languages, and we get the exact url for the Wikipedia page. In the other projects, this was not a straight forward thing, as there were items that had different labels or different formats or would result in redirects. So to simplify that, parsing the wikidata page for the list of languages and Wikipedia uri links is a good idea.
+
+Next, we used various Node server program to get around CORS issues for this. However, we don't want to have to maintain another app to do this. Also, we would have to pay for traffic if there ever was any. Using React Native was the only client that was able to handle the calls without issue.
 
 ## Issue #8: Create a form to enter a new category
 
@@ -358,7 +382,7 @@ npm run serve:sw
 
 To test the service worker in production the app must be hosted somewhere. Deployment from the master branch was done with Firebase like this:
 
-```
+```txt
 m$ firebase init
      ######## #### ########  ######## ########     ###     ######  ########
      ##        ##  ##     ## ##       ##     ##  ##   ##  ##       ##

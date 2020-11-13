@@ -10,6 +10,7 @@ import { QuoteService } from './quote.service';
 })
 export class HomeComponent implements OnInit {
   quote: string | undefined;
+  label: string | undefined;
   isLoading = false;
 
   constructor(private quoteService: QuoteService) {}
@@ -24,7 +25,11 @@ export class HomeComponent implements OnInit {
         })
       )
       .subscribe((quote: string) => {
-        this.quote = quote;
+        console.log('quote', quote);
+        this.quote = quote['entities']['Q295150']['labels']['en'];
+        this.label = quote['entities']['Q295150']['sitelinks']['enwiki'];
+        console.log('quote===', this.quote);
+        console.log('k===', this.label);
       });
   }
 }

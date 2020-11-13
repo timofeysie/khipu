@@ -1,7 +1,5 @@
 <ion-item>
-  <ion-label>
-    <a href="{{ item.uri }}">
-      {{ item.label | titlecase }}
-    </a>
+  <ion-label (click)="gotoItemDetails(item.uri)">
+    {{ item.label | titlecase }}
   </ion-label>
 </ion-item>

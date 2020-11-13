@@ -6,11 +6,17 @@ import { IonicModule } from '@ionic/angular';
 import { ItemsContainerComponent } from './items/container/items-container.component';
 import { ItemsComponent } from './items/components/items.component';
 import { ItemsListEndpoint } from './items/items.endpoint';
+
+import { ItemDetailsContainerComponent } from './item-details/container/item-details/item-details-container.component';
+import { ItemDetailsComponent } from './item-details/components/item-details/item-details.component';
+import { ItemDetailsEndpoint } from './item-details/item-details.endpoint';
+
 import { CategoryItemDetailsRoutingModule } from './category-item-details-routing.module';
 import { CategoriesContainerComponent } from './categories/container/categories-list/categories-container.component';
 import { CategoryComponent } from './categories/components/categories-list/category.component';
 import { ReactiveFormsModule } from '@angular/forms';
 import { CategoriesEndpoint } from './categories/categories.endpoint';
+
 import { AddCategoryContainerComponent } from './categories/container/add-category/add-category-container.component';
 import { AddCategoryComponent } from './categories/components/add-category/add-category.component';
 
@@ -22,9 +28,11 @@ import { AddCategoryComponent } from './categories/components/add-category/add-c
     CategoryComponent,
     ItemsContainerComponent,
     ItemsComponent,
+    ItemDetailsContainerComponent,
+    ItemDetailsComponent,
     AddCategoryContainerComponent,
     AddCategoryComponent
   ],
-  providers: [ItemsListEndpoint, CategoriesEndpoint]
+  providers: [ItemsListEndpoint, CategoriesEndpoint, ItemDetailsEndpoint]
 })
 export class CategoryItemDetailsModule {}

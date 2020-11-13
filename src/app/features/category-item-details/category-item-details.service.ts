@@ -4,26 +4,25 @@ import { Observable, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 
 const routes = {
-  quote: (c: RandomQuoteContext) => `/Special:EntityData/Q295150.json`
+  entities: (c: WikidataContext) => `/Special:EntityData/Q295150${c.qcode}.json`
 };
 
-export interface RandomQuoteContext {
-  // The quote's category: 'dev', 'explicit'...
-  category: string;
+export interface WikidataContext {
+  qcode: string;
 }
 
 @Injectable({
   providedIn: 'root'
 })
-export class QuoteService {
+export class CategoryItemDetailsService {
   constructor(private httpClient: HttpClient) {}
 
-  getRandomQuote(context: RandomQuoteContext): Observable<string> {
+  getRandomQuote(context: WikidataContext): Observable<string> {
     return this.httpClient
       .cache()
-      .get(routes.quote(context))
+      .get(routes.entities(context))
       .pipe(
-        map((body: any) => body),
+        map((body: any) => body.value),
         catchError(() => of('Error, could not load joke :-('))
       );
   }

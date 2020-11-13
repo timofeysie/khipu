@@ -11,7 +11,7 @@ export const environment = {
   production: false,
   hmr: false,
   version: env.npm_package_version,
-  serverUrl: 'https://api.chucknorris.io',
+  serverUrl: 'https://www.wikidata.org/wiki',
   defaultLanguage: 'en-US',
   supportedLanguages: ['en-US', 'fr-FR'],
   sparqlLanguages: [
