@@ -3,13 +3,20 @@
     <ion-buttons slot="start">
       <ion-menu-button></ion-menu-button>
     </ion-buttons>
-    <ion-title><span translate>Details</span></ion-title>
+    <ion-title
+      ><span translate
+        ><span translate *ngIf="label">{{ label['value'] }}</span></span
+      ></ion-title
+    >
   </ion-toolbar>
 </ion-header>
 <ion-content>
-  <ion-card class="ion-text-center">
+  <ion-card class="ion-text-center" *ngIf="!isLoading">
     <ion-card-content>
-      <p *ngIf="label">{{ label['value'] }}</p>
+      <span translate *ngIf="label">{{ label['title'] }}</span>
+      <div *ngFor="let alias of aliases">
+        {{ alias.value }}
+      </div>
     </ion-card-content>
     <p *ngIf="siteLink">
       <a href="{{ siteLink['url'] }}">{{ siteLink['url'] }}</a>

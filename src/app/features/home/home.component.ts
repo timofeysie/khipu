@@ -29,7 +29,6 @@ export class HomeComponent implements OnInit {
         this.quote = quote['entities']['Q295150']['labels']['en'];
         this.label = quote['entities']['Q295150']['sitelinks']['enwiki'];
         this.aliases = quote['entities']['Q295150']['aliases']['en'];
-        console.log('aliases', this.aliases);
       });
   }
 }

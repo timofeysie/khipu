@@ -5,6 +5,10 @@ import { finalize } from 'rxjs/operators';
 import { CategoryItemDetailsService } from '../../../category-item-details.service';
 import { ItemDetailsStore } from '../../item-details-store';
 
+interface Label {
+  language: string;
+  value: string;
+}
 @Component({
   selector: 'app-categories',
   templateUrl: './item-details-container.component.html',
@@ -13,23 +17,20 @@ import { ItemDetailsStore } from '../../item-details-store';
 })
 export class ItemDetailsContainerComponent implements OnInit {
   isLoading = false;
-  label: string;
+  label: Label;
   siteLink: string;
+  aliases: string | undefined;
   constructor(
     public store: ItemDetailsStore,
     private categoryItemDetailsService: CategoryItemDetailsService,
     private activatedRoute: ActivatedRoute
-  ) {
-    console.log('constructed');
-  }
+  ) {}
 
   ngOnInit() {
     // this.store.fetchList();
     this.activatedRoute.paramMap.subscribe(params => {
-      console.log('qcodeer', params.get('qcode'));
       this.getSomething(params.get('qcode'));
     });
-    console.log(' this.store', this.store);
   }
 
   getSomething(_qcode: string) {
@@ -41,10 +42,12 @@ export class ItemDetailsContainerComponent implements OnInit {
         })
       )
       .subscribe((details: string) => {
-        console.log('details', details);
         this.label = details['entities'][_qcode]['labels']['en'];
         this.siteLink = details['entities'][_qcode]['sitelinks']['enwiki'];
-        console.log('k===', this.label);
+        if (details['entities']['Q295150']) {
+          console.log("details['entities']", details['entities']);
+          this.aliases = details['entities']['Q295150']['aliases']['en'];
+        }
       });
   }
 }
