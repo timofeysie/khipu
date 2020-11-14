@@ -4,7 +4,7 @@ import { Observable, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 
 const routes = {
-  entities: (c: WikidataContext) => `/Special:EntityData/Q295150${c.qcode}.json`
+  wikidata: (c: WikidataContext) => `/Special:EntityData/${c.qcode}.json`
 };
 
 export interface WikidataContext {
@@ -17,12 +17,12 @@ export interface WikidataContext {
 export class CategoryItemDetailsService {
   constructor(private httpClient: HttpClient) {}
 
-  getRandomQuote(context: WikidataContext): Observable<string> {
+  getItemDetails(context: WikidataContext): Observable<string> {
     return this.httpClient
       .cache()
-      .get(routes.entities(context))
+      .get(routes.wikidata(context))
       .pipe(
-        map((body: any) => body.value),
+        map((body: any) => body),
         catchError(() => of('Error, could not load joke :-('))
       );
   }

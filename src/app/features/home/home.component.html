@@ -13,10 +13,11 @@
       <ion-card-title>
         <span translate *ngIf="label">{{ label['title'] }}</span>
       </ion-card-title>
-      <p>
-        <app-loader [isLoading]="isLoading"></app-loader>
-        <q *ngIf="quote" [hidden]="isLoading">{{ quote['value'] }}</q>
-      </p>
+      <app-loader [isLoading]="isLoading"></app-loader>
+      <p *ngIf="quote" [hidden]="isLoading"></p>
+      <div *ngFor="let alias of aliases">
+        {{ alias.value }}
+      </div>
       <p *ngIf="label">
         <a href="{{ label['url'] }}">{{ label['url'] }}</a>
       </p>

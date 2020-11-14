@@ -11,6 +11,7 @@ import { QuoteService } from './quote.service';
 export class HomeComponent implements OnInit {
   quote: string | undefined;
   label: string | undefined;
+  aliases: string | undefined;
   isLoading = false;
 
   constructor(private quoteService: QuoteService) {}
@@ -18,18 +19,17 @@ export class HomeComponent implements OnInit {
   ngOnInit() {
     this.isLoading = true;
     this.quoteService
-      .getRandomQuote({ category: 'dev' })
+      .getRandomQuote({ category: 'Q295150' })
       .pipe(
         finalize(() => {
           this.isLoading = false;
         })
       )
       .subscribe((quote: string) => {
-        console.log('quote', quote);
         this.quote = quote['entities']['Q295150']['labels']['en'];
         this.label = quote['entities']['Q295150']['sitelinks']['enwiki'];
-        console.log('quote===', this.quote);
-        console.log('k===', this.label);
+        this.aliases = quote['entities']['Q295150']['aliases']['en'];
+        console.log('aliases', this.aliases);
       });
   }
 }

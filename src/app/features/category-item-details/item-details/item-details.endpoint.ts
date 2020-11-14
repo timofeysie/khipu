@@ -16,6 +16,8 @@ export class ItemDetailsEndpoint {
   }
 
   fetchDetails(qcode: string, language: string): Observable<any> {
+    console.log('qcode', qcode);
+    console.log('lang', language);
     let response: Observable<any> = new Observable(observer => {
       let localItemDetails = JSON.parse(localStorage.getItem('categories'));
       observer.next(localItemDetails);

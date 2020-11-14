@@ -247,6 +247,10 @@ Some reasons to get the wikidata page first is we get a list of available langua
 
 Next, we used various Node server program to get around CORS issues for this. However, we don't want to have to maintain another app to do this. Also, we would have to pay for traffic if there ever was any. Using React Native was the only client that was able to handle the calls without issue.
 
+### Steps for creating the details
+
+[This is the issue](https://github.com/timofeysie/khipu/issues/7) for the details.
+
 ## Issue #8: Create a form to enter a new category
 
 This will just be a simple input to let the user enter a new category. It will end up being a SPARQL query such as 'list of <category>' where <category> is a plural word such as "cognitive biases" or "fallacies".

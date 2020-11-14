@@ -3,15 +3,16 @@
     <ion-buttons slot="start">
       <ion-menu-button></ion-menu-button>
     </ion-buttons>
-    <ion-title><span translate>Categories</span></ion-title>
+    <ion-title><span translate>Details</span></ion-title>
   </ion-toolbar>
 </ion-header>
 <ion-content>
   <ion-card class="ion-text-center">
     <ion-card-content>
-      <ion-list *ngFor="let category of (store.state$ | async).categories">
-        <categories-category [category]="category"></categories-category>
-      </ion-list>
+      <p *ngIf="label">{{ label['value'] }}</p>
     </ion-card-content>
+    <p *ngIf="siteLink">
+      <a href="{{ siteLink['url'] }}">{{ siteLink['url'] }}</a>
+    </p>
   </ion-card>
 </ion-content>

@@ -17,7 +17,6 @@ export class ItemsComponent implements OnInit {
   gotoItemDetails(itemUri: string) {
     const lastSlash = itemUri.lastIndexOf('/');
     const qCode = itemUri.substring(lastSlash + 1, itemUri.length);
-    console.log('q', itemUri);
     this.router.navigate(['/categories/item-details/' + qCode]);
   }
 }
