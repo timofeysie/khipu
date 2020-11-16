@@ -1,7 +1,15 @@
+import { Alias } from './alias';
 export interface ItemDetails {
-  name: string;
-  label?: string;
-  language: string;
-  wdt: string;
-  wd: string;
+  aliases: any;
+  claims: any;
+  descriptions: any;
+  id: string;
+  labels: any;
+  lastrevid: number;
+  modified: string;
+  ns: number;
+  pageid: number;
+  sitelinks: any;
+  title: string;
+  type: string;
 }

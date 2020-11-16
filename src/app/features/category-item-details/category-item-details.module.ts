@@ -9,7 +9,6 @@ import { ItemsListEndpoint } from './items/items.endpoint';
 
 import { ItemDetailsContainerComponent } from './item-details/container/item-details/item-details-container.component';
 import { ItemDetailsComponent } from './item-details/components/item-details/item-details.component';
-import { ItemDetailsEndpoint } from './item-details/item-details.endpoint';
 
 import { CategoryItemDetailsRoutingModule } from './category-item-details-routing.module';
 import { CategoriesContainerComponent } from './categories/container/categories-list/categories-container.component';
@@ -33,6 +32,6 @@ import { AddCategoryComponent } from './categories/components/add-category/add-c
     AddCategoryContainerComponent,
     AddCategoryComponent
   ],
-  providers: [ItemsListEndpoint, CategoriesEndpoint, ItemDetailsEndpoint]
+  providers: [ItemsListEndpoint, CategoriesEndpoint]
 })
 export class CategoryItemDetailsModule {}

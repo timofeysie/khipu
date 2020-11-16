@@ -1,20 +1,22 @@
 import { Injectable } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { finalize } from 'rxjs/operators';
 import { Store } from '@app/store';
 import { ItemDetailsState } from './item-details-store-state';
-import { ItemDetailsEndpoint } from './item-details.endpoint';
 import { ItemDetails } from '@app/core/interfaces/item-details';
 import { map } from 'rxjs/operators';
 import { I18nService } from '@app/core';
 import { environment } from '@env/environment.prod';
+import { CategoryItemDetailsService } from '../category-item-details.service';
 
 @Injectable()
 export class ItemDetailsStore extends Store<ItemDetailsState> {
+  ENTITIES_KEY = 'entities';
   constructor(
-    private itemDetailsEndpoint: ItemDetailsEndpoint,
     private i18nService: I18nService,
     private router: Router,
-    private activatedRoute: ActivatedRoute
+    private activatedRoute: ActivatedRoute,
+    private categoryItemDetailsService: CategoryItemDetailsService
   ) {
     super(new ItemDetailsState());
     this.fetchDetails();
@@ -31,25 +33,11 @@ export class ItemDetailsStore extends Store<ItemDetailsState> {
     });
   }
 
-  fetchDetailsFromEndpoint(qcode: string, language: string) {
-    this.itemDetailsEndpoint
-      .fetchDetails(qcode, language)
-      .pipe(
-        map((rawItemDetailsList: ItemDetails[]) => {
-          const lst: ItemDetails[] = rawItemDetailsList.map(rawItemDetails => {
-            const itemDetails: ItemDetails = { ...rawItemDetails, language: language };
-            return itemDetails;
-          });
-          return lst;
-        })
-      )
-      .subscribe((itemDetailsFromEndpoint: ItemDetails[]) => {
-        this.state.itemDetails = itemDetailsFromEndpoint;
-      });
-  }
-
-  saveNewItemDetails(newItemDetails: ItemDetails) {
-    this.setState({ ...this.state, itemDetails: [newItemDetails] });
-    this.itemDetailsEndpoint.addItemDetails(newItemDetails);
+  fetchDetailsFromEndpoint(_qcode: string, language: string) {
+    this.categoryItemDetailsService.getItemDetails({ qcode: _qcode }).subscribe((response: string) => {
+      const itemDetails: ItemDetails = response[this.ENTITIES_KEY][_qcode];
+      this.state.itemDetails = itemDetails;
+      console.log('stored state', this.state);
+    });
   }
 }

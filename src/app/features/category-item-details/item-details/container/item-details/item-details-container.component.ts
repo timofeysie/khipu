@@ -1,6 +1,5 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-// import { categoriesList } from '@env/environment';
 import { finalize } from 'rxjs/operators';
 import { CategoryItemDetailsService } from '../../../category-item-details.service';
 import { ItemDetailsStore } from '../../item-details-store';
@@ -10,7 +9,7 @@ interface Label {
   value: string;
 }
 @Component({
-  selector: 'app-categories',
+  selector: 'app-item-details-container',
   templateUrl: './item-details-container.component.html',
   styleUrls: ['./item-details-container.component.scss'],
   providers: [ItemDetailsStore]
@@ -28,9 +27,9 @@ export class ItemDetailsContainerComponent implements OnInit {
 
   ngOnInit() {
     // this.store.fetchList();
-    this.activatedRoute.paramMap.subscribe(params => {
-      this.getSomething(params.get('qcode'));
-    });
+    // this.activatedRoute.paramMap.subscribe(params => {
+    //   this.getSomething(params.get('qcode'));
+    // });
   }
 
   getSomething(_qcode: string) {

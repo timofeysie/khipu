@@ -8,6 +8,7 @@ import { ItemDetails } from '@app/core/interfaces/item-details';
 })
 export class ItemDetailsComponent implements OnInit {
   @Input() itemDetails: ItemDetails;
+  @Input() language = 'en';
 
   constructor() {}
 

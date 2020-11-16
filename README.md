@@ -251,6 +251,24 @@ Next, we used various Node server program to get around CORS issues for this. Ho
 
 [This is the issue](https://github.com/timofeysie/khipu/issues/7) for the details.
 
+There is a list of what was done, and what is remaining on the issue.
+
+### Still to do
+
+1. Move the service operation into the item-detail.endpoint file.
+2. Create a state for statistics on detail view to track activity.
+3. Get a list of available languages and create a select in the header.
+4. Replace the hard coded language settings with an item from the list based on the current language saved option.
+5. Parse the Wikipedia page for sections and display the description.
+6. Save the description in the state and use part of it as a slide in element in the category-items
+7. Add interfaces for details.
+8. Fix the unit tests.
+9. Try a red-green-refactor session to start to build up unit test code coverage.
+
+Item details has been a blocker, so all these things can happen now. Probably create some new issues to handle most of these.
+
+For #1, a service was created to be shared for the category-item-details module. I wasn't feeling the need to have a separate endpoint file which acted as the service.
+
 ## Issue #8: Create a form to enter a new category
 
 This will just be a simple input to let the user enter a new category. It will end up being a SPARQL query such as 'list of <category>' where <category> is a plural word such as "cognitive biases" or "fallacies".

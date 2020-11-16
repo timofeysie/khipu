@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { ItemDetails } from '@app/core/interfaces/item-details';
 import { Observable, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 
@@ -23,7 +24,7 @@ export class CategoryItemDetailsService {
       .get(routes.wikidata(context))
       .pipe(
         map((body: any) => body),
-        catchError(() => of('Error, could not load joke :-('))
+        catchError(() => of('Error, could not load details.'))
       );
   }
 }

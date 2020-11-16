@@ -1,3 +1,16 @@
-<ion-item color="primary">
-  Coming soon.
+<ion-item color="light">
+  <ion-card class="ion-text-center" *ngIf="itemDetails">
+    <ion-card-content *ngIf="itemDetails.labels['en']">
+      <ion-card-header>
+        <p *ngIf="itemDetails.sitelinks['enwiki']">
+          <a href="{{ itemDetails.sitelinks['enwiki']['url'] }}"> {{ itemDetails.sitelinks['enwiki']['title'] }}</a>
+        </p>
+      </ion-card-header>
+      <div *ngIf="itemDetails.aliases">
+        <div *ngFor="let alias of itemDetails.aliases[language]">
+          {{ alias.value }}
+        </div>
+      </div>
+    </ion-card-content>
+  </ion-card>
 </ion-item>

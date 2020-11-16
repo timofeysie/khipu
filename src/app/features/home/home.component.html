@@ -11,7 +11,7 @@
     <img class="logo" src="assets/ngx-rocket-logo.png" alt="angular logo" />
     <ion-card-content>
       <ion-card-title>
-        <span translate *ngIf="label">{{ label['title'] }}</span>
+        <span *ngIf="label">{{ label['title'] }}</span>
       </ion-card-title>
       <app-loader [isLoading]="isLoading"></app-loader>
       <p *ngIf="quote" [hidden]="isLoading"></p>
