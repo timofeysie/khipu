@@ -1,10 +1,8 @@
 import { Injectable } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
-import { finalize } from 'rxjs/operators';
+import { ActivatedRoute } from '@angular/router';
 import { Store } from '@app/store';
 import { ItemDetailsState } from './item-details-store-state';
 import { ItemDetails } from '@app/core/interfaces/item-details';
-import { map } from 'rxjs/operators';
 import { I18nService } from '@app/core';
 import { environment } from '@env/environment.prod';
 import { CategoryItemDetailsService } from '../category-item-details.service';
@@ -14,7 +12,6 @@ export class ItemDetailsStore extends Store<ItemDetailsState> {
   ENTITIES_KEY = 'entities';
   constructor(
     private i18nService: I18nService,
-    private router: Router,
     private activatedRoute: ActivatedRoute,
     private categoryItemDetailsService: CategoryItemDetailsService
   ) {

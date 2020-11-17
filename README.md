@@ -269,6 +269,76 @@ Item details has been a blocker, so all these things can happen now. Probably cr
 
 For #1, a service was created to be shared for the category-item-details module. I wasn't feeling the need to have a separate endpoint file which acted as the service.
 
+### Regarding languages
+
+At first it seemed like we should get the language from the current state where the app strings will be translated as their bundle translations.
+
+But we actually want to be able to support a foreign language student who has a native language and languages being learned. For this reason, we will need a different approach.
+
+Each list potential could have it's own language setting so that the user would see the keys as one thing and the details as another. I can think of a few variations on this.
+
+An item on a list of category items looks like this:
+
+```js
+export interface Item {
+  categoryType?: string;
+  label: string;
+  description: string;
+  type: string;
+  uri: string;
+}
+```
+
+We cam imagine the following situation: A student has a list of English words that they want to translate into French. If there is no language set already, then their current app languages settings can be used as their "default" or native language. The native language to target language is a special kind of relationship, but for now, we will skip that.
+
+We will also want to track the number of times and dates each detail is visited. Do we want to combine the language chosen for the item detail with statistics about it? That means we also need to implement Firebase Oath login and a user preferences db table. This could be considered the start of a premium feature.
+
+But we also want a free mode which will store the preferences in the local storage and rely on their PWA installation to keep track of their choices and stats. A nice free version would also let you export your settings and copy them into another installation of the app. Or better yet, keep track of their current state and let them access the same from various devices as a premium feature.
+
+The problem with the premium feature is of course financial. If too many people want to use the app, then it starts to cost money which has to be passed along, and there is then a much longer todo list to support this.
+
+So after this discussion, it seems like the starting point is just local storage. Put a language selector in the header for each item detail filled with the choices available in the wikidata file and store the choice. The first loaded choice will be from the app settings, and we will deal with what to do with changes later. For now just pretend like that's not an issue.
+
+Thanks for listening, rubber ducky.
+
+The options language setting is not in the local storage unless you make a choice on the options page. So the easy default is assume English unless there is a choice made there.
+
+"Excès de confiance" exists in French, but the other items on the list just show the Q-code, and going to the detail page shows a blank screen, so we will also need a way to let the user know that there is no info in that language.
+
+If you look at the results of the details call, we see 'fr' is not on the list.
+
+id: "Q16948492"
+labels:
+ar: {language: "ar", value: "انحياز لللآلة"}
+cs: {language: "cs", value: "Automation bias"}
+en: {language: "en", value: "Automation bias"}
+fa: {language: "fa", value: "سوگیری خودکارسازی"}
+ja: {language: "ja", value: "自動化バイアス"}
+
+sitelinks:
+arwiki: {site: "arwiki", title: "انحياز للآلة", badges: Array(0), url: "https://ar.wikipedia.org/wiki/%D8%A ..."}
+cswiki: {site: "cswiki", title: "Automation bias", badges: Array(0), url: "https://cs.wikipedia.org/wiki/Automation_bias"}
+enwiki: {site: "enwiki", title: "Automation bias", badges: Array(0), url: "https://en.wikipedia.org/wiki/Automation_bias"}
+fawiki: {site: "fawiki", title: "سوگیری خودکارسازی", badges: Array(0), url: "https://fa.wikipedia.org/wiki/%D8%B ..."}
+
+Also there is a label in Japanese, but no link to a Wikipedia page. That's another issue.
+
+So then, we want a list of languages available, do we have to merge these lists to get it? Is there a case where there is a link in Japanese, but no label?
+
+We could show the available languages for the label and then say there is no Wikipedia page for it, but if there is a link for a language without a label, the user will never see that option.
+
+Food for thought.
+
+Another thing about the language select currently is that is lists the language abbreviation, and the item label itself translated into the language in question.
+
+We could translate the code and just show the available language by mapping the code to an array of full text language labels. Give it some thought.
+
+Also, the Ionic select is less than perfect. [This issue](https://github.com/ionic-team/ionic-framework/issues/18487) describes a bug with Windows desktop where you can't scroll. I can however use the keyboard arrows.
+
+Also, the size is too small and difficult to change. Probably we want another page or our own custom select to replace this. The issue has been open for more than a year now so I can see nothing has changed at Ionic, which like many is a company masquerading as an open source project. No offence, as this is a good business model in my mind, but not so good for developers who need to leave the narrow path of working features.
+
+Another issue is that the value of the select is not shown on page load. It would be nice to use it as the title on the header, as that works well once selected. Always more to do!
+
 ## Issue #8: Create a form to enter a new category
 
 This will just be a simple input to let the user enter a new category. It will end up being a SPARQL query such as 'list of <category>' where <category> is a plural word such as "cognitive biases" or "fallacies".

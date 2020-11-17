@@ -1,3 +1,19 @@
 .specific-content {
   height: 100%;
 }
+.alert-wrapper {
+  width: 100%;
+}
+.alert-radio-label {
+  margin-left: -20px;
+}
+.alert-radio-icon {
+  margin-left: -20px;
+}
+.alert-button-inner {
+  margin-left: -20px;
+}
+.selector {
+  --background: #{--primary};
+  width: 400px;
+}

@@ -1,6 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
-import { finalize } from 'rxjs/operators';
+import { I18nService } from '@app/core';
 import { CategoryItemDetailsService } from '../../../category-item-details.service';
 import { ItemDetailsStore } from '../../item-details-store';
 
@@ -19,34 +18,15 @@ export class ItemDetailsContainerComponent implements OnInit {
   label: Label;
   siteLink: string;
   aliases: string | undefined;
-  constructor(
-    public store: ItemDetailsStore,
-    private categoryItemDetailsService: CategoryItemDetailsService,
-    private activatedRoute: ActivatedRoute
-  ) {}
-
-  ngOnInit() {
-    // this.store.fetchList();
-    // this.activatedRoute.paramMap.subscribe(params => {
-    //   this.getSomething(params.get('qcode'));
-    // });
+  language: string;
+  constructor(public store: ItemDetailsStore, private i18nService: I18nService) {
+    this.language = this.i18nService.language.substring(0, 2);
   }
 
-  getSomething(_qcode: string) {
-    this.categoryItemDetailsService
-      .getItemDetails({ qcode: _qcode })
-      .pipe(
-        finalize(() => {
-          this.isLoading = false;
-        })
-      )
-      .subscribe((details: string) => {
-        this.label = details['entities'][_qcode]['labels']['en'];
-        this.siteLink = details['entities'][_qcode]['sitelinks']['enwiki'];
-        if (details['entities']['Q295150']) {
-          console.log("details['entities']", details['entities']);
-          this.aliases = details['entities']['Q295150']['aliases']['en'];
-        }
-      });
+  ngOnInit() {}
+
+  updateLanguage(event: any) {
+    console.log('eve', event.detail.value);
+    this.language = event.detail.value;
   }
 }
