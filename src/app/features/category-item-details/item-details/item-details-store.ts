@@ -36,15 +36,22 @@ export class ItemDetailsStore extends Store<ItemDetailsState> {
       this.state.itemDetails = itemDetails;
       console.log('stored state', this.state);
       const title = this.getTitle(itemDetails, language);
-      this.fetchDescription(title, language);
+      if (title) {
+        this.fetchDescription(title, language);
+      }
     });
   }
 
   getTitle(itemDetails: any, language: string) {
-    const link: string = itemDetails.sitelinks[language + 'wiki']['url'];
-    const titleStart = link.lastIndexOf('/');
-    const title = link.substring(titleStart + 1, link.length);
-    return title;
+    console.log('===', [language + 'wiki']);
+    if (itemDetails.sitelinks[language + 'wiki']) {
+      const link: string = itemDetails.sitelinks[language + 'wiki']['url'];
+      const titleStart = link.lastIndexOf('/');
+      const title = link.substring(titleStart + 1, link.length);
+      return title;
+    } else {
+      return null;
+    }
   }
 
   fetchDescription(_title: string, _language: string) {

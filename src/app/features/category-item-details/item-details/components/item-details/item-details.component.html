@@ -7,6 +7,9 @@
             {{ itemDetails.sitelinks[language + 'wiki']['title'] }}</a
           >
         </p>
+        <p class="title_no_link" *ngIf="itemDetails.labels[language]">
+          {{ itemDetails.labels[language]['value'] }}
+        </p>
       </ion-card-header>
       <div *ngIf="itemDetails.aliases">
         Aliases:
@@ -19,7 +22,7 @@
     </ion-card-content>
   </ion-card>
 </ion-item>
-<ion-card>
+<ion-card *ngIf="description">
   <!-- <img src="./madison.jpg" /> -->
   <ion-card-header>
     <ion-card-subtitle></ion-card-subtitle>

@@ -1,5 +1,7 @@
 # khipu
 
+An e-learning project to work with Wikipedia content.
+
 This project was generated with [ngX-Rocket](https://github.com/ngx-rocket/generator-ngx-rocket/)
 version 7.1.0
 
@@ -20,6 +22,10 @@ version 7.1.0
 - [AD B2C Implicit Grant Flow](#aD-B2C-Implicit-Grant-Flow)
 - [The Service Worker](#the-Service-Worker)
 - [Original README](#original-README)
+
+Please note this list is not complete. There are a number of issues opened and completed on the GitHub that are listed below.
+
+Current work is ongoing for [Issue #25 Get the description of a detail page](#Issue-#25-get-the-description-of-a-detail-page). Rather than create links for all these in the table of contents, they should be deleted or moved somewhere else. Since we are creating a React app to do the same thing as this project, having the list of tasks to do is also an important part. So the documentation of the work done is also a priority.
 
 ## Workflow
 
@@ -88,11 +94,11 @@ The categories directory can be the start of a feature directory which will hold
 
 ### Some previous notes on the pattern
 
-ttps://en.wikipedia.org/api/rest_v1/page/summary/Basic_English#Word_lists
+https://en.wikipedia.org/api/rest_v1/page/summary/Basic_English#Word_lists
 
 A service that uses the pattern might look like this:
 
-```
+```js
 onAddTodo(description) {
     this.todoStore.addTodo(newTodo)
         .subscribe(
@@ -255,13 +261,13 @@ There is a list of what was done, and what is remaining on the issue.
 
 ### Still to do
 
-1. Move the service operation into the item-detail.endpoint file.
+1. (done) Move the service operation into the item-detail.endpoint file.
 2. Create a state for statistics on detail view to track activity.
-3. Get a list of available languages and create a select in the header.
-4. Replace the hard coded language settings with an item from the list based on the current language saved option.
-5. Parse the Wikipedia page for sections and display the description.
-6. Save the description in the state and use part of it as a slide in element in the category-items
-7. Add interfaces for details.
+3. (done) Get a list of available languages and create a select in the header.
+4. (done) Replace the hard coded language settings with an item from the list based on the current language saved option.
+5. (done) Parse the Wikipedia page for sections and display the description.
+6. Save the description in the state and use part of it as a slide in element in the category-items.
+7. (done) Add interfaces for details.
 8. Fix the unit tests.
 9. Try a red-green-refactor session to start to build up unit test code coverage.
 
@@ -338,6 +344,8 @@ Also, the Ionic select is less than perfect. [This issue](https://github.com/ion
 Also, the size is too small and difficult to change. Probably we want another page or our own custom select to replace this. The issue has been open for more than a year now so I can see nothing has changed at Ionic, which like many is a company masquerading as an open source project. No offence, as this is a good business model in my mind, but not so good for developers who need to leave the narrow path of working features.
 
 Another issue is that the value of the select is not shown on page load. It would be nice to use it as the title on the header, as that works well once selected. Always more to do!
+
+### Adding the description to the item in the item list
 
 ## Issue #8: Create a form to enter a new category
 

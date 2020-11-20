@@ -15,3 +15,7 @@ table.box-More_citations_needed {
 .references {
   display: none;
 }
+
+.title_no_link::first-letter {
+  text-transform: uppercase;
+}
