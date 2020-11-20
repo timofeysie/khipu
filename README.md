@@ -9,7 +9,7 @@ version 7.1.0
 - [Project brief](#project-brief)
 - [Observable Store Pattern](#observable-Store-Pattern)
 - [Implement categories from a static list](#implement-categories-from-a-static-list)
-- [Ffetch a list of wikidata items for the selected category](#fetch-a-list-of-wikidata-items-for-the-selected-category)
+- [Fetch a list of wikidata items for the selected category](#fetch-a-list-of-wikidata-items-for-the-selected-category)
 - [Get the page of wikipedia for the category and parse it for the list](#get-the-page-of-wikipedia-for-the-category-and-parse-it-for-the-list)
 - [Merge the two lists](#merge-the-two-lists)
 - [Create a detail page for a selected item](#create-a-detail-page-for-a-selected-item)
@@ -47,7 +47,7 @@ firebase deploy
 
 This project is to create a tool that can be used in e-learning to automatically generate lists of items from Wikipedia.
 
-These list can then be exported and used by educators in their favourite e-learning application such as Moodle or Canvas.
+These list can then be exported and used by educators in their favorite e-learning application such as Moodle or Canvas.
 
 I have implemented most of the functionality in various other projects using a variety of methods in both Angular and React so I have some example implementations of features needed for this project.
 
@@ -358,6 +358,94 @@ It will be helpful to run the SPARQL query for the user and show the some info a
 ## Issue #10: Add the category to the category list
 
 Add the new category to the list of categories.
+
+## Issue #25 Get the description of a detail page
+
+An example that returns a json string with a description.
+
+Here is the uri:
+
+```uri
+https://en.wikipedia.org/w/api.php?format=json&action=query&prop=extracts&exintro&explaintext&redirects=1&titles=Correlation_does_not_imply_causation
+```
+
+The result:
+
+```json
+{
+  "batchcomplete": "",
+  "query": {
+    "normalized": [
+      {
+        "from": "Correlation_does_not_imply_causation",
+        "to": "Correlation does not imply causation"
+      }
+    ],
+    "pages": {
+      "39834": {
+        "pageid": 39834,
+        "ns": 0,
+        "title": "Correlation does not imply causation",
+        "extract": "In statistics, the phrase \"correlation does not imply ... tests for causality, including the Granger causality test and convergent cross mapping."
+      }
+    }
+  }
+}
+```
+
+I hate how they use the id as the property. Anyhow, if you try to get that result in an Angular service, you will get the following error:
+
+```txt
+Access to XMLHttpRequest at 'https://en.wikipedia.org/w/api.php%20%20%20%20?format=json&action=query&prop=extracts&exintro&explaintext&redirects=1&titles=Q295150' from origin 'http://localhost:4200' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.
+```
+
+As noted before, React Native didn't have this problem. Otherwise we have used a node server app to make the call and send the results back to the client app in the browser.
+
+We have done this a few different times. With vanilla JS, using TypeScript, following the NodeJS lengthy best-practices document, and also using serverless. They are all at different states of implementation. Time to see which one will be chosen to use here in the Khipu project.
+
+- [Conchifolia](https://github.com/timofeysie/conchifolia) on Heroku in Vanilla JS.
+- Quallasu on Azure
+  The console will then show endpoints in the Service Information section.
+- Calasaya on Azure, now defunct
+- [Tiahuanaco](https://github.com/timofeysie/tiahuanaco) on AWS using the [serverless stack](https://serverless-stack.com/) docs and uses a dynamodb to store some results.
+
+Conchifolia seems to have the most functionality. It deals with a lot of the redirect issues that you get when using the title. Using the Wikidata page which has the links for the Wikipedia pages in various languages should negate the need for a lot of that.
+
+I say Vanilla JS, but the app is layered nicely with controllers, endpoints, models, routes and utilities.
+
+It has the functionality we need to get descriptions, remove preambles and a lot of good stuff. So I think this is the one we will be trying to get working again. It works locally, but there is a server error reported from the host, so that needs to be fixed.
+
+I spoke too soon about the Conchifolia node app being layered. It's all one file and very old school. A simple front end solution could be looked at for now.
+
+### Description content
+
+There are three main parts to the description content: preambles, description and references.
+
+What I call the pre-ables are a group of icons that alert the user about such things as citations needed and problems in the content, etc. We want to move the icons to the bottom, hide the text and make them clickable.
+
+The references could also be expandable somehow.
+
+I'm wondering now about where to break up the description markup. Rather than adding crap onto the currently working server app, I gave a shot at creating a directive to put on the tag used like this:
+
+```html
+<p descriptionDirective [innerHTML]="description"></p>
+```
+
+However, it seems like, since the content is asynchronous, we can't really operate on it in the constructor. Then, to make matters worse, the onChange function doesn't get called. I guess it requires an input directive. We could listen for a DOM event. And which one would that be?
+
+Suddenly the crappy Node app is starting to sound worth jumping in to. At least it can be used in any app, since we really should be writing this in React. It will come. For right now a demo of some of the functionality will help answer some UX questions about the whole enterprise.
+
+Also, the directive approach is not idea because we not only want to show parts of the content, but use it in various ways. For example, the description will be used to make a map with the item - description using the ion-item-sliding component.
+
+Then, the citations have icons, and we want to hide the text and make the icons clickable. And probably put them at the bottom.
+
+The directive could still be used, for example in making the icons clickable.
+
+Right now, the styles are not being observed. This behavior is normal. The class added to innerHTML is ignored because by default the encapsulation is Emulated. Which means Angular prevents styles from intercepting inside and outside of the component. We have to change the encapsulation to None, and then we can style the innerHtml content.
+
+This works to just hide the unwanted content for now. You can always click on the link to go to the actual Wikipedia page.
+
+The goal of getting the description in the app instead of a re-direct is so that it can be added to a slide out section in the item list. The best place to do this is where the data comes in from the API call and added to the store.
 
 ## Creating the app
 

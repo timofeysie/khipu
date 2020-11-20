@@ -5,11 +5,18 @@ import { Observable, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 
 const routes = {
-  wikidata: (c: WikidataContext) => `/Special:EntityData/${c.qcode}.json`
+  wikidata: (c: WikidataContext) => `www.wikidata.org/wiki/Special:EntityData/${c.qcode}.json`,
+  wikipedia: (c: WikipediaContext) =>
+    `https://radiant-springs-38893.herokuapp.com/api/detail/${c.title}/${c.language}/false`
 };
 
 export interface WikidataContext {
   qcode: string;
+}
+
+export interface WikipediaContext {
+  language: string;
+  title: string;
 }
 
 @Injectable({
@@ -22,6 +29,16 @@ export class CategoryItemDetailsService {
     return this.httpClient
       .cache()
       .get(routes.wikidata(context))
+      .pipe(
+        map((body: any) => body),
+        catchError(() => of('Error, could not load details.'))
+      );
+  }
+
+  getItemDescription(context: WikipediaContext): Observable<string> {
+    return this.httpClient
+      .cache()
+      .get(routes.wikipedia(context))
       .pipe(
         map((body: any) => body),
         catchError(() => of('Error, could not load details.'))

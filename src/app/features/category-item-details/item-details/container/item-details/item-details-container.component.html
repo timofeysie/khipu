@@ -16,5 +16,9 @@
   </ion-toolbar>
 </ion-header>
 <ion-content class="specific-content">
-  <item-details [language]="language" [itemDetails]="(store.state$ | async).itemDetails"></item-details>
+  <item-details
+    [language]="language"
+    [itemDetails]="(store.state$ | async).itemDetails"
+    [description]="(store.state$ | async).description"
+  ></item-details>
 </ion-content>

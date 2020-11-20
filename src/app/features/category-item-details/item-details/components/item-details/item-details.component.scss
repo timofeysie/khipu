@@ -3,3 +3,15 @@ ion-item {
   border-color: none;
   background-color: var(--light);
 }
+
+ion-card-content {
+  .mbox-text-span {
+    display: none;
+  }
+}
+table.box-More_citations_needed {
+  display: none;
+}
+.references {
+  display: none;
+}

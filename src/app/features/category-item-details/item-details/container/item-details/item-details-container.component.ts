@@ -1,6 +1,5 @@
 import { Component, OnInit } from '@angular/core';
 import { I18nService } from '@app/core';
-import { CategoryItemDetailsService } from '../../../category-item-details.service';
 import { ItemDetailsStore } from '../../item-details-store';
 
 interface Label {
@@ -26,7 +25,6 @@ export class ItemDetailsContainerComponent implements OnInit {
   ngOnInit() {}
 
   updateLanguage(event: any) {
-    console.log('eve', event.detail.value);
     this.language = event.detail.value;
   }
 }

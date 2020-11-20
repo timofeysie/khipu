@@ -35,6 +35,32 @@ export class ItemDetailsStore extends Store<ItemDetailsState> {
       const itemDetails: ItemDetails = response[this.ENTITIES_KEY][_qcode];
       this.state.itemDetails = itemDetails;
       console.log('stored state', this.state);
+      const title = this.getTitle(itemDetails, language);
+      this.fetchDescription(title, language);
     });
+  }
+
+  getTitle(itemDetails: any, language: string) {
+    const link: string = itemDetails.sitelinks[language + 'wiki']['url'];
+    const titleStart = link.lastIndexOf('/');
+    const title = link.substring(titleStart + 1, link.length);
+    return title;
+  }
+
+  fetchDescription(_title: string, _language: string) {
+    const currentLanguage = this.i18nService.language;
+    const sparqlLanguages = environment.sparqlLanguages;
+    const sparqlLanguageObject = sparqlLanguages.find(i => i.appLanguage === currentLanguage);
+    this.activatedRoute.paramMap.subscribe(() => {
+      this.fetchDescriptionFromEndpoint(_title, sparqlLanguageObject.sparqlLanguage);
+    });
+  }
+
+  fetchDescriptionFromEndpoint(_title: string, _language: string) {
+    this.categoryItemDetailsService
+      .getItemDescription({ title: _title, language: _language })
+      .subscribe((response: string) => {
+        this.state.description = response['description'];
+      });
   }
 }
