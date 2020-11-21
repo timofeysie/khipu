@@ -15,5 +15,7 @@
 }
 .selector {
   --background: #{--primary};
-  width: 400px;
+  ion-select {
+    width: 150px;
+  }
 }

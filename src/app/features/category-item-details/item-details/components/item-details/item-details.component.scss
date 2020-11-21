@@ -3,7 +3,9 @@ ion-item {
   border-color: none;
   background-color: var(--light);
 }
-
+ion-card-header {
+  font-weight: bold;
+}
 ion-card-content {
   .mbox-text-span {
     display: none;

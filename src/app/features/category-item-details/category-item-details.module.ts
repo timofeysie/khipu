@@ -19,6 +19,7 @@ import { CategoriesEndpoint } from './categories/categories.endpoint';
 import { AddCategoryContainerComponent } from './categories/container/add-category/add-category-container.component';
 import { AddCategoryComponent } from './categories/components/add-category/add-category.component';
 import { DescriptionDirective } from './item-details/description.directive';
+
 @NgModule({
   imports: [CommonModule, TranslateModule, IonicModule, CategoryItemDetailsRoutingModule, ReactiveFormsModule],
   entryComponents: [CategoriesContainerComponent],

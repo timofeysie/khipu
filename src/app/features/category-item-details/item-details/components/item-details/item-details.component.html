@@ -2,14 +2,16 @@
   <ion-card class="ion-text-center" *ngIf="itemDetails">
     <ion-card-content *ngIf="itemDetails.labels[language]">
       <ion-card-header>
-        <p *ngIf="itemDetails.sitelinks[language + 'wiki']">
+        <p *ngIf="itemDetails.sitelinks[language + 'wiki']; else noLinkTitle">
           <a href="{{ itemDetails.sitelinks[language + 'wiki']['url'] }}">
             {{ itemDetails.sitelinks[language + 'wiki']['title'] }}</a
           >
         </p>
-        <p class="title_no_link" *ngIf="itemDetails.labels[language]">
-          {{ itemDetails.labels[language]['value'] }}
-        </p>
+        <ng-template #noLinkTitle>
+          <p class="title_no_link" *ngIf="itemDetails.labels[language]">
+            {{ itemDetails.labels[language]['value'] }}
+          </p>
+        </ng-template>
       </ion-card-header>
       <div *ngIf="itemDetails.aliases">
         Aliases:

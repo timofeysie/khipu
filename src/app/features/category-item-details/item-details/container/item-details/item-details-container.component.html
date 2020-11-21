@@ -2,17 +2,18 @@
   <ion-toolbar color="primary">
     <ion-buttons slot="start">
       <ion-menu-button></ion-menu-button>
-      <ion-item class="selector">
-        <ion-select value="{{ language }}" (ionChange)="updateLanguage($event)">
-          <ion-select-option
-            *ngFor="let lang of (store.state$ | async).itemDetails.labels | keyvalue"
-            value="{{ lang.key }}"
-          >
-            {{ lang.key }}:{{ lang.value.value }}
-          </ion-select-option>
-        </ion-select>
-      </ion-item>
+      <ion-title>{{ selectedCategory }}</ion-title>
     </ion-buttons>
+    <ion-item class="selector" slot="end">
+      <ion-select value="{{ language }}" (ionChange)="updateLanguage($event)">
+        <ion-select-option
+          *ngFor="let lang of (store.state$ | async).itemDetails.labels | keyvalue"
+          value="{{ lang.key }}"
+        >
+          {{ lang.key }}
+        </ion-select-option>
+      </ion-select>
+    </ion-item>
   </ion-toolbar>
 </ion-header>
 <ion-content class="specific-content">

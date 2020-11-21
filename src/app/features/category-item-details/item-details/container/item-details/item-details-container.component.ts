@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { I18nService } from '@app/core';
 import { ItemDetailsStore } from '../../item-details-store';
 
@@ -18,11 +19,22 @@ export class ItemDetailsContainerComponent implements OnInit {
   siteLink: string;
   aliases: string | undefined;
   language: string;
-  constructor(public store: ItemDetailsStore, private i18nService: I18nService) {
-    this.language = this.i18nService.language.substring(0, 2);
+  selectedCategory: string;
+  constructor(
+    public store: ItemDetailsStore,
+    private i18nService: I18nService,
+    private activatedRoute: ActivatedRoute
+  ) {
+    this.activatedRoute.paramMap.subscribe(params => {
+      this.selectedCategory = params.get('selectedCategory');
+    });
   }
 
-  ngOnInit() {}
+  ngOnInit() {
+    setTimeout(() => {
+      this.language = this.i18nService.language.substring(0, 2);
+    }, 1600);
+  }
 
   updateLanguage(event: any) {
     this.language = event.detail.value;

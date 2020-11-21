@@ -9,6 +9,7 @@ import { Item } from '../items.store.state';
 })
 export class ItemsComponent implements OnInit {
   @Input() item: Item;
+  @Input() categoryName: string;
 
   constructor(private router: Router) {}
 
@@ -17,6 +18,6 @@ export class ItemsComponent implements OnInit {
   gotoItemDetails(itemUri: string) {
     const lastSlash = itemUri.lastIndexOf('/');
     const qCode = itemUri.substring(lastSlash + 1, itemUri.length);
-    this.router.navigate(['/categories/item-details/' + qCode]);
+    this.router.navigate([`/categories/item-details/${this.categoryName}/${qCode}`]);
   }
 }

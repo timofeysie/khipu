@@ -13,7 +13,7 @@ const routes: Routes = [
   { path: ':name/:wdt/:wd/:language/items', component: ItemsContainerComponent, data: { title: extract('items') } },
   { path: 'add', component: AddCategoryContainerComponent, data: { title: extract('items') } },
   {
-    path: 'item-details/:qcode',
+    path: 'item-details/:selectedCategory/:qcode',
     component: ItemDetailsContainerComponent,
     data: { title: extract('items') }
   }

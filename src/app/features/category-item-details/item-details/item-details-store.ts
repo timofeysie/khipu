@@ -24,7 +24,6 @@ export class ItemDetailsStore extends Store<ItemDetailsState> {
     const sparqlLanguages = environment.sparqlLanguages;
     const sparqlLanguageObject = sparqlLanguages.find(i => i.appLanguage === currentLanguage);
     this.activatedRoute.paramMap.subscribe(params => {
-      console.log(params.get('qcode'));
       const qcode = params.get('qcode');
       this.fetchDetailsFromEndpoint(qcode, sparqlLanguageObject.sparqlLanguage);
     });
@@ -43,7 +42,6 @@ export class ItemDetailsStore extends Store<ItemDetailsState> {
   }
 
   getTitle(itemDetails: any, language: string) {
-    console.log('===', [language + 'wiki']);
     if (itemDetails.sitelinks[language + 'wiki']) {
       const link: string = itemDetails.sitelinks[language + 'wiki']['url'];
       const titleStart = link.lastIndexOf('/');
