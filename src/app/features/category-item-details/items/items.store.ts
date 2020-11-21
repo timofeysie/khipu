@@ -9,7 +9,7 @@ import { Store } from '@app/store';
 @Injectable()
 export class ItemsStore extends Store<ItemsState> {
   private reloadItems$: Subject<undefined> = new Subject();
-  private currentPage: number = 0;
+  private currentPage = 0;
   constructor(private itemListEndpoint: ItemsListEndpoint) {
     super(new ItemsState());
   }

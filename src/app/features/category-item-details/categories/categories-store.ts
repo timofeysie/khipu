@@ -16,11 +16,8 @@ export class CategoriesStore extends Store<CategoriesState> {
 
   fetchList() {
     const currentLanguage = this.i18nService.language;
-
     const sparqlLanguages = environment.sparqlLanguages;
-
     const sparqlLanguageObject = sparqlLanguages.find(i => i.appLanguage === currentLanguage);
-
     this.categoriesEndpoint
       .fetchList()
       .pipe(

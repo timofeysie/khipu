@@ -1,5 +1,15 @@
-<ion-item>
-  <ion-label (click)="gotoItemDetails(item.uri)">
-    {{ item.label | titlecase }}
-  </ion-label>
-</ion-item>
+<ion-item-sliding>
+  <ion-item>
+    <ion-item-options side="end" *ngIf="item.description">
+      <ion-item-option color="secondary">
+        {{ item.description }}
+      </ion-item-option>
+    </ion-item-options>
+    <ion-label (click)="gotoItemDetails(item.uri)">
+      {{ item.label | titlecase }}
+      <span class="description_exists" *ngIf="item.description">
+        >
+      </span>
+    </ion-label>
+  </ion-item>
+</ion-item-sliding>
