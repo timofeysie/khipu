@@ -1,0 +1,15 @@
+<ion-label position="floating">Description</ion-label>
+<ion-textarea
+  class="description_input"
+  [formControl]="descriptionForm"
+  placeholder="{{ descriptionForm.value }}"
+></ion-textarea>
+<p>
+  <button (click)="updateName()">Update Name</button>
+</p>
+valid {{ descriptionForm.valid }}
+<div *ngIf="descriptionForm.errors">
+  <div color="error" *ngIf="descriptionForm.errors.maxlength">
+    Name must be less than 100 characters long.
+  </div>
+</div>

@@ -18,4 +18,8 @@ export class ItemDetailsComponent implements OnInit, AfterViewInit {
   ngOnInit() {}
 
   ngAfterViewInit() {}
+
+  descriptionUpdated(event: any) {
+    console.log('descriptionUpdated', event);
+  }
 }

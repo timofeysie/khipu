@@ -19,7 +19,11 @@
           {{ alias.value }}
         </div>
       </div>
-      <p>Description: {{ itemDetails.descriptions[language]['value'] }}</p>
+      <app-description-form
+        (descriptionUpdated)="descriptionUpdated($event)"
+        [itemDetails]="itemDetails"
+        [language]="language"
+      ></app-description-form>
       <p>Modified: {{ itemDetails.modified | date: 'medium' }}</p>
     </ion-card-content>
   </ion-card>

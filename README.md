@@ -455,6 +455,25 @@ This works to just hide the unwanted content for now. You can always click on th
 
 The goal of getting the description in the app instead of a re-direct is so that it can be added to a slide out section in the item list. The best place to do this is where the data comes in from the API call and added to the store.
 
+### The description editor form
+
+We should create a new component to handle the editing of the description field. I know it's only one field, but it will be good to keep that logic out of the simple display component.
+
+We can specify the route starting after the app folder. The CLI command to do this:
+
+```txt
+ng g c features/category-item-details/item-details/components/description-form --module=features/category-item-details/category-item-details.module.ts
+CREATE src/app/features/category-item-details/item-details/components/description-form/description-form.component.html (31 bytes)
+CREATE src/app/features/category-item-details/item-details/components/description-form/description-form.component.spec.ts (692 bytes)
+CREATE src/app/features/category-item-details/item-details/components/description-form/description-form.component.ts (309 bytes)
+CREATE src/app/features/category-item-details/item-details/components/description-form/description-form.component.scss (0 bytes)
+UPDATE src/app/features/category-item-details/category-item-details.module.ts (2052 bytes)
+```
+
+The docs on [reactive forms](https://angular.io/guide/reactive-forms) and [validation](https://angular.io/guide/form-validation) show everything that's needed for a simple form like this.
+
+The commit under [issue #26](https://github.com/timofeysie/khipu/issues/26) shows the commit to make it happen.
+
 ## Creating the app
 
 These are the answers to the questions asked by the [ngX-Rocket CLI](https://github.com/ngx-rocket/generator-ngx-rocket/) when creating the app.
