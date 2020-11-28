@@ -58,6 +58,7 @@ export class ItemDetailsStore extends Store<ItemDetailsState> {
     const sparqlLanguageObject = sparqlLanguages.find(i => i.appLanguage === currentLanguage);
     this.activatedRoute.paramMap.subscribe(() => {
       this.fetchDescriptionFromEndpoint(_title, sparqlLanguageObject.sparqlLanguage);
+      this.fetchWikimediaDescriptionFromEndpoint(_title, sparqlLanguageObject.sparqlLanguage);
     });
   }
 
@@ -66,6 +67,16 @@ export class ItemDetailsStore extends Store<ItemDetailsState> {
       .getItemDescription({ title: _title, language: _language })
       .subscribe((response: string) => {
         this.state.description = response['description'];
+      });
+  }
+
+  fetchWikimediaDescriptionFromEndpoint(_title: string, _language: string) {
+    this.categoryItemDetailsService
+      .getWikidediaDescription({ title: _title, language: _language })
+      .subscribe((response: any) => {
+        console.log('number of keys for description', Object.keys(response['query']['pages']).length);
+        const firstItem = Object.keys(response['query']['pages'])[0];
+        this.state.wikimediaDescription = response['query']['pages'][firstItem]['extract'];
       });
   }
 }

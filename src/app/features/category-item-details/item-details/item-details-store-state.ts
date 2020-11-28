@@ -18,4 +18,5 @@ const initItemDetails: ItemDetails = {
 export class ItemDetailsState {
   itemDetails: ItemDetails = initItemDetails;
   description: any;
+  wikimediaDescription: any;
 }

@@ -7,7 +7,8 @@ import { map, catchError } from 'rxjs/operators';
 const routes = {
   wikidata: (c: WikidataContext) => `www.wikidata.org/wiki/Special:EntityData/${c.qcode}.json`,
   wikipedia: (c: WikipediaContext) =>
-    `https://radiant-springs-38893.herokuapp.com/api/detail/${c.title}/${c.language}/false`
+    `https://radiant-springs-38893.herokuapp.com/api/detail/${c.title}/${c.language}/false`,
+  wikimedia: (c: WikipediaContext) => `https://radiant-springs-38893.herokuapp.com/api/details/${c.language}/${c.title}`
 };
 
 export interface WikidataContext {
@@ -39,6 +40,16 @@ export class CategoryItemDetailsService {
     return this.httpClient
       .cache()
       .get(routes.wikipedia(context))
+      .pipe(
+        map((body: any) => body),
+        catchError(() => of('Error, could not load details.'))
+      );
+  }
+
+  getWikidediaDescription(context: WikipediaContext): Observable<string> {
+    return this.httpClient
+      .cache()
+      .get(routes.wikimedia(context))
       .pipe(
         map((body: any) => body),
         catchError(() => of('Error, could not load details.'))

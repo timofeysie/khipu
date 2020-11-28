@@ -7,7 +7,6 @@ export class DescriptionDirective implements OnChanges {
 
   @HostListener('DOMNodeInserted', ['$event']) public onKeyup(event: KeyboardEvent): void {
     const value = (event.target as HTMLInputElement).value;
-    console.log(value);
   }
 
   constructor(elem: ElementRef, renderer: Renderer2) {
@@ -15,10 +14,7 @@ export class DescriptionDirective implements OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges) {
-    console.log('changes', changes);
-    console.log('paragraph', this.paragraph);
     const arr: any = [];
     [].push.apply(arr, this.paragraph);
-    console.log('arr', arr);
   }
 }

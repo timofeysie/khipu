@@ -474,6 +474,164 @@ The docs on [reactive forms](https://angular.io/guide/reactive-forms) and [valid
 
 The commit under [issue #26](https://github.com/timofeysie/khipu/issues/26) shows the commit to make it happen.
 
+Some extra things we need to do to support this feature are:
+
+- Ionic content is not make for selecting fields. But we want it to be all selectable so that users can copy and pase anything from any page.
+- We also want to listen to the enter key and use that to update the field rather than a submit button.
+
+But these are small cosmetic tasks. There is a bigger problem now. The description field is currently markup, which is not text area editing-friendly. We can't just dump it into the description field for the form to edit when it looks like this:
+
+```html
+<div class="mw-parser-output">
+  <table
+    class="vertical-navbox nowraplinks hlist"
+    style="float:right;clear:right;width:22.0em;margin:0 0 1.0em 1.0em;background:#f8f9fa;border:1px solid #aaa;padding:0.2em;border-spacing:0.4em 0;text-align:center;line-height:1.4em;font-size:88%"
+  >
+    <tbody>
+      <tr>
+        <td style="padding-top:0.4em;line-height:1.2em">
+          Part of <a href="/wiki/Category:Au...
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+```
+
+This one, automation bias is particularly difficult, as it actually has an image, and a lot of preambles that don't appear in other items, such as the entire table of contents for the series on automation. This doesn't really have a place in a description. Unless the preamble content is specifically about the contents of the description. I suppose it is OK in it's collapsable form, but will cause a layout issue when opened. I suppose if we have these at the bottom of the content, they can be expanded and the user can scroll down as far as they wat without destroying the main content.
+
+Usually the description is the contents of the only <p> tag in all the markup. This wont work for automation bias, which has multiple <p> tags. There is no class name or id to identify the actual description. It looks like it just comes after the table.
+
+The best thing would be to learn how to use the Wikipedia API to get that specific content. It's not a traditional API. It's also not like the Wikidata API that uses SPARQL as it's language of choice.
+
+Anyhow, for now, we have a problem, and Issue #25: _Get the description of a detail page and add it as the item list description_ is ballooning out into a giant set of sub-tasks.
+
+To allow the description to be edited, we need to get into how to update the store with actions, persist the changes, and allow a user to manage content they have created for their account, which includes a free guest account by default, and a premium account that will take care of all of that automatically.
+
+That's a lot to do for what seems like a straight forward feature. But, it addresses a lot of issues that need to be solved for this to become a serious e-learning project.
+
+### Wiki APIS
+
+Before embarking on some hack to parse the html to get our description, a little search for Wikipedia APIs turns up a few links:
+
+[This page provides an overview of the MediaWiki Action API.](https://www.mediawiki.org/wiki/API:Main_page). At the end in the section on _Other APIs_, there are two more links to check out.
+
+[The MediaWiki Core REST API lets you interact with MediaWiki by sending HTTP requests to unique URLs](https://www.mediawiki.org/wiki/API:REST_API], including something about setting the User-Agent header.
+
+This shows the API results that search results use to display additional information about articles, including a lead image and a description of the article's subject from Wikidata.
+
+The [Hub](https://www.mediawiki.org/wiki/API:Web_APIs_hub) and the [search results page link](https://www.mediawiki.org/wiki/API:Page_info_in_search_results) look exactly like what we want. It says:
+
+_The lead image comes from Extension:PageImages, which adds a page_image property to pages giving its guess as to an appropriate image for the page. The description comes from Wikidata, which maintains a localized description of the subject of each wiki page._
+
+An example from [the sandbox](api.php?action=query&formatversion=2&prop=pageimages|pageterms&titles=Albert%20Einstein
+https://en.wikipedia.org/wiki/Special:ApiSandbox#action=query&format=json&prop=pageimages%7Cpageterms&titles=Albert%20Einstein&formatversion=2) shows the usage of this call:
+
+```url
+https://en.wikipedia.org/w/api.php?action=query&format=json&prop=pageimages%7Cpageterms&titles=Albert%20Einstein&formatversion=2
+```
+
+```json
+  "batchcomplete": true,
+  "query": {
+    "pages": [
+      {
+        "pageid": 736,
+        "ns": 0,
+        "title": "Albert Einstein",
+        "thumbnail": {
+          "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Einstein_1921_by_F_Schmutzer_-_restoration.jpg/38px-Einstein_1921_by_F_Schmutzer_-_restoration.jpg",
+          "width": 38,
+          "height": 50
+        },
+        "pageimage": "Einstein_1921_by_F_Schmutzer_-_restoration.jpg",
+        "terms": {
+          "alias": [
+              "Einstein",
+              "Einstein, Albert",
+              "A. Einstein"
+          ],
+          "label": [
+              "Albert Einstein"
+          ],
+          "description": [
+              "German-born theoretical physicist; developer of the theory of relativity (1879–1955)"
+          ]
+        }
+      }
+    ]
+  }
+}
+```
+
+That's everything we need in one call, as promised. And it may not be blocked by CORS.
+But when using the API for a fallacy, the response doesn't include anything like the above. So it is just Wikidata after all. Not the description content we need from Wikimedia:
+
+```json
+{
+  "batchcomplete": true,
+  "query": {
+    "normalized": [
+      {
+        "fromencoded": false,
+        "from": "Fallacy_of_composition",
+        "to": "Fallacy of composition"
+      }
+    ],
+    "pages": [
+      {
+        "pageid": 523043,
+        "ns": 0,
+        "title": "Fallacy of composition",
+        "terms": {
+          "label": ["Fallacy of composition"]
+        }
+      }
+    ]
+  }
+}
+```
+
+There is more work to be done to get the parts of the Wikipedia page.
+
+[This StackOverflow](https://stackoverflow.com/questions/8555320/is-there-a-wikipedia-api-just-for-retrieve-content-summary) answer has a good example. They use the title 'pizza', but switching that to a bias returns a lengthy page description using page title:
+
+```url
+https://en.wikipedia.org/w/api.php?format=json&action=query&prop=extracts&exintro&explaintext&redirects=1&titles=actor-observer_bias
+```
+
+Here is the response:
+
+```json
+{
+  "batchcomplete": "",
+  "query": {
+    "normalized": [
+      {
+        "from": "actor-observer_bias",
+        "to": "Actor-observer bias"
+      }
+    ],
+    "redirects": [
+      {
+        "from": "Actor-observer bias",
+        "to": "Actor\u2013observer asymmetry"
+      }
+    ],
+    "pages": {
+      "510995": {
+        "pageid": 510995,
+        "ns": 0,
+        "title": "Actor\u2013observer asymmetry",
+        "extract": "Actor\u2013observer asymmetry (also actor\u2013observer bias) explains the errors that one makes when forming attributions about the behavior of others (Jones & Nisbett 1971). When people judge their own behavior, and they are the actor ... (long description)."
+      }
+    }
+  }
+}
+```
+
+Or use pageids instead of the title there.
+
 ## Creating the app
 
 These are the answers to the questions asked by the [ngX-Rocket CLI](https://github.com/ngx-rocket/generator-ngx-rocket/) when creating the app.

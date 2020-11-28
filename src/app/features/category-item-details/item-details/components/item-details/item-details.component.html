@@ -19,20 +19,30 @@
           {{ alias.value }}
         </div>
       </div>
-      <app-description-form
+      <!-- <app-description-form
         (descriptionUpdated)="descriptionUpdated($event)"
         [itemDetails]="itemDetails"
         [language]="language"
-      ></app-description-form>
+        [description]="wikimediaDescription"
+      ></app-description-form> -->
       <p>Modified: {{ itemDetails.modified | date: 'medium' }}</p>
     </ion-card-content>
   </ion-card>
 </ion-item>
+<ion-card *ngIf="wikimediaDescription">
+  <ion-card-header>
+    <ion-card-subtitle></ion-card-subtitle>
+    <ion-card-title>Description</ion-card-title>
+  </ion-card-header>
+  <ion-card-content>
+    <p class="description_container">{{ wikimediaDescription }}</p>
+  </ion-card-content>
+</ion-card>
 <ion-card *ngIf="description">
   <!-- <img src="./madison.jpg" /> -->
   <ion-card-header>
     <ion-card-subtitle></ion-card-subtitle>
-    <ion-card-title>Description</ion-card-title>
+    <ion-card-title>Wikipedia Description</ion-card-title>
   </ion-card-header>
   <ion-card-content>
     <p class="description_container" descriptionDirective [innerHTML]="description"></p>
