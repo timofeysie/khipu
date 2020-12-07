@@ -5,7 +5,7 @@
         {{ item.description }}
       </ion-item-option>
     </ion-item-options>
-    <ion-label (click)="gotoItemDetails(item.uri)">
+    <ion-label (click)="gotoItemDetails(item)">
       {{ item.label | titlecase }}
       <span class="description_exists" *ngIf="item.description">
         >

@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { I18nService } from '@app/core';
 import { ItemDetailsStore } from '../../item-details-store';
+import { ItemsStore } from '../../../items/items.store';
 
 interface Label {
   language: string;
@@ -22,6 +23,7 @@ export class ItemDetailsContainerComponent implements OnInit {
   selectedCategory: string;
   constructor(
     public store: ItemDetailsStore,
+    public itemsStore: ItemsStore,
     private i18nService: I18nService,
     private activatedRoute: ActivatedRoute
   ) {
@@ -34,6 +36,7 @@ export class ItemDetailsContainerComponent implements OnInit {
     setTimeout(() => {
       this.language = this.i18nService.language.substring(0, 2);
     }, 1600);
+    console.log('this.itemsStore.state.selectedItem', this.itemsStore.state.selectedItem);
   }
 
   updateLanguage(event: any) {

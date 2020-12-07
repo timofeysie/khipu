@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { ItemsStore } from '../items.store';
 import { ActivatedRoute } from '@angular/router';
 import { Category } from '@app/core/interfaces/categories';
+import { Item } from '../items.store.state';
 
 @Component({
   selector: 'app-items-container',
@@ -16,6 +17,10 @@ export class ItemsContainerComponent implements OnInit {
       this.category = category;
       this.store.fetchList(category, this.store.state.currentPage);
     });
+  }
+
+  onSelectedItem(item: Item) {
+    this.store.state.selectedItem = item;
   }
 
   ngOnInit() {}

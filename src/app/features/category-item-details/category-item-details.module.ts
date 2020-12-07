@@ -6,6 +6,7 @@ import { IonicModule } from '@ionic/angular';
 import { ItemsContainerComponent } from './items/container/items-container.component';
 import { ItemsComponent } from './items/components/items.component';
 import { ItemsListEndpoint } from './items/items.endpoint';
+import { ItemsStore } from './items/items.store';
 
 import { ItemDetailsContainerComponent } from './item-details/container/item-details/item-details-container.component';
 import { ItemDetailsComponent } from './item-details/components/item-details/item-details.component';
@@ -36,6 +37,6 @@ import { DescriptionFormComponent } from './item-details/components/description-
     DescriptionDirective,
     DescriptionFormComponent
   ],
-  providers: [ItemsListEndpoint, CategoriesEndpoint]
+  providers: [ItemsListEndpoint, CategoriesEndpoint, ItemsStore]
 })
 export class CategoryItemDetailsModule {}

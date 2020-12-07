@@ -9,6 +9,7 @@ export interface Item {
 const initItems: Item[] = [];
 
 export class ItemsState {
-  currentPage: number = 0;
+  currentPage = 0;
   items: Item[] = initItems;
+  selectedItem: Item;
 }

@@ -1,4 +1,4 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { Router } from '@angular/router';
 import { Item } from '../items.store.state';
 
@@ -10,14 +10,17 @@ import { Item } from '../items.store.state';
 export class ItemsComponent implements OnInit {
   @Input() item: Item;
   @Input() categoryName: string;
+  @Output() selectedItem = new EventEmitter<Item>();
 
   constructor(private router: Router) {}
 
   ngOnInit() {}
 
-  gotoItemDetails(itemUri: string) {
+  gotoItemDetails(item: Item) {
+    const itemUri = item.uri;
     const lastSlash = itemUri.lastIndexOf('/');
     const qCode = itemUri.substring(lastSlash + 1, itemUri.length);
+    this.selectedItem.emit(item);
     this.router.navigate([`/categories/item-details/${this.categoryName}/${qCode}`]);
   }
 }

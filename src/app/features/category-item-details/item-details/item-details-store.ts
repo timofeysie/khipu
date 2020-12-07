@@ -33,7 +33,6 @@ export class ItemDetailsStore extends Store<ItemDetailsState> {
     this.categoryItemDetailsService.getItemDetails({ qcode: _qcode }).subscribe((response: string) => {
       const itemDetails: ItemDetails = response[this.ENTITIES_KEY][_qcode];
       this.state.itemDetails = itemDetails;
-      console.log('stored state', this.state);
       const title = this.getTitle(itemDetails, language);
       if (title) {
         this.fetchDescription(title, language);
@@ -74,7 +73,6 @@ export class ItemDetailsStore extends Store<ItemDetailsState> {
     this.categoryItemDetailsService
       .getWikidediaDescription({ title: _title, language: _language })
       .subscribe((response: any) => {
-        console.log('number of keys for description', Object.keys(response['query']['pages']).length);
         const firstItem = Object.keys(response['query']['pages'])[0];
         this.state.wikimediaDescription = response['query']['pages'][firstItem]['extract'];
       });
