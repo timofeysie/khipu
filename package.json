@@ -46,6 +46,7 @@
     "@types/color": "^3.0.0",
     "angulartics2": "^7.2.4",
     "color": "^3.1.2",
+    "firebase": "^8.1.2",
     "firebase-tools": "^7.11.0",
     "lodash": "^4.17.11",
     "moment": "^2.24.0",

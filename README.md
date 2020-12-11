@@ -632,11 +632,120 @@ Here is the response:
 
 Or use pageids instead of the title there.
 
+## Adding Firebase Auth
+
+This app (Angular app) already is hosted on firebase. Using [the official guide](https://firebase.google.com/docs/web/setup?authuser=0) to enable authentication using Firebase, we also need to add Firebase to the web app to get it's Firebase configuration which looks like this:
+
+```js
+var firebaseConfig = {
+  apiKey: 'AIzaSyBDeqGbiib0fVFoc2yWr9WVE4MV6isWQ9Y',
+  authDomain: 'khipu1.firebaseapp.com',
+  databaseURL: 'https://khipu1.firebaseio.com',
+  projectId: 'khipu1',
+  storageBucket: 'khipu1.appspot.com',
+  messagingSenderId: '348969595626',
+  appId: '1:348969595626:web:a3094e5d87583fca551d93'
+};
+firebase.initializeApp(firebaseConfig);
+```
+
+This looks like secret info but is OK to commit to the public repository. The apiKey in this configuration snippet just identifies the Firebase project on the Google servers. It is not a security risk for someone to know it. In fact, it is necessary for them to know it, in order for them to interact with the Firebase project.
+
+There are four available ways to use Firebase JS SDKs:
+
+1. from reserved Hosting URLs
+2. from the CDN
+3. using bundler with modules
+4. modules for Node.js
+
+We will off course use #3 via npm.
+
+```txt
+npm install --save firebase
+```
+
+Then it's time to [add email address and password sign-in](https://firebase.google.com/docs/auth/web/start?authuser=0) to the app.
+
+```js
+import firebase from 'firebase/app';
+import 'firebase/auth';
+```
+
+Putting the firebase init call in the onInit lifecycle hook was causing this error:
+
+```txt
+core.js:4002 ERROR Error: Uncaught (in promise):
+FirebaseError: Firebase: No Firebase App '[DEFAULT]' has been created - call Firebase App.initializeApp() (app/no-app).
+...
+LoginComponent.push../src/app/features/login/login.component.ts.LoginComponent.login (login.component.ts:60)
+```
+
+Just checking for umdefomed or null doesn't work. You have to check for this:
+
+```js
+if (!firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+}
+```
+
+Then, login appears to work, but we see this error:
+
+```txt
+logger.service.ts:107 [Login] Login error: TypeError: You provided 'undefined' where a stream was expected. You can provide an Observable, Promise, Array, or Iterable.
+zone.js:3372 POST https://www.googleapis.com/identitytoolkit/v3/relyingparty/verifyPassword?key=AIzaSyBDeqGbiib0fVFoc2yWr9WVE4MV6isWQ9Y 400
+```
+
+The authentication service is working. The problem is the problem is how the service is used in the sprawling login function:
+
+```js
+async login() {
+  this.isLoading = true;
+  const login$ = this.authenticationService.login(this.loginForm.value)..
+  const loadingOverlay = await this.loadingController.create({});
+  const loading$ = from(loadingOverlay.present());
+  forkJoin([login$, loading$])
+    .pipe(
+      map(([credentials, ...rest]) => credentials),
+      finalize(() => {
+        this.loginForm.markAsPristine();
+        this.isLoading = false;
+        loadingOverlay.dismiss();
+      }),
+      untilDestroyed(this)
+    )
+    .subscribe(
+      credentials => {
+        this.router.navigate([this.route.snapshot.queryParams.redirect || '/'], { replaceUrl: true });
+      },
+      error => {
+        log.debug(`Login error: ${error}`);
+        this.error = error;
+      }
+    );
+}
+```
+
+The error message above comes from the log output in the error block.
+_You provided 'undefined' where a stream was expected_
+
+The login service API looks like this:
+
+```js
+login(context: LoginContext): Observable<Credentials> | any { ... }
+```
+
+It returns either of these:
+
+- return of(data);
+- return of(errorCode + ' ', errorMessage);
+
+Seems OK to me, but obviously something is wrong.
+
 ## Creating the app
 
 These are the answers to the questions asked by the [ngX-Rocket CLI](https://github.com/ngx-rocket/generator-ngx-rocket/) when creating the app.
 
-```
+```txt
 $ ngx new
           __   __
  _ _  __ _\ \./ / ____ ____ ____ _  _ ____ ___

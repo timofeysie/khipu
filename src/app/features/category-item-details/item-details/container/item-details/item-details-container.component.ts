@@ -36,7 +36,6 @@ export class ItemDetailsContainerComponent implements OnInit {
     setTimeout(() => {
       this.language = this.i18nService.language.substring(0, 2);
     }, 1600);
-    console.log('this.itemsStore.state.selectedItem', this.itemsStore.state.selectedItem);
   }
 
   updateLanguage(event: any) {

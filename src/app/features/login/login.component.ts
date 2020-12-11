@@ -7,6 +7,8 @@ import { forkJoin, from } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 import { environment } from '@env/environment';
 import { Logger, I18nService, AuthenticationService, untilDestroyed } from '@app/core';
+import firebase from 'firebase/app';
+import 'firebase/auth';
 
 const log = new Logger('Login');
 
@@ -31,6 +33,19 @@ export class LoginComponent implements OnInit, OnDestroy {
     private authenticationService: AuthenticationService
   ) {
     this.createForm();
+    const firebaseConfig = {
+      apiKey: 'AIzaSyBDeqGbiib0fVFoc2yWr9WVE4MV6isWQ9Y',
+      authDomain: 'khipu1.firebaseapp.com',
+      databaseURL: 'https://khipu1.firebaseio.com',
+      projectId: 'khipu1',
+      storageBucket: 'khipu1.appspot.com',
+      messagingSenderId: '348969595626',
+      appId: '1:348969595626:web:a3094e5d87583fca551d93'
+    };
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+    console.log(firebase.apps);
   }
 
   ngOnInit() {}
@@ -58,7 +73,7 @@ export class LoginComponent implements OnInit, OnDestroy {
       )
       .subscribe(
         credentials => {
-          log.debug(`${credentials.username} successfully logged in`);
+          console.log('creds', credentials);
           this.router.navigate([this.route.snapshot.queryParams.redirect || '/'], { replaceUrl: true });
         },
         error => {

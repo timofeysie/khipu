@@ -17,18 +17,18 @@ export class HomeComponent implements OnInit {
   constructor(private quoteService: QuoteService) {}
 
   ngOnInit() {
-    this.isLoading = true;
-    this.quoteService
-      .getRandomQuote({ category: 'Q295150' })
-      .pipe(
-        finalize(() => {
-          this.isLoading = false;
-        })
-      )
-      .subscribe((quote: string) => {
-        this.quote = quote['entities']['Q295150']['labels']['en'];
-        this.label = quote['entities']['Q295150']['sitelinks']['enwiki'];
-        this.aliases = quote['entities']['Q295150']['aliases']['en'];
-      });
+    // this.isLoading = true;
+    // this.quoteService
+    //   .getRandomQuote({ category: 'Q295150' })
+    //   .pipe(
+    //     finalize(() => {
+    //       this.isLoading = false;
+    //     })
+    //   )
+    //   .subscribe((quote: string) => {
+    //     this.quote = quote['entities']['Q295150']['labels']['en'];
+    //     this.label = quote['entities']['Q295150']['sitelinks']['enwiki'];
+    //     this.aliases = quote['entities']['Q295150']['aliases']['en'];
+    //   });
   }
 }

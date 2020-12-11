@@ -1,7 +1,9 @@
-import { Injectable } from '@angular/core';
+import { Injectable, NO_ERRORS_SCHEMA } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { Credentials, CredentialsService } from './credentials.service';
 import { Plugins } from '@capacitor/core';
+import firebase from 'firebase/app';
+import 'firebase/auth';
 
 export interface LoginContext {
   username: string;
@@ -24,14 +26,56 @@ export class AuthenticationService {
    * @param context The login parameters.
    * @return The user credentials.
    */
-  login(context: LoginContext): Observable<Credentials> {
-    // Replace by proper authentication call
-    const data = {
-      username: context.username,
-      token: '123456'
+  login(context: LoginContext): Observable<Credentials> | any {
+    const firebaseConfig = {
+      apiKey: 'AIzaSyBDeqGbiib0fVFoc2yWr9WVE4MV6isWQ9Y',
+      authDomain: 'khipu1.firebaseapp.com',
+      databaseURL: 'https://khipu1.firebaseio.com',
+      projectId: 'khipu1',
+      storageBucket: 'khipu1.appspot.com',
+      messagingSenderId: '348969595626',
+      appId: '1:348969595626:web:a3094e5d87583fca551d93'
     };
-    this.credentialsService.setCredentials(data, context.remember);
-    return of(data);
+    if (!firebase.apps.length) {
+      console.log('firebase initiated');
+      firebase.initializeApp(firebaseConfig);
+    }
+    firebase
+      .auth()
+      .signInWithEmailAndPassword(context.username, context.password)
+      .then((result: any) => {
+        // Signed in
+        console.log('firebase yes!', result);
+        const data = {
+          username: context.username,
+          token: result.user.uid
+        };
+        this.credentialsService.setCredentials(data, context.remember);
+        return of(data) as Observable<any>;
+      })
+      .catch((error: any) => {
+        const errorCode = error.code;
+        const errorMessage = error.message;
+        console.log('firebase no!', error.code, errorMessage);
+        return of(errorCode + ' ', errorMessage) as Observable<any>;
+      });
+  }
+
+  firebaseLogin(context: LoginContext) {
+    firebase
+      .auth()
+      .signInWithEmailAndPassword(context.username, context.password)
+      .then((user: any) => {
+        // Signed in
+        console.log('firebase yes!', user);
+        return user;
+      })
+      .catch((error: any) => {
+        const errorCode = error.code;
+        const errorMessage = error.message;
+        console.log(errorCode + ' ', errorMessage);
+        throw new Error(errorMessage);
+      });
   }
 
   b2cLogin(context: LoginContext) {
