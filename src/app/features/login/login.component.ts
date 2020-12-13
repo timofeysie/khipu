@@ -73,7 +73,6 @@ export class LoginComponent implements OnInit, OnDestroy {
       )
       .subscribe(
         credentials => {
-          console.log('creds', credentials);
           this.router.navigate([this.route.snapshot.queryParams.redirect || '/'], { replaceUrl: true });
         },
         error => {
@@ -82,6 +81,16 @@ export class LoginComponent implements OnInit, OnDestroy {
         }
       );
   }
+
+  // async login() {
+  //   console.log('login called');
+  //   const login$ = this.authenticationService.login(this.loginForm.value)
+  //   login$.subscribe((result: any) => {
+  //     console.log('result', result);
+  //   }).pipe((what: any) => {
+  //     console.log('what', what);
+  //   })
+  // }
 
   setLanguage(language: string) {
     this.i18nService.language = language;

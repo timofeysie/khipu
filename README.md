@@ -739,7 +739,148 @@ It returns either of these:
 - return of(data);
 - return of(errorCode + ' ', errorMessage);
 
-Seems OK to me, but obviously something is wrong.
+Seems OK to me, but obviously something is wrong. Without looking too much, this didn't work.
+
+```js
+return of(data) as Observable<any>;
+```
+
+Of is an RxJs operator. It's signature: of(...values, scheduler: Scheduler): Observable.
+
+That should solve the second part of the error which says _You can provide an Observable, Promise, Array, or Iterable._
+
+There seems to be a wide array of causes for this issue, ranging from providing the service in two different points, neglecting to return an Action in an NgRx Effect, returning different actions based on certain condition, an empty return, authenticate a user using JSON Web Token, wrong response type and on.
+
+Seriously, these are all answers to [this StackOverflow question](https://stackoverflow.com/questions/47849258/typeerror-you-provided-undefined-where-a-stream-was-expected/50835027).
+
+I'm pretty sure if I write my own login function, I can proceed. But that loses this lovely boilerplate code that has worked for me when using AWS cognito authentication. That b2cLogin function is still sitting there in the auth service file unused now.
+
+And, the function is almost like poetry:
+
+_forkJoin([...]).pipe(map(([...]) => credentials), finalize(() => {...}), untilDestroyed(this)).subscribe(credentials => {},error => {})_
+
+I can imagine a chorus of Greek actors saying that like an ancient play. Or it's a magic incantation that Gandalf might teach to a young apprentice.
+
+Moving on and ignoring the beautiful mess, we can create the simplest working solution and work incrementally from there. Everyone who learns Angular should know about [the official Tour of Heroes](https://angular.io/tutorial/toh-pt4) app. Using a service there goes something like this:
+
+```js
+this.heroService.getHeroes().subscribe(result => (this.heroes = result));
+```
+
+But there is something weird happening here, as we get this error:
+
+```txt
+TypeError: Cannot read property 'subscribe' of undefined
+    at LoginComponent.<anonymous> (login.component.ts:89)
+```
+
+What? This function is called from the submit function, which is plenty of time for Angular to setup the service via dependency injection. Even if we check for the service to be truthy before subscribing, we are seeing this error in the service:
+
+```txt
+undefined result.next is not a function
+```
+
+In this case, BOTH blocks in the service get triggered. We see firebase success, AND firebase errors. What gives? I never get used to the continual problems we face as developers. Calling a service I have done a thousand times, but never had these issues. However, a main skill of a frontend developer is to get over it and move on trying to get a solution to the issue. Soon enough it will be working and I will be on with the next challenge and forget all about this.
+
+One of the purposes of keeping these notes is to respect the process. It's easy to forget about the effort that went into something and later wonder what I did with my Saturday morning on December 12th, 2020. Now, there is a record of this. A kind of meta cognition that I can use to pace my development work with better planning and estimating.
+
+OK, so next, I want to know why both of those errors are happening.
+
+### Cannot read property 'subscribe' of undefined
+
+Looking at a StackOverflow answer for a similar problem turns up this advice:
+_The login method SHOULD NOT SUBSCRIBE. It should return either a Promise or an Observable._
+
+This makes sense given that the previous code used an RxJs pipe.
+
+http.get(…​) returns an Observable. With the subscription method shown in the Angular tutorial, we are subscribing to the observable and storing the results locally on the component. One reason not to do this is to use an async pipe in the template, and skip that overhead. But in this case, it's a login, so we actually want to do the navigate call on a successful login.
+
+There is still a problem with the auth service login signature:
+
+```js
+login(context: LoginContext): Observable<Credentials> | any
+```
+
+This is shit. Any time you use the 'any' type, it's shit. Originally, the boilerplate code created by the veteran coders [Gaëtan Maisse](https://github.com/gaetanmaisse) and [Yohan Lasorsa](https://github.com/sinedied) looked like this:
+
+```js
+login(context: LoginContext): Observable<Credentials> {
+// Replace by proper authentication call
+```
+
+Gaëtan is a developer at Leadformance as well as a teacher at Mines St Etienne, described on their website as one of the most prestigious engineering schools in France. Yohan is a Senior Cloud Developer Advocate at Microsoft.
+
+These guys have a solid boilerplate that I have used before on the job and in production. What they mean by _proper authentication_ is up to us to determine however. If there is an error, we want the login form to display the message, so doesn't that mean either pass back either the credentials from a successful login, or an error if something went wrong? In our case, to get things working we used any to cover the error case, which could be a code and a message, just a message, or both glues together, or some specific error object. What would you do?
+
+There is a good example of how to [use RxJs to use an http service](https://codecraft.tv/courses/angular/http/http-with-observables/). It is showing a search box, but you can see the itunes.search() service is used as part of an RxJs stream:
+
+```js
+  this.results = this.searchField.valueChanges
+    .debounceTime(400)
+    .distinctUntilChanged()
+    .do( () => this.loading = true)
+    .switchMap( term => this.itunes.search(term))
+    .do( () => this.loading = false )
+}
+```
+
+Let's give the [Tour of Heroes Error Handling section](https://angular.io/tutorial/toh-pt6#error-handling) a go to see what is the basic approach. It spells it out for us:
+
+_To catch errors, you "pipe" the observable result from http.get() through an RxJS catchError() operator._
+
+That may be true for an http call, but in this case, we are using the firebase code, which can be summarized like this:
+
+```js
+firebase
+  .auth()
+  .signInWithEmailAndPassword()
+  .then()
+  .catch();
+```
+
+If we create a return type for this function like this:
+
+```js
+firebaseLogin(context: LoginContext): Observable <any> { ... }
+```
+
+Then we see the Typescript error: _A function whose declared type is neither 'void' nor 'any' must return a value._
+
+Both blocks 'then' and 'catch' blocks in the firebase function return 'of(user/errorMessage)', so this seems like we are returning a value. Unless we need a finally block. What would it being doing exactly?
+
+Since this was just a test to see if a basic approach works, I think I will go back to making the original so-called poetic approach. This starts with the forkJoin. A definition please.
+
+_forkJoin_ combines two subscriptions into a single one and returns an array of there results. It is extremely useful to use in ngOnInit when you need data from multiple sources before you can finish loading the component.
+
+But just understanding the code doesn't help to understand the error at this point. A refresher:
+
+_You provided 'undefined' where a stream was expected. You can provide an Observable, Promise, Array, or Iterable._
+
+We are also seeing the then/catch blocks being executed in the firebase login function.
+
+In the authentication.service, if we removed `return result.next();` from the 'then' block, then the catch block doesn't get triggered. So that's one of the issues. I can't really say it's solved because I'm not sure why that was there in the first place.
+
+The problem was that even though it looked like we were returning something anything, it took reading [this comment from the great rapropos](vhttps://forum.ionicframework.com/t/cannot-read-property-subscribe-of-undefined-solved/87988), Ionic forum moderator where he said _Async validators must return a future (Promise or Observable). Yours is not returning anything._
+
+Look at this:
+
+```ts
+login(context: LoginContext): Observable<Credentials> | any {
+  this.setupFirebase();
+  return firebase <-- this was missing
+    .auth()
+    .signInWithEmailAndPassword(context.username, context.password)
+    .then((result: any) => {
+      const data = {
+        username: context.username,
+        token: result.user.uid
+      };
+      this.credentialsService.setCredentials(data, context.remember);
+      return result;
+    })
+```
+
+Even though the results are being returned, the observable wasn't being returned. Adding that word fixed the login. Now it back to the backlog to see what comes next.
 
 ## Creating the app
 
@@ -942,6 +1083,12 @@ src/                         project source code
 +- setup-jest.ts             unit tests entry point
 reports/                     test and coverage reports
 proxy.conf.js                backend proxy configuration
+```
+
+The proxy.conf.js file has been disabled. To enable it add this flag to the package.json scripts section:
+
+```json
+    "start": "npm run env -s && ng serve --proxy-config proxy.conf.js",
 ```
 
 # Main tasks

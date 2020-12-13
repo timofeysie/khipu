@@ -27,6 +27,26 @@ export class AuthenticationService {
    * @return The user credentials.
    */
   login(context: LoginContext): Observable<Credentials> | any {
+    this.setupFirebase();
+    return firebase
+      .auth()
+      .signInWithEmailAndPassword(context.username, context.password)
+      .then((result: any) => {
+        const data = {
+          username: context.username,
+          token: result.user.uid
+        };
+        this.credentialsService.setCredentials(data, context.remember);
+        return result;
+      })
+      .catch((error: any) => {
+        const errorCode = error.code;
+        const errorMessage = error.message;
+        return of(errorCode + ' ', errorMessage) as Observable<any>;
+      });
+  }
+
+  setupFirebase() {
     const firebaseConfig = {
       apiKey: 'AIzaSyBDeqGbiib0fVFoc2yWr9WVE4MV6isWQ9Y',
       authDomain: 'khipu1.firebaseapp.com',
@@ -40,42 +60,7 @@ export class AuthenticationService {
       console.log('firebase initiated');
       firebase.initializeApp(firebaseConfig);
     }
-    firebase
-      .auth()
-      .signInWithEmailAndPassword(context.username, context.password)
-      .then((result: any) => {
-        // Signed in
-        console.log('firebase yes!', result);
-        const data = {
-          username: context.username,
-          token: result.user.uid
-        };
-        this.credentialsService.setCredentials(data, context.remember);
-        return of(data) as Observable<any>;
-      })
-      .catch((error: any) => {
-        const errorCode = error.code;
-        const errorMessage = error.message;
-        console.log('firebase no!', error.code, errorMessage);
-        return of(errorCode + ' ', errorMessage) as Observable<any>;
-      });
-  }
-
-  firebaseLogin(context: LoginContext) {
-    firebase
-      .auth()
-      .signInWithEmailAndPassword(context.username, context.password)
-      .then((user: any) => {
-        // Signed in
-        console.log('firebase yes!', user);
-        return user;
-      })
-      .catch((error: any) => {
-        const errorCode = error.code;
-        const errorMessage = error.message;
-        console.log(errorCode + ' ', errorMessage);
-        throw new Error(errorMessage);
-      });
+    return firebaseConfig;
   }
 
   b2cLogin(context: LoginContext) {
@@ -98,8 +83,19 @@ export class AuthenticationService {
    * @return True if the user was logged out successfully.
    */
   logout(): Observable<boolean> {
-    // Customize credentials invalidation here
+    this.setupFirebase();
     this.credentialsService.setCredentials();
+    firebase
+      .auth()
+      .signOut()
+      .then(
+        () => {
+          console.log('Signed Out');
+        },
+        error => {
+          console.error('Sign Out Error', error);
+        }
+      );
     return of(true);
   }
 }
