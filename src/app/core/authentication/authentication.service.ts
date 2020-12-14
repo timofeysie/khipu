@@ -40,9 +40,7 @@ export class AuthenticationService {
         return result;
       })
       .catch((error: any) => {
-        const errorCode = error.code;
-        const errorMessage = error.message;
-        return of(errorCode + ' ', errorMessage) as Observable<any>;
+        throw new Error(error.message);
       });
   }
 

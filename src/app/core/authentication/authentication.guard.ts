@@ -13,7 +13,6 @@ export class AuthenticationGuard implements CanActivate {
   constructor(private router: Router, private credentialsService: CredentialsService) {}
 
   canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): boolean {
-    console.log('check this.credentialsService.isAuthenticated()', this.credentialsService.isAuthenticated());
     if (this.credentialsService.isAuthenticated()) {
       return true;
     }
