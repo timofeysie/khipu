@@ -1,4 +1,5 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
+import { SwUpdate } from '@angular/service-worker';
 import { Router, ActivatedRoute } from '@angular/router';
 import { FormGroup, FormBuilder, Validators } from '@angular/forms';
 import { LoadingController, Platform } from '@ionic/angular';
@@ -22,6 +23,11 @@ export class LoginComponent implements OnInit, OnDestroy {
   error: string | undefined;
   loginForm!: FormGroup;
   isLoading = false;
+  updateChecked = false;
+  updateAvailable = false;
+  get waitingForUpdates() {
+    return !this.updateChecked || this.updateAvailable;
+  }
 
   constructor(
     private router: Router,
@@ -30,7 +36,8 @@ export class LoginComponent implements OnInit, OnDestroy {
     private platform: Platform,
     private loadingController: LoadingController,
     private i18nService: I18nService,
-    private authenticationService: AuthenticationService
+    private authenticationService: AuthenticationService,
+    private updates: SwUpdate
   ) {
     this.createForm();
     const firebaseConfig = {
@@ -48,7 +55,19 @@ export class LoginComponent implements OnInit, OnDestroy {
     console.log(firebase.apps);
   }
 
-  ngOnInit() {}
+  async ngOnInit() {
+    // Check for new version and update if available
+    this.updates.available.subscribe(() => {
+      this.updateAvailable = true;
+      window.location.reload();
+    });
+    if (this.updates.isEnabled) {
+      await this.updates.checkForUpdate();
+    } else {
+      console.log('Service worker updates are disabled.');
+    }
+    this.updateChecked = true;
+  }
 
   ngOnDestroy() {}
 
