@@ -31,6 +31,7 @@ export class ItemsStore extends Store<ItemsState> {
               type: incomingItem[properties[1]].type,
               uri: incomingItem[properties[0]].value
             };
+            console.log('item', item);
             return item;
           });
           return list;
@@ -48,4 +49,6 @@ export class ItemsStore extends Store<ItemsState> {
       currentPage
     });
   }
+
+  writeItems(item: any) {}
 }

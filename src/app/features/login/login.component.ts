@@ -52,19 +52,19 @@ export class LoginComponent implements OnInit, OnDestroy {
     if (!firebase.apps.length) {
       firebase.initializeApp(firebaseConfig);
     }
-    console.log(firebase.apps);
   }
 
   async ngOnInit() {
     // Check for new version and update if available
     this.updates.available.subscribe(() => {
       this.updateAvailable = true;
+      log.debug('updateAvailable', this.updateAvailable);
       window.location.reload();
     });
     if (this.updates.isEnabled) {
       await this.updates.checkForUpdate();
     } else {
-      console.log('Service worker updates are disabled.');
+      log.debug('Service worker updates are disabled.');
     }
     this.updateChecked = true;
   }

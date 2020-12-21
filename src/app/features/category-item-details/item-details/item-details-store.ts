@@ -1,12 +1,13 @@
 import { Injectable } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
+import firebase from 'firebase/app';
 import { Store } from '@app/store';
 import { ItemDetailsState } from './item-details-store-state';
 import { ItemDetails } from '@app/core/interfaces/item-details';
 import { I18nService } from '@app/core';
 import { environment } from '@env/environment.prod';
 import { CategoryItemDetailsService } from '../category-item-details.service';
-
+import { Category } from '@app/core/interfaces/categories';
 @Injectable()
 export class ItemDetailsStore extends Store<ItemDetailsState> {
   ENTITIES_KEY = 'entities';
@@ -76,5 +77,13 @@ export class ItemDetailsStore extends Store<ItemDetailsState> {
         const firstItem = Object.keys(response['query']['pages'])[0];
         this.state.wikimediaDescription = response['query']['pages'][firstItem]['extract'];
       });
+  }
+
+  writeDescription(detail: any) {
+    const database = firebase.database();
+    firebase
+      .database()
+      .ref('items/details/' + detail.query.normalized.fromencoded)
+      .set(detail);
   }
 }

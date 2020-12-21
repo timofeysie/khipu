@@ -58,7 +58,6 @@ export class AuthenticationService {
       console.log('firebase initiated');
       firebase.initializeApp(firebaseConfig);
     }
-    return firebaseConfig;
   }
 
   b2cLogin(context: LoginContext) {

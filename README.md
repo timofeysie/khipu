@@ -76,6 +76,373 @@ I will be playing around with the OAuth login which relates to what I am doing a
 
 I will also doing the layout styles and theme.  The project is setup to use the Ionic UI components so you can create basic layouts using Ionic components such as list: https://ionicframework.com/docs/api/list
 
+## The Current App State
+
+Currently, we have five rows in the local storage table.
+
+1. credentials
+2. language
+3. theme
+4. categories
+5. itemDetails
+
+We will need to add the current page range in the pagination. The options also include a setting for the number of items on a page.
+
+We also want the app to load wherever it left off. This means storing the route and having the api responses and user modifications in stored so that if the user loads a category list of items page, the descriptions added or modified in the detail needs to be used for the slide out items.
+
+[Add selected item to the store #27](https://github.com/timofeysie/khipu/issues/27).
+
+This issue has some work in progress, and will be the starting point for this feature.
+
+The current item result must be stored in local storage, as well as with firebase. Some planning is needed here, because we don't really want to be storing complete pages from Wikipedia here. Right now we are only getting Wikidata partial results, but these will be expanded to include more types of items.
+
+The main thing is the description, the available languages, and possibly some other details which will help flow back into the entry in the category list.
+
+For example, there are currently many items without descriptions. In this case, when the detail is visited, a portion of the description, such as the first 100 characters can be copied into a user description field.
+
+After this, the user description will replace the description in the slide out under the item.
+
+The user is encouraged to customize this by cutting and pasting from the long descriptions from various API call results that appear on the details page. They can write whatever they want there.
+
+So back to step one, the chooses an item from the category items list. As well as the two api calls that get made
+
+```txt
+www.wikidata.org/wiki/Special:EntityData/\${c.qcode}.json,
+https://radiant-springs-38893.herokuapp.com/api/detail/${c.title}/${c.language}/false`,
+https://radiant-springs-38893.herokuapp.com/api/details/${c.language}/${c.title}
+```
+
+We need to also get the user description from a table on firebase. In order to make the association between the user description and the item description from the api results, we need to have a key value table. A direct lookup table (ie: flat data)? A items list with duplicate structure with the categories list? That way association is easy.
+
+There are a few similar choices for firebase web apps.
+
+1. Firebase Realtime Database
+2. Cloud Firestore
+
+### Cloud Firestore
+
+_Use our flexible, scalable NoSQL cloud database to store and sync data for client- and server-side development._
+
+### Firebase Realtime Database
+
+_Store and sync data with our NoSQL cloud database. Data is synced across all clients in realtime, and remains available when your app goes offline._
+
+There is page comparing [the two choices here](https://firebase.google.com/docs/database/rtdb-vs-firestore). The main frontend difference I saw was:
+
+#### Data model
+
+I prefer to structure my data as...
+
+1. A simple JSON tree.
+2. Documents organized into collections.
+
+The only thing this project might be missing with the realtime db is sophisticated querying capabilities on local data when the user is offline.
+
+The realtime database sounds slightly better choice for this project, so going with that.
+
+The firebase [realtime database docs](https://firebase.google.com/docs/database/web/structure-data?authuser=0) give these guidelines:
+
+- data structure as flat as possible
+- denormalization (split data into separate paths)
+
+Their example looks like this:
+
+```json
+{
+  "chats": {
+    "one": {
+      "title": "Historical Tech Pioneers",
+      "messages": {
+        "m1": { "sender": "ghopper", "message": "Relay malfunction found. Cause: moth." },
+        "m2": { ... },
+        ...
+      }
+    },
+    "two": { ... }
+  }
+}
+```
+
+The denormalization flat structure example is this:
+
+```json
+{
+  "chats": {
+    "one": {
+      "title": "Historical Tech Pioneers",
+      "lastMessage": "ghopper: Relay malfunction found. Cause: moth.",
+      "timestamp": 1459361875666
+    },
+    "two": { ... },
+    "three": { ... }
+  },
+  "members": {
+    "one": {
+      "ghopper": true,
+      "alovelace": true,
+      "eclarke": true
+    },
+    "two": { ... },
+    "three": { ... }
+  },
+  "messages": {
+    "one": {
+      "m1": {
+        "name": "eclarke",
+        "message": "The relay seems to be malfunctioning.",
+        "timestamp": 1459361875337
+      },
+      "m2": { ... },
+      "m3": { ... }
+    },
+    "two": { ... },
+    "three": { ... }
+  }
+}
+```
+
+If there is a two-way relationship between users and groups then things are more difficult. What is needed is an elegant way to list the groups a user belongs to and fetch only data for those groups. An index of groups can help a great deal here:
+
+```json
+{
+  "users": {
+    "alovelace": {
+      "name": "Ada Lovelace",
+      "groups": {
+         "techpioneers": true,
+         "womentechmakers": true
+      }
+    },
+    ...
+  },
+  "groups": {
+    "techpioneers": {
+      "name": "Historical Tech Pioneers",
+      "members": {
+        "alovelace": true,
+        "ghopper": true,
+        "eclarke": true
+      }
+    },
+    ...
+  }
+}
+```
+
+This duplicates some data so to delete Ada from the group, it has to be updated in two places. This is a necessary redundancy for two-way relationships.
+
+_This approach, inverting the data by listing the IDs as keys and setting the value to true, makes checking for a key as simple as reading /users/$uid/groups/$group_id and checking if it is null. The index is faster and a good deal more efficient than querying or scanning the data._
+
+Here is a sketch of what we want our database structure to look like using denormalization.
+
+For categories, since we want the user to be able to create their own custom categories, the wd value wont work, so we will use the name, which may not be the same as the label.
+
+```json
+{
+  "categories": {
+    "fallacies": {
+      "name": "fallacies",
+      "label": "Fallacies",
+      "language": "en",
+      "wd": "Q186150",
+      "wdt": "P31"
+    },
+    ...
+  },
+  "items": {
+    "categories": ["fallacies"],
+    "current-page": "",
+    "details": {
+      "Fallacy of composition": {
+        "batchcomplete": true,
+        "query": {
+          "normalized": [
+            {
+              "fromencoded": false,
+              "from": "Fallacy_of_composition",
+              "to": "Fallacy of composition"
+            }
+          ],
+          "pages": [
+            {
+              "pageid": 523043,
+              "ns": 0,
+              "title": "Fallacy of composition",
+              "terms": {
+                "label": ["Fallacy of composition"]
+              }
+            }
+          ]
+        }
+      }
+      ...
+    }
+  },
+  "descriptions": {
+    "fallacies": {
+      "Fallacy_of_composition": {
+        "item-name": "Fallacy of composition",
+        "user-description": "It's a crazy world.  And any way you can skin it is your business."
+      }
+    }
+    ...
+  }
+}
+```
+
+So you can see, since we have a connection between the lists, some duplicated data means changes to items might have to be done in more than one place. The items/details/fallacies/name has a corresponding entry in descriptions/fallacies/name. After details are viewed, their user-description will be set. This due to the fact that a lot of item lists on Wikidata don't have any descriptions, or their are misused fields that contain info such as category or type which is not helpful for our purposes.
+
+The above is missing the kind of keys mentioned in the denormalization example
+
+```json
+{
+  "users": {
+    "alovelace": { }
+    },
+    ...
+  },
+  "groups": {
+    "techpioneers": {
+      "members": {
+        "alovelace": true,
+```
+
+### The CRUD functions
+
+Since there are three parts of the JSON so far, we will need three functions to add data to the firestore:
+
+- writeCategories
+- writeItems
+- writeDetailDescriptions
+
+The first one looks like this:
+
+```js
+writeCategories(category: Category) {
+  const database = firebase.database();
+  firebase
+    .database()
+    .ref('categories/' + category.name)
+    .set({
+      name: category.name,
+      label: category.label,
+      language: category.language,
+      wd: category.wd,
+      wdt: category.wdt });
+}
+```
+
+For the item details, we don't want to store whole pages from Wikipedia, so just the description fields will do for now.
+
+We man need to use the normalized/from field as the key for items. Does every item have that field? Why are we using the name "details", when something like "category-items" or "items-list" might be more appropriate?
+
+```json
+"items": {
+  "categories": ["fallacies"],
+  "current-page": "",
+  "details": {
+    "Fallacy of composition": {
+      "batchcomplete": true,
+      "query": {
+        "normalized": [
+          {
+            "fromencoded": false,
+            "from": "Fallacy_of_composition",
+            "to": "Fallacy of composition"
+          }
+        ],
+        "pages": [ ... ]
+      }
+    }
+  }
+}
+```
+
+For better or for worse, this is what it would look like currently:
+
+```js
+writeDescription(detail: any) {
+  const database = firebase.database();
+  firebase
+    .database()
+    .ref('items/details/' + detail.query.normalized.fromencoded)
+    .set(detail);
+}
+```
+
+The first time using the database there was this error:
+
+```txt
+TypeError: app_1.default.database is not a function
+```
+
+I believe this was because I had imported the wrong thing, mainly because I am still a little confused about which one I need to use:
+
+This is the import for firestore:
+
+```js
+import 'firebase/firestore';
+```
+
+This is the import for the realtime database:
+
+```js
+import 'firebase/database';
+```
+
+If you recall, the later was chosen. But firestore is a cooler name, which is probably why I added that to the project by mistake. After actually adding the realtime db and using the right import, the error changed to this:
+
+```js
+ERROR Error: Uncaught (in promise): Error: PERMISSION_DENIED: Permission denied
+```
+
+This StackOverflow answer says: _change the rules so that the database is only readable/writeable by authenticated users:_
+
+```js
+{
+  "rules": {
+    ".read": "auth != null",
+    ".write": "auth != null"
+  }
+}
+```
+
+Making this change in the console shows this message:
+
+```txt
+Your security rules are not secure. Any authenticated user can steal, modify or delete data in your database.
+```
+
+This doesn't make sense. It's users that are not authenticated who we don't want to change the data. The db is intended to be used by authenticated users!
+
+Anyhow, after refreshing the app, the CategoriesStore.writeCategories() works, and we can now see the data in the data dashboard. Great! That was a lot easier that MySQL by far.
+
+Next up, back to the docs to learn about the rest of the CRUD functions.
+
+We will also need to create a sharable config function for creating the db. It's not clear how this is done, but hopefully that will be addressed somewhere in the docs.
+
+### Item statistics
+
+Another thing we want is statistics about each category list and each item on the list. For example, every time an item short description is viewed, every time an item detail is viewed, we want to increment a counter, as well as what date the item was viewed. We also want to let the user indicate that they have committed an item to long term memory now, and it no longer needs to be on the list of things to be learned.
+
+The reason for this is when a student is learning a list of things, they want to know how often they have studied a particular item. We will want to display some kind of indicator based on this information. It's kind of like a classic to do list with extra features.
+
+This is where the xAPI/cmi5 comes in. cmi5 which appears to be a stripped down/focused use case of the xAPI. You can [read about xAPI and cmi5 here](https://xapi.com/cmi5/?utm_source=google&utm_medium=natural_search) and see a picture of the [whole ecosystem here](https://xapi.com/ecosystem/).
+
+We also tried out some of the Javascript libs in [the Cades project](https://github.com/timofeysie/clades#trying-out-cmi5). The first three items on the checklist for what we would want this client to implement are:
+
+1. Create Course structure
+2. Add Assignable Units (AU) and Blocks to Course
+3. Import Course into LMS (Learning Management System)
+
+To support these features, we need a LRS (Learning Record Store) to send actions that happen in the Khipu app. For example, we want to send an xAPI statement to the LRS each time an item is viewed.
+
+Then, this data needs to be retrieved to indicate on the list of items which items have been viewed and how many times, and especially highlight items that have never been viewed.
+
+It is conceived that using [the Leitner system](https://en.wikipedia.org/wiki/Leitner_system#:~:text=The%20Leitner%20system%20is%20a,are%20reviewed%20at%20increasing%20intervals.) or some version of spaced repetition can create pacing through the list by removing items which have passed through a series of steps including being viewed, and tested for reading, writing, speaking, listening and possibly used in compound structures in the future.
+
+For this reason, we don't want to include this state data in our firebase storage.
+
 ## Observable Store Pattern
 
 [Issue #12](https://github.com/timofeysie/khipu/issues/12) has been opened to apply this pattern to the list of items (Issue #4).
@@ -84,12 +451,14 @@ There is a brief overview of the pattern [here](https://blog.angular-university.
 
 And a fuller architecture based article using the above is [here](https://georgebyte.com/scalable-angular-app-architecture/)
 
+(Note: the following is old documentation before a refactor of into the features/category-item-details directory).
+
 The categories directory can be the start of a feature directory which will hold the item list feature. This will include:
 
-- create a items directory inside (with the observable state and presenter/container patterns)
+- create an items directory inside (with the observable state and presenter/container patterns)
 - create a service with a RxJs subject
 - create a container that uses the service to get the list of items
-- create a presentation component to display data from the container via @Input/@Output
+- create a presentation component to display data from the container communicating via @Input/@Output
 - create a view class to sync with the state store via the router url
 
 ### Some previous notes on the pattern
