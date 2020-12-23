@@ -1,5 +1,6 @@
 import { Injectable, NO_ERRORS_SCHEMA } from '@angular/core';
 import { Observable, of } from 'rxjs';
+import { RealtimeDbService } from '@app/core/firebase/realtime-db.service';
 import { Credentials, CredentialsService } from './credentials.service';
 import { Plugins } from '@capacitor/core';
 import firebase from 'firebase/app';
@@ -19,7 +20,7 @@ export interface LoginContext {
   providedIn: 'root'
 })
 export class AuthenticationService {
-  constructor(private credentialsService: CredentialsService) {}
+  constructor(private credentialsService: CredentialsService, private realtimeDbService: RealtimeDbService) {}
 
   /**
    * Authenticates the user.
@@ -27,7 +28,7 @@ export class AuthenticationService {
    * @return The user credentials.
    */
   login(context: LoginContext): Observable<Credentials> | any {
-    this.setupFirebase();
+    this.realtimeDbService.setupFirebase();
     return firebase
       .auth()
       .signInWithEmailAndPassword(context.username, context.password)
@@ -42,22 +43,6 @@ export class AuthenticationService {
       .catch((error: any) => {
         throw new Error(error.message);
       });
-  }
-
-  setupFirebase() {
-    const firebaseConfig = {
-      apiKey: 'AIzaSyBDeqGbiib0fVFoc2yWr9WVE4MV6isWQ9Y',
-      authDomain: 'khipu1.firebaseapp.com',
-      databaseURL: 'https://khipu1.firebaseio.com',
-      projectId: 'khipu1',
-      storageBucket: 'khipu1.appspot.com',
-      messagingSenderId: '348969595626',
-      appId: '1:348969595626:web:a3094e5d87583fca551d93'
-    };
-    if (!firebase.apps.length) {
-      console.log('firebase initiated');
-      firebase.initializeApp(firebaseConfig);
-    }
   }
 
   b2cLogin(context: LoginContext) {
@@ -80,7 +65,7 @@ export class AuthenticationService {
    * @return True if the user was logged out successfully.
    */
   logout(): Observable<boolean> {
-    this.setupFirebase();
+    this.realtimeDbService.setupFirebase();
     this.credentialsService.setCredentials();
     firebase
       .auth()

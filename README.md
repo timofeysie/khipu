@@ -415,11 +415,51 @@ Your security rules are not secure. Any authenticated user can steal, modify or 
 
 This doesn't make sense. It's users that are not authenticated who we don't want to change the data. The db is intended to be used by authenticated users!
 
+The [docs on security point out](https://firebase.google.com/docs/database/security/get-started?authuser=0): _in Realtime Database, you might want to include a field that denotes a specific role for each user. Then, your rules can read that field and use it to grant role-based access._
+
 Anyhow, after refreshing the app, the CategoriesStore.writeCategories() works, and we can now see the data in the data dashboard. Great! That was a lot easier that MySQL by far.
 
 Next up, back to the docs to learn about the rest of the CRUD functions.
 
 We will also need to create a sharable config function for creating the db. It's not clear how this is done, but hopefully that will be addressed somewhere in the docs.
+
+#### Reading and writing to firebase
+
+After implementing the "C" by creating the categories in the db successfully, it's time for the "R" part of CRUD. The write and create seem to be the same thing. Whatever was there previously will be overwritten with the newly created JSON. So this makes the read even more important. We want to know what is there before we modify it. This also brings up all sorts of concurrency questions for me. If I am using an app and a browser at the same time asynchronously, there could be issues if the time between read and write is extended.
+
+[Here are the docs for that](https://firebase.google.com/docs/database/web/read-and-write?authuser=0)
+
+set() overwrites data at the specified location, including any child nodes.
+
+To read data at a path and listen for changes, use the on() or once() methods to observe events.
+
+It appears as if we will have to manually differentiate users and store our category, items and details based on a user id. This is accomplished as follows:
+
+```js
+const userId = firebase.auth().currentUser.uid;
+```
+
+So our current JSON structure will work but will need this id in from of each object stored. As far as how this would affect the performance of a popular app, I'm doubtful. But since this app can be considered a demo of a future implementation, it's probably OK either to ignore user differences and let all the user share the lists and descriptions, or use the id to let each user have their own.
+
+We will definitely need roles in the future, such as admin, teacher, student, parent, spectator. All this will need to be thought about as we go. This is an incremental development project. At each step we can gain more information that will inform where we are headed and the next steps on how to get there.
+
+As an example of the possibility of using the user id in front of each object, here is what that might look like for the categories table:
+
+```json
+{
+  "categories": {
+    "<user-id>": {
+      "fallacies": {
+        "name": "fallacies",
+        "label": "Fallacies",
+        "language": "en",
+        "wd": "Q186150",
+        "wdt": "P31"
+      },
+      ...
+    }
+  },
+```
 
 ### Item statistics
 

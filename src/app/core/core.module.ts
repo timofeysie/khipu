@@ -6,6 +6,7 @@ import { TranslateModule } from '@ngx-translate/core';
 
 import { RouteReusableStrategy } from './route-reusable-strategy';
 import { HttpService } from './http/http.service';
+import { RealtimeDbService } from './firebase/realtime-db.service';
 
 @NgModule({
   imports: [CommonModule, HttpClientModule, TranslateModule, RouterModule],
@@ -17,7 +18,8 @@ import { HttpService } from './http/http.service';
     {
       provide: RouteReuseStrategy,
       useClass: RouteReusableStrategy
-    }
+    },
+    RealtimeDbService
   ]
 })
 export class CoreModule {

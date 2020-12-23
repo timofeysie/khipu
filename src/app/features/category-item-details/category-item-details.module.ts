@@ -17,6 +17,7 @@ import { CategoryComponent } from './categories/components/categories-list/categ
 import { ReactiveFormsModule } from '@angular/forms';
 import { CategoriesEndpoint } from './categories/categories.endpoint';
 
+import { RealtimeDbService } from '@app/core/firebase/realtime-db.service';
 import { AddCategoryContainerComponent } from './categories/container/add-category/add-category-container.component';
 import { AddCategoryComponent } from './categories/components/add-category/add-category.component';
 import { DescriptionDirective } from './item-details/description.directive';
@@ -37,6 +38,6 @@ import { DescriptionFormComponent } from './item-details/components/description-
     DescriptionDirective,
     DescriptionFormComponent
   ],
-  providers: [ItemsListEndpoint, CategoriesEndpoint, ItemsStore]
+  providers: [ItemsListEndpoint, CategoriesEndpoint, ItemsStore, RealtimeDbService]
 })
 export class CategoryItemDetailsModule {}

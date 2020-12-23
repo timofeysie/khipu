@@ -12,3 +12,4 @@ export * from './route-reusable-strategy';
 export * from './logger.service';
 export * from './until-destroyed';
 export * from './theme.service';
+export * from './firebase/realtime-db.service';
