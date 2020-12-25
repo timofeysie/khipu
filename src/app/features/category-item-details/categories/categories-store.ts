@@ -1,12 +1,15 @@
 import { Injectable } from '@angular/core';
 import { Store } from '@app/store';
 import { RealtimeDbService } from '@app/core/firebase/realtime-db.service';
+import { Logger } from '@app/core/logger.service';
 import { CategoriesState } from './categories-store-state';
 import { CategoriesEndpoint } from './categories.endpoint';
 import { Category } from '@app/core/interfaces/categories';
 import { map } from 'rxjs/operators';
 import { I18nService } from '@app/core';
 import { environment } from '@env/environment.prod';
+
+const log = new Logger('CategoriesStore');
 
 @Injectable()
 export class CategoriesStore extends Store<CategoriesState> {
@@ -19,6 +22,24 @@ export class CategoriesStore extends Store<CategoriesState> {
   }
 
   fetchList() {
+    this.realtimeDbService
+      .readUserData('categories')
+      .then(result => {
+        let cats: any = [];
+        Object.keys(result).forEach(function(key) {
+          var value = result[key];
+          cats.push(value);
+        });
+        this.state.categories = cats;
+      })
+      .catch(error => {
+        log.debug('error', error);
+        log.debug('get categories form endpoint');
+        this.getCategoriesFromEndpoint();
+      });
+  }
+
+  getCategoriesFromEndpoint() {
     const currentLanguage = this.i18nService.language;
     const sparqlLanguages = environment.sparqlLanguages;
     const sparqlLanguageObject = sparqlLanguages.find(i => i.appLanguage === currentLanguage);
@@ -26,12 +47,11 @@ export class CategoriesStore extends Store<CategoriesState> {
       .fetchList()
       .pipe(
         map((rawCategoryList: Category[]) => {
-          // TODO: check firebase first
           const list: Category[] = rawCategoryList.map(rawCategory => {
             const category: Category = { ...rawCategory, language: sparqlLanguageObject.sparqlLanguage };
             return category;
           });
-          // this.realtimeDbService.writeCategories(list);
+          this.realtimeDbService.writeCategories(list);
           return list;
         })
       )

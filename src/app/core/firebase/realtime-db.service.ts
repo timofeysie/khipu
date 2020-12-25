@@ -1,21 +1,20 @@
 import { Injectable } from '@angular/core';
 import firebase from 'firebase/app';
 import 'firebase/database';
+import { Logger } from '../logger.service';
 import { Category } from '@app/core/interfaces/categories';
+
+const log = new Logger('RealtimeDbService');
 
 @Injectable()
 export class RealtimeDbService {
+  userId: string;
   constructor() {}
-
-  getUserId() {
-    this.setupFirebase();
-    const userId = firebase.auth().currentUser.uid;
-    console.log('userId', userId);
-    return userId;
-  }
 
   /**
    * TODO:  How to handle errors with the firebase functions?
+   * https://firebase.google.com/docs/database/web/read-and-write?authuser=0#add_a_completion_callback
+   * The "Add a Completion Callback" section seems like the answer.
    * @param categories JSON category object.
    */
   writeCategories(categories: Category[]) {
@@ -27,8 +26,25 @@ export class RealtimeDbService {
     const database = firebase.database();
     firebase
       .database()
-      .ref('categories')
-      .set(categoriesToWrite);
+      .ref('categories/' + this.userId)
+      .set(categoriesToWrite, error => {
+        if (error) {
+          log.error('write failed', error);
+        } else {
+          log.debug('write successful');
+        }
+      });
+  }
+
+  readUserData(name: string) {
+    this.setupFirebase();
+    return firebase
+      .database()
+      .ref(name + '/' + this.userId)
+      .once('value')
+      .then(snapshot => {
+        return snapshot.val();
+      });
   }
 
   writeDescription(detail: any) {
@@ -36,8 +52,14 @@ export class RealtimeDbService {
     const database = firebase.database();
     firebase
       .database()
-      .ref('items/details/' + detail.query.normalized.fromencoded)
-      .set(detail);
+      .ref('items/' + this.userId + '/details/' + detail.query.normalized.fromencoded)
+      .set(detail, error => {
+        if (error) {
+          log.error('write failed', error);
+        } else {
+          log.debug('write successful');
+        }
+      });
   }
 
   setupFirebase() {
@@ -52,6 +74,8 @@ export class RealtimeDbService {
     };
     if (!firebase.apps.length) {
       firebase.initializeApp(firebaseConfig);
+      this.userId = firebase.auth().currentUser.uid;
+    } else {
     }
   }
 }

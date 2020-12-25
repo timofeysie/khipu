@@ -322,13 +322,14 @@ writeCategories(category: Category) {
   const database = firebase.database();
   firebase
     .database()
-    .ref('categories/' + category.name)
-    .set({
-      name: category.name,
-      label: category.label,
-      language: category.language,
-      wd: category.wd,
-      wdt: category.wdt });
+    .ref('categories/' + this.userId)
+    .set(categoriesToWrite, error => {
+      if (error) {
+        log.error('write failed', error);
+      } else {
+        log.debug('write successful');
+      }
+    });
 }
 ```
 
@@ -461,6 +462,8 @@ As an example of the possibility of using the user id in front of each object, h
   },
 ```
 
+This is what was decided upon in the end. It will be helpful to create test users with various test categories and not have to worry about affecting an account that is actually being used for study.
+
 ### Item statistics
 
 Another thing we want is statistics about each category list and each item on the list. For example, every time an item short description is viewed, every time an item detail is viewed, we want to increment a counter, as well as what date the item was viewed. We also want to let the user indicate that they have committed an item to long term memory now, and it no longer needs to be on the list of things to be learned.
@@ -482,6 +485,10 @@ Then, this data needs to be retrieved to indicate on the list of items which ite
 It is conceived that using [the Leitner system](https://en.wikipedia.org/wiki/Leitner_system#:~:text=The%20Leitner%20system%20is%20a,are%20reviewed%20at%20increasing%20intervals.) or some version of spaced repetition can create pacing through the list by removing items which have passed through a series of steps including being viewed, and tested for reading, writing, speaking, listening and possibly used in compound structures in the future.
 
 For this reason, we don't want to include this state data in our firebase storage.
+
+However, getting the LRS set up with xAPI/cmi5 reporting and querying is another rabbit hole of work. It would be so easy to add a counter to each item and increment it each time it's viewed. With that only, we could implement some viewed/un-viewed styles and think about how best to handle the UX we seek.
+
+The other apps that got this far didn't really do a good job of this, so trying things out while the above is underway is a good idea.
 
 ## Observable Store Pattern
 
@@ -668,22 +675,6 @@ Next, we used various Node server program to get around CORS issues for this. Ho
 
 There is a list of what was done, and what is remaining on the issue.
 
-### Still to do
-
-1. (done) Move the service operation into the item-detail.endpoint file.
-2. Create a state for statistics on detail view to track activity.
-3. (done) Get a list of available languages and create a select in the header.
-4. (done) Replace the hard coded language settings with an item from the list based on the current language saved option.
-5. (done) Parse the Wikipedia page for sections and display the description.
-6. Save the description in the state and use part of it as a slide in element in the category-items.
-7. (done) Add interfaces for details.
-8. Fix the unit tests.
-9. Try a red-green-refactor session to start to build up unit test code coverage.
-
-Item details has been a blocker, so all these things can happen now. Probably create some new issues to handle most of these.
-
-For #1, a service was created to be shared for the category-item-details module. I wasn't feeling the need to have a separate endpoint file which acted as the service.
-
 ### Regarding languages
 
 At first it seemed like we should get the language from the current state where the app strings will be translated as their bundle translations.
@@ -755,6 +746,15 @@ Also, the size is too small and difficult to change. Probably we want another pa
 Another issue is that the value of the select is not shown on page load. It would be nice to use it as the title on the header, as that works well once selected. Always more to do!
 
 ### Adding the description to the item in the item list
+
+[This is issue #25: Get the description of a detail page and add it as the item list description](https://github.com/timofeysie/khipu/issues/25). It's a rabbit hole, since the user descriptions need to be persisted and applied later to the list. This required authentication, a database, and all kinds of functionality to support it.
+
+Here are some of the related issues:
+
+- #30 Create CRUD functions for the firebase realtime db
+- #28 Setup firebase auth integration
+- #27 Add selected item to the store
+- #26 Add description edit form
 
 ## Issue #8: Create a form to enter a new category
 
