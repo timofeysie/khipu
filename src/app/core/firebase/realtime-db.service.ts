@@ -3,6 +3,7 @@ import firebase from 'firebase/app';
 import 'firebase/database';
 import { Logger } from '../logger.service';
 import { Category } from '@app/core/interfaces/categories';
+import { Item } from '@app/core/interfaces/item';
 
 const log = new Logger('RealtimeDbService');
 
@@ -23,11 +24,43 @@ export class RealtimeDbService {
     categories.forEach(category => {
       categoriesToWrite[category.name] = category;
     });
-    const database = firebase.database();
     firebase
       .database()
       .ref('categories/' + this.userId)
       .set(categoriesToWrite, error => {
+        if (error) {
+          log.error('write failed', error);
+        } else {
+          log.debug('write successful');
+        }
+      });
+  }
+
+  /**
+   * Right now we are using the item label as the key in this list,
+   * it might be better to use the "from" value (see below)
+   * if that's a unique value that is converted into a human readable label.
+   * "Fallacy of composition": {
+   *    "batchcomplete": true,
+   *      "query": {
+   *        "normalized": [{
+   *          "fromencoded": false,
+   *          "from": "Fallacy_of_composition",
+   *          "to": "Fallacy of composition"
+   *        }
+   *        ...
+   * @param items List of items to store.
+   */
+  writeItemsList(items: Item[]) {
+    this.setupFirebase();
+    let itemsToWrite = {};
+    items.forEach(item => {
+      itemsToWrite[item.label] = item;
+    });
+    firebase
+      .database()
+      .ref('items/' + this.userId)
+      .set(itemsToWrite, error => {
         if (error) {
           log.error('write failed', error);
         } else {
@@ -44,12 +77,14 @@ export class RealtimeDbService {
       .once('value')
       .then(snapshot => {
         return snapshot.val();
+      })
+      .catch(error => {
+        console.log('error', error);
       });
   }
 
   writeDescription(detail: any) {
     this.setupFirebase();
-    const database = firebase.database();
     firebase
       .database()
       .ref('items/' + this.userId + '/details/' + detail.query.normalized.fromencoded)
@@ -74,8 +109,13 @@ export class RealtimeDbService {
     };
     if (!firebase.apps.length) {
       firebase.initializeApp(firebaseConfig);
+      const database = firebase.database();
       this.userId = firebase.auth().currentUser.uid;
+      console.log('1 this.userId', this.userId);
     } else {
+      const database = firebase.database();
+      this.userId = firebase.auth().currentUser.uid;
+      console.log('2 this.userId', this.userId);
     }
   }
 }

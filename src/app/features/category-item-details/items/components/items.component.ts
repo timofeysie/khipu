@@ -1,6 +1,6 @@
 import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { Router } from '@angular/router';
-import { Item } from '../items.store.state';
+import { Item } from '@app/core/interfaces/item';
 
 @Component({
   selector: 'app-items',

@@ -1,20 +1,43 @@
 import { Injectable } from '@angular/core';
-import { ItemsState, Item } from './items.store.state';
+import { ItemsState } from './items.store.state';
+import { Item } from '@app/core/interfaces/item';
 import { Subject } from 'rxjs';
 import { Category } from '@app/core/interfaces/categories';
+import { RealtimeDbService } from '@app/core/firebase/realtime-db.service';
 import { ItemsListEndpoint } from './items.endpoint';
 import { map } from 'rxjs/operators';
 import { Store } from '@app/store';
+import { Logger } from '@app/core/logger.service';
+
+const log = new Logger('ItemsStore');
 
 @Injectable()
 export class ItemsStore extends Store<ItemsState> {
   private reloadItems$: Subject<undefined> = new Subject();
   private currentPage = 0;
-  constructor(private itemListEndpoint: ItemsListEndpoint) {
+  constructor(private itemListEndpoint: ItemsListEndpoint, private realtimeDbService: RealtimeDbService) {
     super(new ItemsState());
   }
 
   fetchList(category: Category, currentPage: number) {
+    this.realtimeDbService
+      .readUserData('items')
+      .then(result => {
+        // check if items exist already
+        if (result) {
+          const items: Item[] = Object.values(result);
+          this.updateItemsState(items, currentPage);
+        } else {
+          // if not get it from an API call
+          this.getItemsFromEndpoint(category, currentPage);
+        }
+      })
+      .catch(error => {
+        log.error('error', error);
+      });
+  }
+
+  getItemsFromEndpoint(category: Category, currentPage: number) {
     this.itemListEndpoint
       .listItems(category, currentPage)
       .pipe(
@@ -29,11 +52,12 @@ export class ItemsStore extends Store<ItemsState> {
                 ? incomingItem[properties[0] + 'Description'].value
                 : '',
               type: incomingItem[properties[1]].type,
-              uri: incomingItem[properties[0]].value
+              uri: incomingItem[properties[0]].value,
+              binding: incomingItem // raw item will replace the other values here eventually
             };
-            console.log('item', item);
             return item;
           });
+          this.realtimeDbService.writeItemsList(list);
           return list;
         })
       )

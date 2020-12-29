@@ -1,10 +1,4 @@
-export interface Item {
-  categoryType?: string;
-  label: string;
-  description: string;
-  type: string;
-  uri: string;
-}
+import { Item } from '@app/core/interfaces/item';
 
 const initItems: Item[] = [];
 

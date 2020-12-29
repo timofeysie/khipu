@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { ItemsStore } from '../items.store';
 import { ActivatedRoute } from '@angular/router';
 import { Category } from '@app/core/interfaces/categories';
-import { Item } from '../items.store.state';
+import { Item } from '@app/core/interfaces/item';
 
 @Component({
   selector: 'app-items-container',

@@ -335,24 +335,26 @@ writeCategories(category: Category) {
 
 For the item details, we don't want to store whole pages from Wikipedia, so just the description fields will do for now.
 
-We man need to use the normalized/from field as the key for items. Does every item have that field? Why are we using the name "details", when something like "category-items" or "items-list" might be more appropriate?
+We may need to use the normalized/from field as the key for items. Does every item have that field? Why are we using the name "details", when something like "category-items" or "items-list" might be more appropriate?
 
 ```json
 "items": {
-  "categories": ["fallacies"],
-  "current-page": "",
-  "details": {
-    "Fallacy of composition": {
-      "batchcomplete": true,
-      "query": {
-        "normalized": [
-          {
-            "fromencoded": false,
-            "from": "Fallacy_of_composition",
-            "to": "Fallacy of composition"
-          }
-        ],
-        "pages": [ ... ]
+  "<user-id>": {
+    "categories": ["fallacies"],
+    "current-page": "",
+    "item-list": {
+      "Fallacy of composition": {
+        "batchcomplete": true,
+        "query": {
+          "normalized": [
+            {
+              "fromencoded": false,
+              "from": "Fallacy_of_composition",
+              "to": "Fallacy of composition"
+            }
+          ],
+          "pages": [ ... ]
+        }
       }
     }
   }
@@ -463,6 +465,55 @@ As an example of the possibility of using the user id in front of each object, h
 ```
 
 This is what was decided upon in the end. It will be helpful to create test users with various test categories and not have to worry about affecting an account that is actually being used for study.
+
+### Item list discussion
+
+The paginated results for an item list call look like this:
+
+```json
+{
+  "head" : {
+    "vars" : [ "cognitive_bias", "cognitive_biasLabel", "cognitive_biasDescription" ]
+  },
+  "results" : {
+    "bindings" : [ {
+      "cognitive_bias" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q16503490"
+      },
+      "cognitive_biasLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "overconfidence effect"
+      },
+      "cognitive_biasDescription" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "bias in which a person's subjective confidence in their judgements is reliably greater than the objective accuracy of those judgements"
+      }
+    },
+    ...
+```
+
+From this we have created a JSON object that looks like this:
+
+```js
+categoryType: 'cognitive_bias';
+description: "bias in which a person's subjective confidence in their judgements is reliably greater than the objective accuracy of those judgements";
+label: 'overconfidence effect';
+type: 'literal';
+uri: 'http://www.wikidata.org/entity/Q16503490';
+```
+
+This seemed like a good idea at the start, but maybe it's better to just store the result from the server, and get the values from that in the presentation class? If we create our own mapping and store data that way, we could be setting ourselves up later for problems with bad data. For example, if Wikidata changes this format somewhat, we would have to revisit all the items on the lists again and reload them.
+
+If we however do this mapping in the presentation layer, there is just that to change to allow both old and new types and both types can co-exist together.
+
+When you look at the advantage of doing the mapping in a template, it's clear that it is a better choice. But maybe we could have both.
+
+For example, we want to at least add a user-description created on the detail page to replace the stock descriptions which are pitiful in many cases of they exist. We also want to add meta data regarding how many times an item description and detail have been viewed. This might be handled exclusively by our LRS reporting in the future, but for now, we will do it here.
+
+To cover all bases, for the moment we will include _both_ models. We might even start using the type/value values to make a more responsive app once we start looking at more different kinds of content that make use of different types.
 
 ### Item statistics
 

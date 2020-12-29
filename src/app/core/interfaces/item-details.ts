@@ -1,4 +1,3 @@
-import { Alias } from './alias';
 export interface ItemDetails {
   aliases: any;
   claims: any;
