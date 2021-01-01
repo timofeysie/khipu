@@ -4,12 +4,14 @@ import 'firebase/database';
 import { Logger } from '../logger.service';
 import { Category } from '@app/core/interfaces/categories';
 import { Item } from '@app/core/interfaces/item';
+import { Subscription } from 'rxjs';
 
 const log = new Logger('RealtimeDbService');
 
 @Injectable()
 export class RealtimeDbService {
   userId: string;
+  authSubscription: Subscription;
   constructor() {}
 
   /**
@@ -51,21 +53,43 @@ export class RealtimeDbService {
    *        ...
    * @param items List of items to store.
    */
-  writeItemsList(items: Item[]) {
-    this.setupFirebase();
-    let itemsToWrite = {};
-    items.forEach(item => {
-      itemsToWrite[item.label] = item;
-    });
-    firebase
-      .database()
-      .ref('items/' + this.userId)
-      .set(itemsToWrite, error => {
-        if (error) {
-          log.error('write failed', error);
-        } else {
-          log.debug('write successful');
+  writeItemsList(newItems: Item[], category: string) {
+    console.log('new items', newItems);
+    // load the current items list
+    this.readUserSubData('items', category)
+      .then((currentItems: any) => {
+        if (!currentItems) {
+          currentItems = {};
         }
+        // current items are the existing
+        console.log('current items', currentItems);
+        newItems.forEach((item: any) => {
+          // check if the item already exists?
+          // if it doesn't, created a new default user description and counts
+          // maybe the description should be set as the item description?
+          const newItem = {
+            'user-description': item.description,
+            'user-description-viewed-count': 0,
+            'item-details-viewed-count': 0,
+            'item-details-viewed-date': new Date().getMilliseconds()
+          };
+          currentItems[item.label] = newItem;
+        });
+        console.log('new items to write', newItems);
+        firebase
+          .database()
+          .ref('items/' + this.userId + '/' + category)
+          .set(currentItems, error => {
+            if (error) {
+              log.error('write failed', error);
+            } else {
+              log.debug('write successful');
+            }
+          });
+      })
+      .catch(error => {
+        // list doesn't exist yet?
+        console.log('error', error);
       });
   }
 
@@ -74,6 +98,20 @@ export class RealtimeDbService {
     return firebase
       .database()
       .ref(name + '/' + this.userId)
+      .once('value')
+      .then(snapshot => {
+        return snapshot.val();
+      })
+      .catch(error => {
+        console.log('error', error);
+      });
+  }
+
+  readUserSubData(name: string, sub: string) {
+    this.setupFirebase();
+    return firebase
+      .database()
+      .ref(name + '/' + this.userId + '/' + sub)
       .once('value')
       .then(snapshot => {
         return snapshot.val();
@@ -109,13 +147,15 @@ export class RealtimeDbService {
     };
     if (!firebase.apps.length) {
       firebase.initializeApp(firebaseConfig);
-      const database = firebase.database();
-      this.userId = firebase.auth().currentUser.uid;
-      console.log('1 this.userId', this.userId);
+      console.log('1');
     } else {
-      const database = firebase.database();
-      this.userId = firebase.auth().currentUser.uid;
-      console.log('2 this.userId', this.userId);
+      console.log('2');
     }
+    firebase.auth().onAuthStateChanged(user => {
+      if (user) {
+        const database = firebase.database();
+        this.userId = firebase.auth().currentUser.uid;
+      }
+    });
   }
 }

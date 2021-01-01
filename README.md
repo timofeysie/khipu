@@ -515,6 +515,50 @@ For example, we want to at least add a user-description created on the detail pa
 
 To cover all bases, for the moment we will include _both_ models. We might even start using the type/value values to make a more responsive app once we start looking at more different kinds of content that make use of different types.
 
+But, there is actually a problem. The item list is a paginated view of an API call. If we store only the items on the list, we still need to make the api call in case the results for a certain range have changed.  So what, do we have to change the ... what?  Forgot what I was getting at.
+
+Since doing the work above to store the dual item list objects, we have a regression now.  The next page will be the same as the current page. Do we need to store the possibly the paginated views? If we do that, then an item is added, and another item moves to another slice of the list, there will be duplicates in the db.
+
+This puts a big spanner in the pagination.  Store by pagination view, make the call and replace the old view with the new view.  The same with the next slice, and so on, propagating changes as they go from page to page.
+
+Of course, we will have to copy over the old user created data such as the user-description to the new items if it exists there.
+
+But wait, this poses a problem, as if an item is deleted, we may lose a user-description because there is no equivalent on the current page.
+
+There seem to be two options now:
+
+1. We could separate the user created data stored on a simplified object.
+2. Remove the pagination from the API call, get all the items at once, and then do the pagination on the stored list instead.
+
+At least with #2 we would have the total number of pages and allow a richer pagination experience, as well as an overview on the entire list for those interested.
+
+Given the pagination issue, In either case I think we don't want anything on firebase items except user-description, counts, etc.  We can use the objects on the page views. #1 is a smaller change for now.
+
+```json
+"items": {
+  "<user-id>": {
+    "fallacies": {
+    "current-page": "0",
+    "total-pages": "0",
+    "item-list": {
+      "Fallacy of composition": {
+        "user-description": "blah blah blah",
+        "user-description-viewed-count": 0,
+        "item-details-viewed-count": 0,
+        "item-details-viewed-date": 1234556789
+      },
+      ...
+```
+
+Regarding the count, it might also be helpful to have the last viewed date there. Not sure if we need that just for description viewed. How about just for item-details-viewed for now.
+
+This should avoid the pagination issue for now. We can get the meta data we want by creating a map of all the item-lists objects whose names will map to the items on the list returned from the paginated api calls, and can be used in some way in the display template.
+
+The total pages can be updated as we go, until there are no more results. A little awkward until we discover a final solution, as there must be a Wikipedia/Wikidata method for this.
+
+After trying this our, going to the next page erases the old page list. We need to add it.
+Which means getting the list, adding the items from the next page, then writing the new combined list I think.
+
 ### Item statistics
 
 Another thing we want is statistics about each category list and each item on the list. For example, every time an item short description is viewed, every time an item detail is viewed, we want to increment a counter, as well as what date the item was viewed. We also want to let the user indicate that they have committed an item to long term memory now, and it no longer needs to be on the list of things to be learned.

@@ -19,9 +19,27 @@ export class ItemsStore extends Store<ItemsState> {
     super(new ItemsState());
   }
 
+  /**
+   * "items": {
+  ```json 
+    "<user-id>": {
+    "fallacies": {
+    "current-page": "0",
+    "total-pages": "0",
+    "item-list": {
+      "Fallacy of composition": {
+        "user-description": "blah blah blah",
+        "user-description-viewed-count": 0,
+        "item-details-viewed-count": 0,
+        "item-details-viewed-date": 1234556789
+      },
+      ```
+   * @param category 
+   * @param currentPage 
+   */
   fetchList(category: Category, currentPage: number) {
     this.realtimeDbService
-      .readUserData('items')
+      .readUserData('items/' + this.realtimeDbService.userId + '/' + category.name)
       .then(result => {
         // check if items exist already
         if (result) {
@@ -57,7 +75,7 @@ export class ItemsStore extends Store<ItemsState> {
             };
             return item;
           });
-          this.realtimeDbService.writeItemsList(list);
+          this.realtimeDbService.writeItemsList(list, category.name);
           return list;
         })
       )
