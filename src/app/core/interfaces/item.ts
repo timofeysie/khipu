@@ -5,4 +5,5 @@ export interface Item {
   type: string;
   uri: string;
   binding?: any;
+  metaData?: any;
 }

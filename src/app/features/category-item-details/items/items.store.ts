@@ -21,41 +21,37 @@ export class ItemsStore extends Store<ItemsState> {
 
   /**
    * "items": {
-  ```json 
-    "<user-id>": {
-    "fallacies": {
-    "current-page": "0",
-    "total-pages": "0",
-    "item-list": {
-      "Fallacy of composition": {
-        "user-description": "blah blah blah",
-        "user-description-viewed-count": 0,
-        "item-details-viewed-count": 0,
-        "item-details-viewed-date": 1234556789
-      },
-      ```
-   * @param category 
-   * @param currentPage 
+   *   ```json
+   *     "<user-id>": {
+   *       "fallacies": {
+   *       "current-page": "0",
+   *       "total-pages": "0",
+   *       "item-list": {
+   *        "Fallacy of composition": {
+   *          "user-description": "blah blah blah",
+   *          "user-description-viewed-count": 0,
+   *          "item-details-viewed-count": 0,
+   *          "item-details-viewed-date": 1234556789
+   *       },
+   *       ```
+   * @param category
+   * @param currentPage
    */
   fetchList(category: Category, currentPage: number) {
     this.realtimeDbService
-      .readUserData('items/' + this.realtimeDbService.userId + '/' + category.name)
-      .then(result => {
+      .readUserSubData('items', category.name)
+      .then(existingItems => {
         // check if items exist already
-        if (result) {
-          const items: Item[] = Object.values(result);
-          this.updateItemsState(items, currentPage);
-        } else {
-          // if not get it from an API call
-          this.getItemsFromEndpoint(category, currentPage);
-        }
+        // get the paginated item list from an API call and
+        // save the merged list
+        this.getItemsFromEndpoint(category, currentPage, existingItems);
       })
       .catch(error => {
         log.error('error', error);
       });
   }
 
-  getItemsFromEndpoint(category: Category, currentPage: number) {
+  getItemsFromEndpoint(category: Category, currentPage: number, existingItems: any) {
     this.itemListEndpoint
       .listItems(category, currentPage)
       .pipe(
@@ -71,15 +67,20 @@ export class ItemsStore extends Store<ItemsState> {
                 : '',
               type: incomingItem[properties[1]].type,
               uri: incomingItem[properties[0]].value,
-              binding: incomingItem // raw item will replace the other values here eventually
+              binding: incomingItem, // raw item will replace the other values here eventually
+              metaData: existingItems[incomingItem[properties[1]].value]
             };
             return item;
           });
+          // TODO: we should only need to do this if anything in the list has changed
           this.realtimeDbService.writeItemsList(list, category.name);
           return list;
         })
       )
       .subscribe((items: Item[]) => {
+        // merge in the existing
+        // if old objects exist, we need to overwrite the API result meta-data (user-description)
+        // with the previous version.
         this.updateItemsState(items, currentPage);
       });
   }

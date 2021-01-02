@@ -1,6 +1,8 @@
 import { Injectable } from '@angular/core';
 import firebase from 'firebase/app';
 import 'firebase/database';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { Logger } from '../logger.service';
 import { Category } from '@app/core/interfaces/categories';
 import { Item } from '@app/core/interfaces/item';
@@ -10,7 +12,6 @@ const log = new Logger('RealtimeDbService');
 
 @Injectable()
 export class RealtimeDbService {
-  userId: string;
   authSubscription: Subscription;
   constructor() {}
 
@@ -22,13 +23,14 @@ export class RealtimeDbService {
    */
   writeCategories(categories: Category[]) {
     this.setupFirebase();
-    let categoriesToWrite = {};
+    const userId = firebase.auth().currentUser.uid;
+    const categoriesToWrite = {};
     categories.forEach(category => {
       categoriesToWrite[category.name] = category;
     });
     firebase
       .database()
-      .ref('categories/' + this.userId)
+      .ref('categories/' + userId)
       .set(categoriesToWrite, error => {
         if (error) {
           log.error('write failed', error);
@@ -54,7 +56,8 @@ export class RealtimeDbService {
    * @param items List of items to store.
    */
   writeItemsList(newItems: Item[], category: string) {
-    console.log('new items', newItems);
+    this.setupFirebase();
+    const userId = firebase.auth().currentUser.uid;
     // load the current items list
     this.readUserSubData('items', category)
       .then((currentItems: any) => {
@@ -62,7 +65,6 @@ export class RealtimeDbService {
           currentItems = {};
         }
         // current items are the existing
-        console.log('current items', currentItems);
         newItems.forEach((item: any) => {
           // check if the item already exists?
           // if it doesn't, created a new default user description and counts
@@ -75,10 +77,9 @@ export class RealtimeDbService {
           };
           currentItems[item.label] = newItem;
         });
-        console.log('new items to write', newItems);
         firebase
           .database()
-          .ref('items/' + this.userId + '/' + category)
+          .ref('items/' + userId + '/' + category)
           .set(currentItems, error => {
             if (error) {
               log.error('write failed', error);
@@ -89,43 +90,46 @@ export class RealtimeDbService {
       })
       .catch(error => {
         // list doesn't exist yet?
-        console.log('error', error);
+        log.error('error', error);
       });
   }
 
   readUserData(name: string) {
     this.setupFirebase();
+    const userId = firebase.auth().currentUser.uid;
     return firebase
       .database()
-      .ref(name + '/' + this.userId)
+      .ref(name + '/' + userId)
       .once('value')
       .then(snapshot => {
         return snapshot.val();
       })
       .catch(error => {
-        console.log('error', error);
+        log.error('error', error);
       });
   }
 
   readUserSubData(name: string, sub: string) {
     this.setupFirebase();
+    const userId = firebase.auth().currentUser.uid;
     return firebase
       .database()
-      .ref(name + '/' + this.userId + '/' + sub)
+      .ref(name + '/' + userId + '/' + sub)
       .once('value')
       .then(snapshot => {
         return snapshot.val();
       })
       .catch(error => {
-        console.log('error', error);
+        log.error('error', error);
       });
   }
 
   writeDescription(detail: any) {
     this.setupFirebase();
+    const userId = firebase.auth().currentUser.uid;
     firebase
       .database()
-      .ref('items/' + this.userId + '/details/' + detail.query.normalized.fromencoded)
+      .ref('items/' + userId + '/details/' + detail.query.normalized.fromencoded)
       .set(detail, error => {
         if (error) {
           log.error('write failed', error);
@@ -147,14 +151,10 @@ export class RealtimeDbService {
     };
     if (!firebase.apps.length) {
       firebase.initializeApp(firebaseConfig);
-      console.log('1');
-    } else {
-      console.log('2');
     }
     firebase.auth().onAuthStateChanged(user => {
       if (user) {
         const database = firebase.database();
-        this.userId = firebase.auth().currentUser.uid;
       }
     });
   }

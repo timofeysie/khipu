@@ -559,6 +559,52 @@ The total pages can be updated as we go, until there are no more results. A litt
 After trying this our, going to the next page erases the old page list. We need to add it.
 Which means getting the list, adding the items from the next page, then writing the new combined list I think.
 
+The items.store.getItemsFromEndpoint() function originally just loaded the list from the API call. Now, we want to first load the firebase list, then persist the user data from those items with the results of the API call paginated items. It seems like there is a kind of fundamental flawed with this setup, but I can't quite put my finder on it yet. When there is a better idea it can be refactored.
+
+Right now, with this work in progress, the readUserSubData function is called twice, once to merge the firebase and the API results, and also before writing the new list. It doesn't need to happen the second time, which means we need a new write method.
+
+The original write does a read before write.
+
+The new method should only do the write.
+
+Another issue with all this is how to get the user id which now rely on for each CRUD function. Just reading the id when the setupFirebase() function is called at the beginning of each operation does not seem to work. This is likely a asynchronous situation. The docs so far have not covered this issue.
+
+If we get rid of the class user id member and just get the id each time an operation is done, we're all good. This seems redundant. The realtime-db.service is heading for a refactor, so this can be cleaned up as part of that. For now, this is what our combined items look like:
+
+```json
+{
+  "categoryType": "cognitive_bias",
+  "label": "overconfidence effect",
+  "description": "bias in which a person's subjective confidence in their judgements is reliably greater than the objective accuracy of those judgements",
+  "type": "literal",
+  "uri": "http://www.wikidata.org/entity/Q16503490",
+  "binding": {
+    "cognitive_bias": {
+      "type": "uri",
+      "value": "http://www.wikidata.org/entity/Q16503490"
+    },
+    "cognitive_biasLabel": {
+      "xml:lang": "en",
+      "type": "literal",
+      "value": "overconfidence effect"
+    },
+    "cognitive_biasDescription": {
+      "xml:lang": "en",
+      "type": "literal",
+      "value": "bias in which a person's subjective confidence in their judgements is reliably greater than the objective accuracy of those judgements"
+    }
+  },
+  "metaData": {
+    "item-details-viewed-count": 0,
+    "item-details-viewed-date": 814,
+    "user-description": "bias in which a person's subjective confidence in their judgements is reliably greater than the objective accuracy of those judgements",
+    "user-description-viewed-count": 0
+  }
+},
+```
+
+Only the metaData is stored in the firebase. Now we can go ahead and add a default user-description for those items that are missing them by filling the field with the beginning of the content from the item details API call. The user will also be able to edit, replace, whatever, and then see their preferred descriptions in the slide out component in the main list.
+
 ### Item statistics
 
 Another thing we want is statistics about each category list and each item on the list. For example, every time an item short description is viewed, every time an item detail is viewed, we want to increment a counter, as well as what date the item was viewed. We also want to let the user indicate that they have committed an item to long term memory now, and it no longer needs to be on the list of things to be learned.
