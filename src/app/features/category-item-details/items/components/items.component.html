@@ -5,9 +5,14 @@
         {{ item.description }}
       </ion-item-option>
     </ion-item-options>
+    <ion-item-options side="end" *ngIf="item.metaData['user-description']">
+      <ion-item-option color="secondary">
+        {{ item.metaData['user-description'] }}
+      </ion-item-option>
+    </ion-item-options>
     <ion-label (click)="gotoItemDetails(item)">
       {{ item.label | titlecase }}
-      <span class="description_exists" *ngIf="item.description">
+      <span class="description_exists" *ngIf="item.description || item.metaData['user-description']">
         >
       </span>
     </ion-label>

@@ -59,21 +59,42 @@ export class ItemsStore extends Store<ItemsState> {
           let list: Item[] = [];
           list = inc.map((incomingItem: any) => {
             const properties = Object.keys(incomingItem);
+            let incomingItemLabelKey;
+            let existingDescription;
+            let incomingItemDescription;
+            // check the existing items with the key in the incoming items and use that first,
+            // get the incoming item key
+            if (incomingItem[properties[0] + 'Label']) {
+              incomingItemLabelKey = incomingItem[properties[0] + 'Label'].value;
+            }
+            if (existingItems && existingItems[incomingItemLabelKey]) {
+              // existingDescription = existingItems[incomingItemLabelKey].value;
+              existingDescription = incomingItem[incomingItem[properties[1]].value];
+            }
+            // otherwise use the incoming API description if there is one.
+            if (incomingItem[properties[0] + 'Description']) {
+              incomingItemDescription = incomingItem[properties[0] + 'Description'].value;
+            }
+            let descriptionToUse;
+            if (existingDescription && existingDescription.length > 0) {
+              descriptionToUse = existingDescription;
+            } else {
+              descriptionToUse = incomingItemDescription;
+            }
             const item: Item = {
               categoryType: properties[0],
               label: incomingItem[properties[1]].value,
-              description: incomingItem[properties[0] + 'Description']
-                ? incomingItem[properties[0] + 'Description'].value
-                : '',
               type: incomingItem[properties[1]].type,
+              description: descriptionToUse,
               uri: incomingItem[properties[0]].value,
-              binding: incomingItem, // raw item will replace the other values here eventually
-              metaData: existingItems[incomingItem[properties[1]].value]
+              binding: existingItems[incomingItemLabelKey].value
+              // raw item will replace the other values here eventually
             };
+            item.metaData = existingItems[incomingItem[properties[1]].value];
             return item;
           });
           // TODO: we should only need to do this if anything in the list has changed
-          this.realtimeDbService.writeItemsList(list, category.name);
+          // this.realtimeDbService.writeItemsList(list, category.name);
           return list;
         })
       )

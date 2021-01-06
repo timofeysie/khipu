@@ -35,7 +35,7 @@ export class RealtimeDbService {
         if (error) {
           log.error('write failed', error);
         } else {
-          log.debug('write successful');
+          log.debug('write successful1', categoriesToWrite);
         }
       });
   }
@@ -70,7 +70,7 @@ export class RealtimeDbService {
           // if it doesn't, created a new default user description and counts
           // maybe the description should be set as the item description?
           const newItem = {
-            'user-description': item.description,
+            'user-description': item.description ? item.description : '',
             'user-description-viewed-count': 0,
             'item-details-viewed-count': 0,
             'item-details-viewed-date': new Date().getMilliseconds()
@@ -84,7 +84,7 @@ export class RealtimeDbService {
             if (error) {
               log.error('write failed', error);
             } else {
-              log.debug('write successful');
+              log.debug('write successful2');
             }
           });
       })
@@ -124,17 +124,34 @@ export class RealtimeDbService {
       });
   }
 
-  writeDescription(detail: any) {
+  readUserSubDataItem(tableName: string, category: string, itemName: string) {
     this.setupFirebase();
     const userId = firebase.auth().currentUser.uid;
+    const routeToData = tableName + '/' + userId + '/' + category + '/' + itemName;
+    return firebase
+      .database()
+      .ref(routeToData)
+      .once('value')
+      .then(snapshot => {
+        return snapshot.val();
+      })
+      .catch(error => {
+        log.error('error', error);
+      });
+  }
+
+  writeDescription(detail: any, itemLabel: string, category: string) {
+    this.setupFirebase();
+    const userId = firebase.auth().currentUser.uid;
+    const pathToData = 'items/' + userId + '/' + itemLabel + '/' + category;
     firebase
       .database()
-      .ref('items/' + userId + '/details/' + detail.query.normalized.fromencoded)
+      .ref(pathToData)
       .set(detail, error => {
         if (error) {
           log.error('write failed', error);
         } else {
-          log.debug('write successful');
+          log.debug('write successful3', detail);
         }
       });
   }

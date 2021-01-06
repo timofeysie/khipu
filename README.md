@@ -605,6 +605,61 @@ If we get rid of the class user id member and just get the id each time an opera
 
 Only the metaData is stored in the firebase. Now we can go ahead and add a default user-description for those items that are missing them by filling the field with the beginning of the content from the item details API call. The user will also be able to edit, replace, whatever, and then see their preferred descriptions in the slide out component in the main list.
 
+After making this change, and looking for the value in the template like this:
+
+```html
+{{ item.metaData['user-description'] }}
+```
+
+The first thing to notice is the snake-case, or kebab case, whatever you want to call it. When it comes to back end versus front end naming conventions, which wins out in this case?
+
+Ignoring that issue which when settled may involve a complete db wipe, we now have missing descriptions showing up in the items list after having visited the detail for it. The next big problem is that it is overwritten the next time the item list is loaded.
+
+The existing user-descriptions, userDescriptions, user_descriptions, need to be persisted after a new api call is done. Also, we don't want to do a write if the data has not changed.
+
+1. persist user description
+2. only write if the data has not changed
+
+I wish now I had made a commit at this point with the above defects. Plowing ahead and trying to fix the bug where the description was being erased after visiting a different details, it all fell apart, and now we have no pagination and no descriptions at all. It's time to step through the essential functions and describe what each one is doing, and fix the parts that are not doing what they should.
+
+So where does the old description get passed on?
+
+1. ItemsContainerComponent in the constructor calls ItemsStore.fetchList(category, this.store.state.currentPage).
+
+2. fetchList calls realtimeDbService.readUserSubData('items', category.name) to get the existingItems db items.
+
+3. The getItemsFromEndpoint() is a big one.
+   a. get the paginated item list from an API call
+   b. go through each paginated item
+   c. look for descriptions in the existingItems. These should replace anything the api returns.
+
+Right now we save the merged list after this, but I'm not sure about this. Removing that lets visited detail item description show up back in the list.
+
+Another question, in the getItemsFromEndpoint() function, we have the existing items, and incoming items.
+
+It's weird because, even though we are setting the API description in the item, that property does not exist at the end of the function (all the other properties do). What gives? I guess that description is being erased later and never making it into the template?
+
+No, the variable was being shadowed by a locally block scoped version. Have to pay attention to the orange squiggly underlines in the editor!
+
+The next issue is the Baader-meinhoff Effect, which despite having a details page with descriptions, not of them get added to the item list page descriptions like some of the others that retain them.
+
+### Foreign language learning support and the item details
+
+Now that the item list has meta data stored in firebase and merged with the api results,
+there might be another issue now with the languages. We don't have the item lists stored by language. My feeling is this is OK. The user has a native language, and shouldn't be storing the same list if a different language.
+
+We want to support lists that have a item/translation, where the user description is actually a target language being learned. So for this, do we need to have the user description field typed by this target language? More importantly, how is this type of list going to be described?
+
+### Item details business logic
+
+The item detail store component is responsible for a few different things at this point, and needs to be organized a bit better to deal with them.
+
+Case in point is the new feature to pre-fill blank user descriptions with a portion of the description from the details API response. We will need a new write method to write only that item details meta-data. There are a few places that need to do this, and it makes sense to do them all in one call instead of various calls to update the same object.
+
+Right now we have two updates that need to happen if the current user description is blank. In either case, we increment the count of the number of times the details page has been viewed. If the user description is blank, then we pre-fill it with part of the description from either of the API results. Which one remains to be decided.
+
+If we are checking the description each time, then we could do it all, but it seems strange to put this business logic in a function called fetchFirebaseItem(). What is the best practice here? Return the portion of the description from this function and then
+
 ### Item statistics
 
 Another thing we want is statistics about each category list and each item on the list. For example, every time an item short description is viewed, every time an item detail is viewed, we want to increment a counter, as well as what date the item was viewed. We also want to let the user indicate that they have committed an item to long term memory now, and it no longer needs to be on the list of things to be learned.
