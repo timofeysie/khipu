@@ -643,6 +643,8 @@ No, the variable was being shadowed by a locally block scoped version. Have to p
 
 The next issue is the Baader-meinhoff Effect, which despite having a details page with descriptions, not of them get added to the item list page descriptions like some of the others that retain them.
 
+And we do need to save the merged list if any items are not in the existing items list. Currently, new paginated views are not working.
+
 ### Foreign language learning support and the item details
 
 Now that the item list has meta data stored in firebase and merged with the api results,

@@ -57,6 +57,7 @@ export class ItemsStore extends Store<ItemsState> {
       .pipe(
         map(inc => {
           let list: Item[] = [];
+          let needToSave = false;
           list = inc.map((incomingItem: any) => {
             const properties = Object.keys(incomingItem);
             let incomingItemLabelKey;
@@ -70,6 +71,8 @@ export class ItemsStore extends Store<ItemsState> {
             if (existingItems && existingItems[incomingItemLabelKey]) {
               // existingDescription = existingItems[incomingItemLabelKey].value;
               existingDescription = incomingItem[incomingItem[properties[1]].value];
+            } else {
+              needToSave = true;
             }
             // otherwise use the incoming API description if there is one.
             if (incomingItem[properties[0] + 'Description']) {
@@ -87,7 +90,7 @@ export class ItemsStore extends Store<ItemsState> {
               type: incomingItem[properties[1]].type,
               description: descriptionToUse,
               uri: incomingItem[properties[0]].value,
-              binding: existingItems[incomingItemLabelKey].value
+              binding: existingItems[incomingItemLabelKey]
               // raw item will replace the other values here eventually
             };
             item.metaData = existingItems[incomingItem[properties[1]].value];
