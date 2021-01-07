@@ -41,10 +41,13 @@ export class ItemDetailsStore extends Store<ItemDetailsState> {
   fetchDetailsFromEndpoint(_qcode: string, language: string) {
     this.categoryItemDetailsService.getItemDetails({ qcode: _qcode }).subscribe((response: string) => {
       const itemDetails: ItemDetails = response[this.ENTITIES_KEY][_qcode];
+      // this is the key to save the user description back to the item in the list
+      // the title of the detail might be different that the name used in the Wikidata list
+      const itemListLabelKey = itemDetails.labels[language]['value'];
       this.state.itemDetails = itemDetails;
       const title = this.getTitle(itemDetails, language);
       if (title) {
-        this.fetchDescription(title, language);
+        this.fetchDescription(title, language, itemListLabelKey);
       }
     });
   }
@@ -60,14 +63,14 @@ export class ItemDetailsStore extends Store<ItemDetailsState> {
     }
   }
 
-  fetchDescription(_title: string, _language: string) {
+  fetchDescription(_title: string, _language: string, itemListLabelKey: string) {
     const currentLanguage = this.i18nService.language;
     const sparqlLanguages = environment.sparqlLanguages;
     const sparqlLanguageObject = sparqlLanguages.find(i => i.appLanguage === currentLanguage);
     // TODO: check firebase first
     this.activatedRoute.paramMap.subscribe(() => {
       this.fetchDescriptionFromEndpoint(_title, sparqlLanguageObject.sparqlLanguage);
-      this.fetchWikimediaDescriptionFromEndpoint(_title, sparqlLanguageObject.sparqlLanguage);
+      this.fetchWikimediaDescriptionFromEndpoint(_title, sparqlLanguageObject.sparqlLanguage, itemListLabelKey);
     });
   }
 
@@ -79,7 +82,7 @@ export class ItemDetailsStore extends Store<ItemDetailsState> {
       });
   }
 
-  fetchWikimediaDescriptionFromEndpoint(_title: string, _language: string) {
+  fetchWikimediaDescriptionFromEndpoint(_title: string, _language: string, itemListLabelKey: string) {
     this.categoryItemDetailsService
       .getWikidediaDescription({ title: _title, language: _language })
       .subscribe((response: any) => {
@@ -90,24 +93,26 @@ export class ItemDetailsStore extends Store<ItemDetailsState> {
         // if not, set a portion of the description.
         this.activatedRoute.paramMap.subscribe(params => {
           this.selectedCategory = params.get('selectedCategory');
-          this.fetchFirebaseItemAndUpdate(_title, this.selectedCategory, this.state.wikimediaDescription);
+          this.fetchFirebaseItemAndUpdate(
+            _title,
+            this.selectedCategory,
+            this.state.wikimediaDescription,
+            itemListLabelKey
+          );
         });
       });
   }
 
-  fetchFirebaseItemAndUpdate(subCategory: string, itemLabel: string, description: string) {
-    // TODO: would be better to get the sub-category without having the 'scrub' the underscores.
-    const scrubbedCategory = subCategory.replace('_', ' ');
+  fetchFirebaseItemAndUpdate(subCategory: string, itemLabel: string, description: string, itemListLabelKey: string) {
     this.realtimeDbService
-      .readUserSubDataItem('items', itemLabel, scrubbedCategory)
+      .readUserSubDataItem('items', itemLabel, itemListLabelKey)
       .then(existingItem => {
         if (existingItem && existingItem['user-description'] === '') {
           // pre-fill blank descriptions and save them back to the db
           const n = 100; // TODO: move this value into user preferences.
           const defaultDescription = description.length > n ? description.substr(0, n - 1) + '...' : description;
-          console.log('default', defaultDescription);
           existingItem['user-description'] = defaultDescription;
-          this.realtimeDbService.writeDescription(existingItem, itemLabel, scrubbedCategory);
+          this.realtimeDbService.writeDescription(existingItem, itemLabel, itemListLabelKey);
         }
       })
       .catch(error => {
