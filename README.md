@@ -645,6 +645,44 @@ The next issue is the Baader-meinhoff Effect, which despite having a details pag
 
 And we do need to save the merged list if any items are not in the existing items list. Currently, new paginated views are not working.
 
+### Setting the item detail user descriptions
+
+After fixing part of [A details page with descriptions is not always added to the item list page descriptions](https://github.com/timofeysie/khipu/issues/33) this issue, we find that one of the API call which returns the text description is blocked by CORS.
+
+This one works:
+/api/detail/D%C3%A9formation_professionnelle/en/false
+
+This one doesn't:
+/api/details/en/D%C3%A9formation_professionnelle
+
+Another problem is it takes quite some time to come back with an error. The first attempt was to call the second API when the first one failed, but because of the time delay, if the first description was not there, the user will have to wait for about 30 seconds before the second call is made and the result displayed. This doesn't always happen, but even with a spinner, that's not OK.
+
+We could make both calls simultaneously, as was done before, but then we still need a way to set the user description from the second result if there is an error in the first. So you see the issue.
+
+It seems like we want to do both calls if they are going to be returning different things. The example of the Albert Einstein page is an example of this.
+
+It might be worth looking at the logs for the server to see why it's failing. That's on Heroku I believe.
+
+229:46.422481 app[web.1]: Status Code: 400
+230:16.387975 heroku[router]: at=error code=H12 desc="Request timeout" method=GET path="/api/details/en/D%C3%A9formation_professionnelle" host=radiant-springs-38893.herokuapp.com request_id=a932aa3e-ecae-4ae3-99c8-1c19c42a28ff fwd="103.111.178.105" dyno=web.1 connect=0ms service=30007ms status=503 bytes=0 protocol=https
+230:17.840420 app[web.1]: singlePageUrl http://en.wikipedia.org/w/api.php?action=parse&section=0&prop=text&format=json&page=d%C3%A9formation_professionnelle
+230:18.419087 app[web.1]: 5. WikiData item value re-direct?
+230:18.428836 heroku[router]: at=info method=GET path="/api/detail/D%C3%A9formation_professionnelle/en/false" host=radiant-springs-38893.herokuapp.com request_id=c35d1670-c4fa-495c-8e93-0abaff45256b fwd="103.111.178.105" dyno=web.1 connect=1ms service=597ms status=200 bytes=11040 protocol=https
+231:52.096801 app[web.1]: WIKIPEDIA_DETAILS https://en.wikipedia.org/w/api.php?format=json&action=query&prop=extracts&exintro&explaintext&redirects=1&titles=Déformation_professionnelle
+231:52.186870 app[web.1]: WIKIPEDIA_DETAILS: Request Failed.
+
+The item psychological pricing has this detail uri: /categories/item-details/cognitive_bias/Q419681
+
+But looks like nothing from that page is in firebase. The SPARQL result uses LIMIT 9 OFFSET 18. So that's page three where every page is limited to 9. We should actually change to to 7. I hate having to scroll to see the whole list, and 'chunking' list is known to be psychological better than long lists.
+
+That was another problem. The update list on firebase line was commented out because it was erasing the existing descriptions. The thing is we only want to save items if they exist from the api result but are not yet in firebase. Right now, since these are paginated views, that's not a problem until say, an item is added to a page at some point, and then possibly that whole page will be reset. I'm not sure what the solution to this is at this point.
+
+Then, back to the error above, we can see the question: _WikiData item value re-direct?_
+
+That redirect must be failing. Have to look at that code.
+
+Also, since the call failed, but only after something other 30 seconds, the other call is then made, which works. The description there however is not being saved. Because now we need to refactor the code so that the get the-description-to-use functionality so that it can be shared between both results. However, one is an API text result, and another an HTML DOM element with usually very similar if not exactly the same content.
+
 ### Foreign language learning support and the item details
 
 Now that the item list has meta data stored in firebase and merged with the api results,

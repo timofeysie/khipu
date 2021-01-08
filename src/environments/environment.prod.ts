@@ -18,7 +18,7 @@ export const environment = {
     { appLanguage: 'en-US', sparqlLanguage: 'en' },
     { appLanguage: 'fr-FR', sparqlLanguage: 'fr' }
   ],
-  paginationItemsPerPage: 9
+  paginationItemsPerPage: 7
 };
 
 export const categoriesList: Category[] = [

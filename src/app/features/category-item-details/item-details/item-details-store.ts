@@ -44,6 +44,7 @@ export class ItemDetailsStore extends Store<ItemDetailsState> {
       // this is the key to save the user description back to the item in the list
       // the title of the detail might be different that the name used in the Wikidata list
       const itemListLabelKey = itemDetails.labels[language]['value'];
+      console.log('got itemListLabelKey:', itemListLabelKey);
       this.state.itemDetails = itemDetails;
       const title = this.getTitle(itemDetails, language);
       if (title) {
@@ -64,12 +65,9 @@ export class ItemDetailsStore extends Store<ItemDetailsState> {
   }
 
   fetchDescription(_title: string, _language: string, itemListLabelKey: string) {
-    const currentLanguage = this.i18nService.language;
-    const sparqlLanguages = environment.sparqlLanguages;
-    const sparqlLanguageObject = sparqlLanguages.find(i => i.appLanguage === currentLanguage);
+    const sparqlLanguageObject = this.getSPARQL();
     // TODO: check firebase first
     this.activatedRoute.paramMap.subscribe(() => {
-      this.fetchDescriptionFromEndpoint(_title, sparqlLanguageObject.sparqlLanguage);
       this.fetchWikimediaDescriptionFromEndpoint(_title, sparqlLanguageObject.sparqlLanguage, itemListLabelKey);
     });
   }
@@ -86,24 +84,24 @@ export class ItemDetailsStore extends Store<ItemDetailsState> {
     this.categoryItemDetailsService
       .getWikidediaDescription({ title: _title, language: _language })
       .subscribe((response: any) => {
-        const firstItem = Object.keys(response['query']['pages'])[0];
-        this.state.wikimediaDescription = response['query']['pages'][firstItem]['extract'];
-        // TODO: set in db also
-        // check if a user description exists,
-        // if not, set a portion of the description.
-        this.activatedRoute.paramMap.subscribe(params => {
-          this.selectedCategory = params.get('selectedCategory');
-          this.fetchFirebaseItemAndUpdate(
-            _title,
-            this.selectedCategory,
-            this.state.wikimediaDescription,
-            itemListLabelKey
-          );
-        });
+        if (response['query']) {
+          const firstItem = Object.keys(response['query']['pages'])[0];
+          this.state.wikimediaDescription = response['query']['pages'][firstItem]['extract'];
+          // TODO: set in db also
+          // check if a user description exists,
+          // if not, set a portion of the description.
+          this.activatedRoute.paramMap.subscribe(params => {
+            this.selectedCategory = params.get('selectedCategory');
+            this.fetchFirebaseItemAndUpdate(this.selectedCategory, this.state.wikimediaDescription, itemListLabelKey);
+          });
+        } else {
+          const sparqlLanguageObject = this.getSPARQL();
+          this.fetchDescriptionFromEndpoint(_title, sparqlLanguageObject.sparqlLanguage);
+        }
       });
   }
 
-  fetchFirebaseItemAndUpdate(subCategory: string, itemLabel: string, description: string, itemListLabelKey: string) {
+  fetchFirebaseItemAndUpdate(itemLabel: string, description: string, itemListLabelKey: string) {
     this.realtimeDbService
       .readUserSubDataItem('items', itemLabel, itemListLabelKey)
       .then(existingItem => {
@@ -111,6 +109,7 @@ export class ItemDetailsStore extends Store<ItemDetailsState> {
           // pre-fill blank descriptions and save them back to the db
           const n = 100; // TODO: move this value into user preferences.
           const defaultDescription = description.length > n ? description.substr(0, n - 1) + '...' : description;
+          console.log('default', defaultDescription);
           existingItem['user-description'] = defaultDescription;
           this.realtimeDbService.writeDescription(existingItem, itemLabel, itemListLabelKey);
         }
@@ -118,5 +117,12 @@ export class ItemDetailsStore extends Store<ItemDetailsState> {
       .catch(error => {
         log.error('error', error);
       });
+  }
+
+  getSPARQL() {
+    const currentLanguage = this.i18nService.language;
+    const sparqlLanguages = environment.sparqlLanguages;
+    const sparqlLanguageObject = sparqlLanguages.find(i => i.appLanguage === currentLanguage);
+    return sparqlLanguageObject;
   }
 }

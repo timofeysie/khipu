@@ -20,6 +20,11 @@ export class ItemsStore extends Store<ItemsState> {
   }
 
   /**
+   * Read a user items table and return a list which may have
+   * a user description.
+   * It also gets the result from an API endpoint.  If there is a user description
+   * it should replace the result description.
+   * The firebase data JSON looks like this:
    * "items": {
    *   ```json
    *     "<user-id>": {
@@ -57,56 +62,70 @@ export class ItemsStore extends Store<ItemsState> {
       .pipe(
         map(inc => {
           let list: Item[] = [];
-          let needToSave = false;
+          let listChanged = false;
           list = inc.map((incomingItem: any) => {
-            const properties = Object.keys(incomingItem);
-            let incomingItemLabelKey;
-            let existingDescription;
-            let incomingItemDescription;
-            // check the existing items with the key in the incoming items and use that first,
-            // get the incoming item key
-            if (incomingItem[properties[0] + 'Label']) {
-              incomingItemLabelKey = incomingItem[properties[0] + 'Label'].value;
-            }
-            if (existingItems && existingItems[incomingItemLabelKey]) {
-              // existingDescription = existingItems[incomingItemLabelKey].value;
-              existingDescription = incomingItem[incomingItem[properties[1]].value];
-            } else {
-              needToSave = true;
-            }
-            // otherwise use the incoming API description if there is one.
-            if (incomingItem[properties[0] + 'Description']) {
-              incomingItemDescription = incomingItem[properties[0] + 'Description'].value;
-            }
-            let descriptionToUse;
-            if (existingDescription && existingDescription.length > 0) {
-              descriptionToUse = existingDescription;
-            } else {
-              descriptionToUse = incomingItemDescription;
-            }
-            const item: Item = {
-              categoryType: properties[0],
-              label: incomingItem[properties[1]].value,
-              type: incomingItem[properties[1]].type,
-              description: descriptionToUse,
-              uri: incomingItem[properties[0]].value,
-              binding: existingItems[incomingItemLabelKey]
-              // raw item will replace the other values here eventually
-            };
-            item.metaData = existingItems[incomingItem[properties[1]].value];
-            return item;
+            const results = this.getItemWithDescription(incomingItem, existingItems);
+            listChanged = results.needToSave;
+            return results.item;
           });
-          // TODO: we should only need to do this if anything in the list has changed
-          // this.realtimeDbService.writeItemsList(list, category.name);
+          if (listChanged) {
+            this.realtimeDbService.writeItemsList(list, category.name);
+          }
           return list;
         })
       )
       .subscribe((items: Item[]) => {
         // merge in the existing
-        // if old objects exist, we need to overwrite the API result meta-data (user-description)
+        // if old objects exist,
+        // we need to overwrite the
+        // API result meta-data (user-description)
         // with the previous version.
         this.updateItemsState(items, currentPage);
       });
+  }
+
+  /**
+   * The existing items might have a user description.
+   * @param incomingItem
+   * @param existingItems An entry from firebase with the user description and other metadata.
+   * @param needToSave we only save the results if anything has been
+   */
+  getItemWithDescription(incomingItem: any[], existingItems: any[]) {
+    const properties = Object.keys(incomingItem);
+    let incomingItemLabelKey; // user to
+    let descriptionToUse;
+    let existingDescription;
+    let incomingItemDescription;
+    let needToSave = false;
+    // check the existing items with the key in the incoming items and use that first,
+    // get the incoming item key
+    if (incomingItem[properties[0] + 'Label']) {
+      incomingItemLabelKey = incomingItem[properties[0] + 'Label'].value;
+    }
+    if (existingItems && existingItems[incomingItemLabelKey]) {
+      existingDescription = incomingItem[incomingItem[properties[1]].value];
+    } else {
+      needToSave = true;
+    }
+    // otherwise use the incoming API description if there is one.
+    if (incomingItem[properties[0] + 'Description']) {
+      incomingItemDescription = incomingItem[properties[0] + 'Description'].value;
+    }
+    if (existingDescription && existingDescription.length > 0) {
+      descriptionToUse = existingDescription;
+    } else {
+      descriptionToUse = incomingItemDescription;
+    }
+    const item: Item = {
+      categoryType: properties[0],
+      label: incomingItem[properties[1]].value,
+      type: incomingItem[properties[1]].type,
+      description: descriptionToUse,
+      uri: incomingItem[properties[0]].value,
+      binding: existingItems[incomingItemLabelKey],
+      metaData: existingItems[incomingItem[properties[1]].value]
+    };
+    return { needToSave, item };
   }
 
   updateItemsState(items: Item[], currentPage: number) {
