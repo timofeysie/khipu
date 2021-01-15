@@ -1,4 +1,12 @@
-import { Component, Input, OnInit, Output, EventEmitter } from '@angular/core';
+import {
+  AfterViewInit,
+  ChangeDetectorRef,
+  AfterContentChecked,
+  Component,
+  Input,
+  Output,
+  EventEmitter
+} from '@angular/core';
 import { Validators } from '@angular/forms';
 import { FormControl } from '@angular/forms';
 
@@ -7,7 +15,7 @@ import { FormControl } from '@angular/forms';
   templateUrl: './description-form.component.html',
   styleUrls: ['./description-form.component.scss']
 })
-export class DescriptionFormComponent implements OnInit {
+export class DescriptionFormComponent implements AfterViewInit, AfterContentChecked {
   @Input() itemDetails: any;
   @Input() language: string;
   @Input() description: string;
@@ -15,10 +23,15 @@ export class DescriptionFormComponent implements OnInit {
 
   descriptionForm = new FormControl('', [Validators.maxLength(100)]);
 
-  constructor() {}
+  constructor(private cdref: ChangeDetectorRef) {}
 
-  ngOnInit() {
-    this.descriptionForm.setValue(this.description);
+  ngAfterViewInit() {
+    this.descriptionForm.setValue(this.descriptionForm);
+    console.log('this.description', this.description);
+  }
+
+  ngAfterContentChecked() {
+    this.cdref.detectChanges();
   }
 
   updateName() {

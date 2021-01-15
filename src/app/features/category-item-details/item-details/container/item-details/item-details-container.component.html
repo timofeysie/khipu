@@ -20,7 +20,7 @@
   <item-details
     [language]="language"
     [itemDetails]="(store.state$ | async).itemDetails"
-    [description]="(store.state$ | async).description"
+    [description]="(store.state$ | async).itemDetails.userDescription"
     [wikimediaDescription]="(store.state$ | async).wikimediaDescription"
   ></item-details>
 </ion-content>

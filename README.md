@@ -683,6 +683,21 @@ That redirect must be failing. Have to look at that code.
 
 Also, since the call failed, but only after something other 30 seconds, the other call is then made, which works. The description there however is not being saved. Because now we need to refactor the code so that the get the-description-to-use functionality so that it can be shared between both results. However, one is an API text result, and another an HTML DOM element with usually very similar if not exactly the same content.
 
+Waiting for the first API call to error out before making the second call is not working out. This thing is, the first call description takes priority as the default description. The second one needs to wait to confirm if this is not happening before then setting the user description with the first 100 characters of the DOM (after removing the markup of course).
+
+Another feature request that was added recently has to do with this part of the code as well. Namely, the default user description taken from a Wikidata description needs to have occurrences of the label in the description removed.
+
+For example:
+
+```json
+{
+  "label": "Albert Einstein",
+  "description": "Albert Einstein was a scientist who created the theory of Relativity."
+}
+```
+
+Here, we would ideally remove the label "Albert Einstein" from the description along with the verb, such as "is" or "was". So then the default user description created from this should be "A scientist who created the theory of Relativity."
+
 ### Foreign language learning support and the item details
 
 Now that the item list has meta data stored in firebase and merged with the api results,

@@ -12,7 +12,8 @@ const initItemDetails: ItemDetails = {
   pageid: 0,
   sitelinks: {},
   title: '',
-  type: ''
+  type: '',
+  userDescription: ''
 };
 
 export class ItemDetailsState {

@@ -11,4 +11,5 @@ export interface ItemDetails {
   sitelinks: any;
   title: string;
   type: string;
+  userDescription?: string;
 }

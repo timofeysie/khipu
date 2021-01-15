@@ -95,8 +95,7 @@ export class RealtimeDbService {
   }
 
   readUserData(name: string) {
-    this.setupFirebase();
-    const userId = firebase.auth().currentUser.uid;
+    const userId = this.setupFirebase();
     return firebase
       .database()
       .ref(name + '/' + userId)
@@ -173,6 +172,7 @@ export class RealtimeDbService {
       if (user) {
         const database = firebase.database();
       }
+      return firebase.auth().currentUser.uid;
     });
   }
 }

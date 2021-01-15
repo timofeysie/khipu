@@ -44,7 +44,6 @@ export class ItemDetailsStore extends Store<ItemDetailsState> {
       // this is the key to save the user description back to the item in the list
       // the title of the detail might be different that the name used in the Wikidata list
       const itemListLabelKey = itemDetails.labels[language]['value'];
-      console.log('got itemListLabelKey:', itemListLabelKey);
       this.state.itemDetails = itemDetails;
       const title = this.getTitle(itemDetails, language);
       if (title) {
@@ -72,11 +71,15 @@ export class ItemDetailsStore extends Store<ItemDetailsState> {
     });
   }
 
-  fetchDescriptionFromEndpoint(_title: string, _language: string) {
+  fetchDescriptionFromEndpoint(_title: string, _language: string, setDefaultDescription: boolean) {
     this.categoryItemDetailsService
       .getItemDescription({ title: _title, language: _language })
       .subscribe((response: string) => {
         this.state.description = response['description'];
+        // If the first API call for the description text fails,
+        // and there is no existing user description, then we want to
+        // parse the HTML out of this response and set the description here
+        this.state.itemDetails.userDescription = response['description'].substrng(0, 100);
       });
   }
 
@@ -96,7 +99,8 @@ export class ItemDetailsStore extends Store<ItemDetailsState> {
           });
         } else {
           const sparqlLanguageObject = this.getSPARQL();
-          this.fetchDescriptionFromEndpoint(_title, sparqlLanguageObject.sparqlLanguage);
+          const setDefaultDescription = true;
+          this.fetchDescriptionFromEndpoint(_title, sparqlLanguageObject.sparqlLanguage, setDefaultDescription);
         }
       });
   }
@@ -109,9 +113,11 @@ export class ItemDetailsStore extends Store<ItemDetailsState> {
           // pre-fill blank descriptions and save them back to the db
           const n = 100; // TODO: move this value into user preferences.
           const defaultDescription = description.length > n ? description.substr(0, n - 1) + '...' : description;
-          console.log('default', defaultDescription);
           existingItem['user-description'] = defaultDescription;
+          this.state.itemDetails.userDescription = defaultDescription;
           this.realtimeDbService.writeDescription(existingItem, itemLabel, itemListLabelKey);
+        } else {
+          this.state.itemDetails.userDescription = existingItem.userDescription;
         }
       })
       .catch(error => {
