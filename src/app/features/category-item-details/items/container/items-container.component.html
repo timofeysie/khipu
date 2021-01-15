@@ -28,6 +28,7 @@
     >
       Prev
     </ion-button>
+    <ion-button slot="secondary" class="ion-text-center" fill="outline">{{ store.state.currentPage }} </ion-button>
     <ion-button slot="end" (click)="store.fetchList(category, store.state.currentPage + 1)"> Next</ion-button>
   </ion-toolbar>
 </ion-footer>
