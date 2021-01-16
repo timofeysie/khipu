@@ -28,7 +28,10 @@
     >
       Prev
     </ion-button>
-    <ion-button slot="secondary" class="ion-text-center" fill="outline">{{ store.state.currentPage }} </ion-button>
+    <ion-button class="ion-text-center current_page" fill="outline">
+      {{ store.state.currentPage * 7 }}
+      - {{ store.state.currentPage * 7 + 7 }}
+    </ion-button>
     <ion-button slot="end" (click)="store.fetchList(category, store.state.currentPage + 1)"> Next</ion-button>
   </ion-toolbar>
 </ion-footer>
