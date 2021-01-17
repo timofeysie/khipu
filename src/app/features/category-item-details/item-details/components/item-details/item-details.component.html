@@ -1,5 +1,5 @@
 <ion-item color="light">
-  <ion-card class="ion-text-center" *ngIf="itemDetails">
+  <ion-card class="card ion-text-center" *ngIf="itemDetails">
     <ion-card-content *ngIf="itemDetails.labels[language]">
       <ion-card-header>
         <p *ngIf="itemDetails.sitelinks[language + 'wiki']; else noLinkTitle">
@@ -24,6 +24,7 @@
         [itemDetails]="itemDetails"
         [language]="language"
         [description]="description"
+        [userDescription]="itemDetails.userDescription"
       ></app-description-form>
       <p>Modified: {{ itemDetails.modified | date: 'medium' }}</p>
     </ion-card-content>

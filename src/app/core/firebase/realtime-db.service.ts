@@ -124,8 +124,8 @@ export class RealtimeDbService {
   }
 
   readUserSubDataItem(tableName: string, category: string, itemName: string) {
-    this.setupFirebase();
-    const userId = firebase.auth().currentUser.uid;
+    const userId = this.setupFirebase();
+
     const routeToData = tableName + '/' + userId + '/' + category + '/' + itemName;
     return firebase
       .database()
@@ -140,8 +140,7 @@ export class RealtimeDbService {
   }
 
   writeDescription(detail: any, itemLabel: string, category: string) {
-    this.setupFirebase();
-    const userId = firebase.auth().currentUser.uid;
+    const userId = this.setupFirebase();
     const pathToData = 'items/' + userId + '/' + itemLabel + '/' + category;
     firebase
       .database()

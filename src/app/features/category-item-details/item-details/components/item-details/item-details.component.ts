@@ -12,6 +12,7 @@ export class ItemDetailsComponent implements OnInit, AfterViewInit {
   @Input() itemDetails: ItemDetails;
   @Input() wikimediaDescription: any;
   @Input() description: any;
+  @Input() userDescription: string;
   @Input() language = 'en';
 
   constructor() {}

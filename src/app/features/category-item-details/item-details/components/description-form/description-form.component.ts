@@ -19,6 +19,7 @@ export class DescriptionFormComponent implements AfterViewInit, AfterContentChec
   @Input() itemDetails: any;
   @Input() language: string;
   @Input() description: string;
+  @Input() userDescription: string;
   @Output() descriptionUpdated = new EventEmitter<string>();
 
   descriptionForm = new FormControl('', [Validators.maxLength(100)]);
@@ -26,8 +27,8 @@ export class DescriptionFormComponent implements AfterViewInit, AfterContentChec
   constructor(private cdref: ChangeDetectorRef) {}
 
   ngAfterViewInit() {
-    this.descriptionForm.setValue(this.descriptionForm);
-    console.log('this.description', this.description);
+    this.descriptionForm.setValue(this.userDescription);
+    console.log('this.userDescription', this.userDescription);
   }
 
   ngAfterContentChecked() {

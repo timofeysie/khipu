@@ -109,20 +109,28 @@ export class ItemDetailsStore extends Store<ItemDetailsState> {
     this.realtimeDbService
       .readUserSubDataItem('items', itemLabel, itemListLabelKey)
       .then(existingItem => {
-        if (existingItem && existingItem['user-description'] === '') {
+        if (existingItem && existingItem['userDescription'] === '') {
           // pre-fill blank descriptions and save them back to the db
-          const n = 100; // TODO: move this value into user preferences.
-          const defaultDescription = description.length > n ? description.substr(0, n - 1) + '...' : description;
-          existingItem['user-description'] = defaultDescription;
+          const defaultDescription = this.createDefaultDescription(description);
+          existingItem['userDescription'] = defaultDescription;
           this.state.itemDetails.userDescription = defaultDescription;
           this.realtimeDbService.writeDescription(existingItem, itemLabel, itemListLabelKey);
         } else {
-          this.state.itemDetails.userDescription = existingItem.userDescription;
+          if (this.state.itemDetails && existingItem) {
+            this.state.itemDetails['userDescription'] = existingItem.userDescription;
+          } else {
+            this.state.itemDetails.userDescription = this.createDefaultDescription(this.state.wikimediaDescription);
+          }
         }
       })
       .catch(error => {
         log.error('error', error);
       });
+  }
+
+  createDefaultDescription(description: string) {
+    const n = 100; // TODO: move this value into user preferences.
+    return description.length > n ? description.substr(0, n - 1) + '...' : description;
   }
 
   getSPARQL() {

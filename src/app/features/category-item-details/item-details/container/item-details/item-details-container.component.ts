@@ -35,10 +35,6 @@ export class ItemDetailsContainerComponent implements OnInit {
   ngOnInit() {
     setTimeout(() => {
       this.language = this.i18nService.language.substring(0, 2);
-      console.log('store.state$', this.store);
-      this.store.state$.subscribe(what => {
-        console.log('what', what);
-      });
     }, 1600);
   }
 
