@@ -93,9 +93,15 @@ export class ItemDetailsStore extends Store<ItemDetailsState> {
           // TODO: set in db also
           // check if a user description exists,
           // if not, set a portion of the description.
+          const newDefaultUserDescription = this.createDefaultDescription(this.state.wikimediaDescription);
           this.activatedRoute.paramMap.subscribe(params => {
             this.selectedCategory = params.get('selectedCategory');
-            this.fetchFirebaseItemAndUpdate(this.selectedCategory, this.state.wikimediaDescription, itemListLabelKey);
+            this.fetchFirebaseItemAndUpdate(
+              this.selectedCategory,
+              this.state.wikimediaDescription,
+              itemListLabelKey,
+              newDefaultUserDescription
+            );
           });
         } else {
           const sparqlLanguageObject = this.getSPARQL();
@@ -105,20 +111,45 @@ export class ItemDetailsStore extends Store<ItemDetailsState> {
       });
   }
 
-  fetchFirebaseItemAndUpdate(itemLabel: string, description: string, itemListLabelKey: string) {
+  /**
+   * This whole series of API and database calls is really brittle.
+   * We had added the newDefaultUserDescription so that it can be used as a default
+   * user description if there is no existing user description.
+   * There must be a design pattern that could be used here.
+   * Or an Rxjs functional pipe arrangement that could orchestrate the whole thing.
+   * @param itemLabel the name of the item.
+   * @param description the item description (from the api)
+   * @param itemListLabelKey the item key used to associate this item with it's entry in the item list.
+   * @param newDefaultUserDescription If the previous API result had a description,
+   */
+  fetchFirebaseItemAndUpdate(
+    itemLabel: string,
+    description: string,
+    itemListLabelKey: string,
+    newDefaultUserDescription?: string
+  ) {
     this.realtimeDbService
       .readUserSubDataItem('items', itemLabel, itemListLabelKey)
       .then(existingItem => {
-        if (existingItem && existingItem['userDescription'] === '') {
+        console.log('existingItem', existingItem);
+        if (newDefaultUserDescription && !existingItem && existingItem.userDescription !== '') {
+          this.state.itemDetails.userDescription = newDefaultUserDescription;
+          this.realtimeDbService.writeDescription(existingItem, itemLabel, itemListLabelKey);
+        } else if (existingItem && existingItem.userDescription === '') {
+          console.log('1. existingItem[userDescription]', existingItem.userDescription);
           // pre-fill blank descriptions and save them back to the db
           const defaultDescription = this.createDefaultDescription(description);
-          existingItem['userDescription'] = defaultDescription;
+          existingItem.userDescription = defaultDescription;
           this.state.itemDetails.userDescription = defaultDescription;
           this.realtimeDbService.writeDescription(existingItem, itemLabel, itemListLabelKey);
         } else {
           if (this.state.itemDetails && existingItem) {
-            this.state.itemDetails['userDescription'] = existingItem.userDescription;
+            // this appears to be overwriting the description.
+            console.log('2. newDefaultUserDescription', newDefaultUserDescription);
+            this.state.itemDetails.userDescription = newDefaultUserDescription;
+            existingItem.userDescription = newDefaultUserDescription;
           } else {
+            console.log('3. createDefaultDescription', this.state.wikimediaDescription);
             this.state.itemDetails.userDescription = this.createDefaultDescription(this.state.wikimediaDescription);
           }
         }

@@ -698,6 +698,187 @@ For example:
 
 Here, we would ideally remove the label "Albert Einstein" from the description along with the verb, such as "is" or "was". So then the default user description created from this should be "A scientist who created the theory of Relativity."
 
+These two issues were opened to deal with this:
+
+[Remove label text from default user descriptions and add tooltip with explanation](https://github.com/timofeysie/khipu/issues/35)
+
+[When using the description as a question user should be warned if it contains part of the item label](https://github.com/timofeysie/khipu/issues/34)
+
+There was a bit of confusion because we were using the db table key user-description when the app was expecting pascal case userDescription.
+
+Now that the user description is showing up in the edit form, this is the next issue:
+
+```txt
+ExpressionChangedAfterItHasBeenCheckedError: Expression has changed after it was checked. Previous value: 'placeholder: '. Current value: 'placeholder: An appeal to pity (also called argumentum ad misericordiam, the sob story, or the Galileo argument)...'.
+```
+
+http://localhost:4200/categories/item-details/fallacies/Q531873
+
+ERROR TypeError: Cannot read property 'Q531873' of undefined
+at SafeSubscriber.\_next (item-details-store.ts:43)
+at SafeSubscriber.push../node_modules/rxj
+
+After some network issues, this error showed up:
+
+```err
+ERROR TypeError: Cannot read property 'ecological fallacy' of null
+    at ItemsStore.push../src/app/features/category-item-details/items/items.store.ts.ItemsStore.getItemWithDescription (items.store.ts:125)
+    at items.store.ts:67
+```
+
+The existingItems had to be initialized for the current list. I think maybe I had paginated ahead while offline.
+
+The fallacy of composition was not picking up the description back in the list. The result of this API:
+
+https://radiant-springs-38893.herokuapp.com/api/details/en/Fallacy_of_composition
+
+That's the wikimedia API call. It is called in the getWikidediaDescription. This service is called from the fetchWikimediaDescriptionFromEndpoint function.
+
+The ItemDetailsStore class is a brittle string of functions passing each other too many arguments.
+
+fetchDetails()
+fetchDetailsFromEndpoint()
+fetchDescription()
+fetchWikimediaDescriptionFromEndpoint()
+fetchFirebaseItemAndUpdate() or fetchDescriptionFromEndpoint()
+
+So that's half the problem. The other part is that Fallacy_of_composition has everything thing it needs to get a description, and it can be seen in the firebase table, but there is no default description after visiting the details page as there should be. At one point I swear I saw the description pre-fill the edit description form. But now there is just this error:
+
+_Expression has changed after it was checked._
+
+The Wikipedia description is also the truncated one. It shouldn't be. It should of course be the full content.
+
+For some reason the existingItems[Fallacy of composition].user-description is empty. Shouldn't it have the value from firebase?
+
+The sticking point to having a better, looser coupled set of functions that get all the data needed for the details page is when adding the first default user description.
+
+This means that the item in the wikidata list does not have a description. A log of the descriptions there, if they do exist, are in-appropriate for our purposes. For example, the fallacy "correlation does not imply causation" has the description "phrase".
+
+Even if the descriptions were better, they still have to be stripped of the item label itself.
+
+"Frequency illusion" which appears on the list as the "Baader–Meinhof phenomenon" poses another problem to this. It uses an alias in it's title which is actually the label. So if we remove the second occurrence, there will be a hole in the sentence. We could build up an array of grammar to exclude, such as ['the', 'a', 'also known as'] and exclude them along with the label. But we would then need new equivalents for every language we want to support, which is like all that Wikipedia does.
+
+But, this may be acceptable. The user is going to want to edit these, and should at least check them for issues. So maybe this doesn't have to be perfect. Maybe we want to use a style for the first time a description is shown as coming from the default created by one of the descriptions available. Right now there could be three or none. We could show the text is orange with a note saying "Please check the description and edit it as needed. Do not include the label or aliases in the description."
+
+To begin to refactor this class, we should be more clear on the possible sources for a default user description, as well as a possible user description which has already been set. We don't want to erase any content after it's been edited.
+
+1. WikidataDescription (wikidata.org/wiki/Special:EntityData/qcode)
+2. WikiMediaDescription (api/detail/id/lang/leaveCaseAlone)
+3. WikipediaDescription (api/details/:lang/:title)
+4. UserDescription (from firebase)
+
+The first call is made directly from this app, and is not blocked by CORS. The next two api calls would be blocked, so we make the calls from the Conchifolia NodeJS server app and proxy the results for us. The third api above is created like this:
+
+```url
+https://${lang}.wikipedia.org/w/api.php?
+  format=json&
+  action=query&
+  prop=extracts&
+  exintro&
+  explaintext&
+  redirects=1&
+  titles=${title}
+```
+
+The fourth data source is the Firebase realtime database cloud based no-sql service.
+
+If there is a user description from the firebase call (#4), then we don't need to worry about it any more. So that happens first.
+
+Get item meta data from firebase. If this contains a description, add that to the form to be edited.
+
+If there is no description, we will try and get one from the three different api call results shown above (numbers 1 to 3). There should be used in the following order.
+
+I think the or is:
+
+- 4: Firebase
+- 1: WikiData
+- 2: Wikipedia
+- 3: WikiMedia
+
+Actually I'm not sure about the order of 2 or 3. They seem identical in most cases. I believe the Wikimedia has to have the html stripped from it, but apparently the server app is already doing it for us.
+
+### Refactor the item.store service calls
+
+Instead of passing the result of each function on to the next one in a brittle chain of functions as noted above, lets isolate each function and return the result. Then we can compose the results and do what we need with them in the calling function. Sorry, that might not be the best description, so let's see the function names we want to create that are more descriptive.
+
+fetchList(category: Category, currentPage: number) -> fetchListFromFirebase(category: Category)
+
+Since the paginated current page argument is not needed to get all the items for a particular category kept in firebase, we can remove that. That value will be used later in the next call.
+
+The new fetchListFromFirebase will return the whole list of items which has the following properties:
+
+```json
+  "metaData": {
+    "item-details-viewed-count": 0,
+    "item-details-viewed-date": 814,
+    "user-description": "bias in which a person's subjective confidence in their judgements is reliably greater than the objective accuracy of those judgements",
+    "user-description-viewed-count": 0
+  }
+```
+
+We actually need an interface for that so we can strongly type the result. We are using TypeScript after all so should take full advantage of that and all it's benefits.
+
+That class will look like this:
+
+```ts
+export interface ItemMetaData {
+  itemDetailsViewedCount: number;
+  itemDetailsViewedDate: number;
+  userDescription: string;
+  userDescriptionViewedCount: number;
+}
+```
+
+The existing items result has a list of unique keys that have the body of that interface, like this:
+
+```json
+{
+  "Ad iram": {
+    "item-details-viewed-count": 0
+    "item-details-viewed-date": 602
+    "user-description": ""
+    "user-description-viewed-count": 0
+  },
+  ...
+}
+```
+
+The unique keys are kind of an interface killer, because we cant type a key like that. In fact, I'm not sure exactly how to type this kind of thing but I want to know the best way to do it. We want to put this as our return type, so the function signature should look like this:
+
+```ts
+fetchListFromFirebase(category: Category): ItemMetaData | any  { ... }
+```
+
+The second any part there is for the error. When we know what type of error firebase returns for this call, we can make an interface and type that also. For know, typescript is happy and we will continue sketching out the other functions before string them together and finding out how it actually performs.
+
+The next function to refactor is this:
+
+```ts
+getItemsFromEndpoint(category: Category, currentPage: number, existingItems: any)
+```
+
+We wont need the existing items argument there anymore, as that was the result of the last function call. This will be kept in the calling function now. We also need a better name to signify the api it is calling. It looks like this: https://query.wikidata.org/sparql...
+
+So lets change the name to include that:
+
+```ts
+getItemsFromWikidataEndpoint(category: Category, currentPage: number)
+```
+
+Next, we ween some types for the result. But this is a huge function with sub-routines, so needs more thought first. What it does currently is:
+
+1. fet the list of a SPARQL call
+2. map the results to an Item object
+3. get a possible description for each item
+4. if the list has changed we write the ItemsList
+5. merge in the existing
+6. if old objects exist we need to overwrite the API result meta-data with the previous version.
+7. update the Items state
+
+In essence, if it's the first time we visit this item detail, we need to check if we have a meta data object stored for that already in firebase, and if not, get a possible description for it and then save the new meta data with the new default user description.
+
+The problem is, if we don't have a user-description, then we should wait until the other api calls come in to use one of those and then write the meta data object. Phew, that's a lot!
+
 ### Foreign language learning support and the item details
 
 Now that the item list has meta data stored in firebase and merged with the api results,

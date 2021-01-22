@@ -22,8 +22,7 @@ export class RealtimeDbService {
    * @param categories JSON category object.
    */
   writeCategories(categories: Category[]) {
-    this.setupFirebase();
-    const userId = firebase.auth().currentUser.uid;
+    const userId = this.setupFirebase();
     const categoriesToWrite = {};
     categories.forEach(category => {
       categoriesToWrite[category.name] = category;
@@ -56,8 +55,7 @@ export class RealtimeDbService {
    * @param items List of items to store.
    */
   writeItemsList(newItems: Item[], category: string) {
-    this.setupFirebase();
-    const userId = firebase.auth().currentUser.uid;
+    const userId = this.setupFirebase();
     // load the current items list
     this.readUserSubData('items', category)
       .then((currentItems: any) => {
@@ -70,7 +68,7 @@ export class RealtimeDbService {
           // if it doesn't, created a new default user description and counts
           // maybe the description should be set as the item description?
           const newItem = {
-            'user-description': item.description ? item.description : '',
+            userDescription: item.description ? item.description : '',
             'user-description-viewed-count': 0,
             'item-details-viewed-count': 0,
             'item-details-viewed-date': new Date().getMilliseconds()
@@ -109,8 +107,7 @@ export class RealtimeDbService {
   }
 
   readUserSubData(name: string, sub: string) {
-    this.setupFirebase();
-    const userId = firebase.auth().currentUser.uid;
+    const userId = this.setupFirebase();
     return firebase
       .database()
       .ref(name + '/' + userId + '/' + sub)
@@ -125,7 +122,6 @@ export class RealtimeDbService {
 
   readUserSubDataItem(tableName: string, category: string, itemName: string) {
     const userId = this.setupFirebase();
-
     const routeToData = tableName + '/' + userId + '/' + category + '/' + itemName;
     return firebase
       .database()

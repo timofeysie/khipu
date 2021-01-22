@@ -3,6 +3,7 @@ import { ItemsState } from './items.store.state';
 import { Item } from '@app/core/interfaces/item';
 import { Subject } from 'rxjs';
 import { Category } from '@app/core/interfaces/categories';
+import { ItemMetaData } from '@app/core/interfaces/item-meta-data';
 import { RealtimeDbService } from '@app/core/firebase/realtime-db.service';
 import { ItemsListEndpoint } from './items.endpoint';
 import { map } from 'rxjs/operators';
@@ -49,6 +50,7 @@ export class ItemsStore extends Store<ItemsState> {
         // check if items exist already
         // get the paginated item list from an API call and
         // save the merged list
+        console.log('existingItems', existingItems);
         this.getItemsFromEndpoint(category, currentPage, existingItems);
       })
       .catch(error => {
@@ -56,6 +58,31 @@ export class ItemsStore extends Store<ItemsState> {
       });
   }
 
+  /**
+   *
+   * @param category Replacing fetchList
+   * @param currentPage paginated view
+   * @returns firebase
+   */
+  fetchListFromFirebase(category: Category): ItemMetaData | any {
+    this.realtimeDbService
+      .readUserSubData('items', category.name)
+      .then(existingItems => {
+        console.log('existingItems', existingItems);
+        return existingItems;
+      })
+      .catch(error => {
+        log.error('error', error);
+        return error;
+      });
+  }
+
+  /**
+   * Get items from the Wikidata endpoint.
+   * @param category
+   * @param currentPage
+   * @param existingItems
+   */
   getItemsFromEndpoint(category: Category, currentPage: number, existingItems: any) {
     this.itemListEndpoint
       .listItems(category, currentPage)
@@ -84,6 +111,10 @@ export class ItemsStore extends Store<ItemsState> {
       });
   }
 
+  getItemsFromWikidataEndpoint(category: Category, currentPage: number) {
+    return this.itemListEndpoint.listItems(category, currentPage);
+  }
+
   /**
    * The existing items might have a user description.
    * @param incomingItem
@@ -99,22 +130,32 @@ export class ItemsStore extends Store<ItemsState> {
     let needToSave = false;
     // check the existing items with the key in the incoming items and use that first,
     // get the incoming item key
+    console.log('incomingItem or existingItems?');
+    console.log('incomingItem', incomingItem);
+    console.log('existingItems', existingItems);
     if (incomingItem[properties[0] + 'Label']) {
       incomingItemLabelKey = incomingItem[properties[0] + 'Label'].value;
+      console.log('A');
     }
     if (existingItems && existingItems[incomingItemLabelKey]) {
       existingDescription = incomingItem[incomingItem[properties[1]].value];
+      console.log('B');
     } else {
       needToSave = true;
+      existingItems = [];
+      console.log('C');
     }
     // otherwise use the incoming API description if there is one.
     if (incomingItem[properties[0] + 'Description']) {
       incomingItemDescription = incomingItem[properties[0] + 'Description'].value;
+      console.log('D');
     }
     if (existingDescription && existingDescription.length > 0) {
       descriptionToUse = existingDescription;
+      console.log('E');
     } else {
       descriptionToUse = incomingItemDescription;
+      console.log('F');
     }
     const item: Item = {
       categoryType: properties[0],

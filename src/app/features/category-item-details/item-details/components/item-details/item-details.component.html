@@ -13,7 +13,7 @@
           </p>
         </ng-template>
       </ion-card-header>
-      <div *ngIf="itemDetails.aliases">
+      <div *ngIf="itemDetails.aliases && itemDetails.aliases.length > 0">
         Aliases:
         <div *ngFor="let alias of itemDetails.aliases[language]">
           {{ alias.value }}
@@ -30,16 +30,16 @@
     </ion-card-content>
   </ion-card>
 </ion-item>
-<ion-card *ngIf="wikimediaDescription">
+<ion-card>
   <ion-card-header>
     <ion-card-subtitle></ion-card-subtitle>
-    <ion-card-title>Description</ion-card-title>
+    <ion-card-title>Wikimedia Description</ion-card-title>
   </ion-card-header>
   <ion-card-content>
     <p class="description_container">{{ wikimediaDescription }}</p>
   </ion-card-content>
 </ion-card>
-<ion-card *ngIf="description">
+<ion-card>
   <!-- <img src="./madison.jpg" /> -->
   <ion-card-header>
     <ion-card-subtitle></ion-card-subtitle>
