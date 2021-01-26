@@ -131,12 +131,10 @@ export class ItemDetailsStore extends Store<ItemDetailsState> {
     this.realtimeDbService
       .readUserSubDataItem('items', itemLabel, itemListLabelKey)
       .then(existingItem => {
-        console.log('existingItem', existingItem);
         if (newDefaultUserDescription && !existingItem && existingItem.userDescription !== '') {
           this.state.itemDetails.userDescription = newDefaultUserDescription;
           this.realtimeDbService.writeDescription(existingItem, itemLabel, itemListLabelKey);
         } else if (existingItem && existingItem.userDescription === '') {
-          console.log('1. existingItem[userDescription]', existingItem.userDescription);
           // pre-fill blank descriptions and save them back to the db
           const defaultDescription = this.createDefaultDescription(description);
           existingItem.userDescription = defaultDescription;
@@ -145,11 +143,10 @@ export class ItemDetailsStore extends Store<ItemDetailsState> {
         } else {
           if (this.state.itemDetails && existingItem) {
             // this appears to be overwriting the description.
-            console.log('2. newDefaultUserDescription', newDefaultUserDescription);
             this.state.itemDetails.userDescription = newDefaultUserDescription;
             existingItem.userDescription = newDefaultUserDescription;
+            this.realtimeDbService.writeDescription(existingItem, itemLabel, itemListLabelKey);
           } else {
-            console.log('3. createDefaultDescription', this.state.wikimediaDescription);
             this.state.itemDetails.userDescription = this.createDefaultDescription(this.state.wikimediaDescription);
           }
         }

@@ -865,9 +865,9 @@ So lets change the name to include that:
 getItemsFromWikidataEndpoint(category: Category, currentPage: number)
 ```
 
-Next, we ween some types for the result. But this is a huge function with sub-routines, so needs more thought first. What it does currently is:
+Next, we need some types for the result. But this is a huge function with sub-routines, so needs more thought first. What it does currently is:
 
-1. fet the list of a SPARQL call
+1. fetch the list of a SPARQL call
 2. map the results to an Item object
 3. get a possible description for each item
 4. if the list has changed we write the ItemsList
@@ -877,7 +877,131 @@ Next, we ween some types for the result. But this is a huge function with sub-ro
 
 In essence, if it's the first time we visit this item detail, we need to check if we have a meta data object stored for that already in firebase, and if not, get a possible description for it and then save the new meta data with the new default user description.
 
-The problem is, if we don't have a user-description, then we should wait until the other api calls come in to use one of those and then write the meta data object. Phew, that's a lot!
+The problem is, if we don't have a user-description, then we should wait until the other api calls come in to use one of those and then write the meta data object.
+
+The root function that is going to use all these new functions by getting all their results and then deciding what to save back to firebase is going to make the business login going on here much more apparent.
+
+The next function to refactor is getItemWithDescription(incomingItem, existingItems). Here we have been passing in the result from the last two functions, then deciding which description to use.
+
+The existing items might have a user description.
+
+- @param existingItems An entry from firebase with the user description and other metadata.
+- @param needToSave we only save the results if anything has been
+  // check the existing items with the key in the incoming items and use that first,
+  // get the incoming item key
+  if (incomingItem[properties[0] + 'Label']) {
+  incomingItemLabelKey = incomingItem[properties[0] + 'Label'].value;
+  console.log('A');
+  }
+  if (existingItems && existingItems[incomingItemLabelKey]) {
+  existingDescription = incomingItem[incomingItem[properties[1]].value];
+  console.log('B');
+  } else {
+  needToSave = true;
+  existingItems = [];
+  console.log('C');
+  }
+  // otherwise use the incoming API description if there is one.
+  if (incomingItem[properties[0] + 'Description']) {
+  incomingItemDescription = incomingItem[properties[0] + 'Description'].value;
+  console.log('D');
+  }
+  if (existingDescription && existingDescription.length > 0) {
+  descriptionToUse = existingDescription;
+  console.log('E');
+  } else {
+  descriptionToUse = incomingItemDescription;
+  console.log('F');
+  }
+  const item: Item = {
+  categoryType: properties[0],
+  label: incomingItem[properties[1]].value,
+  type: incomingItem[properties[1]].type,
+  description: descriptionToUse,
+  uri: incomingItem[properties[0]].value,
+  binding: existingItems[incomingItemLabelKey],
+  metaData: existingItems[incomingItem[properties[1]].value]
+  };
+  return { needToSave, item };
+  }
+
+For "Converse accident", the incomingItemLabelKey = Q4892544, which will then get this incomingItem:
+
+```json
+fallacies: {type: "uri", value: "http://www.wikidata.org/entity/Q5106561"}
+fallaciesLabel: {
+  type: "literal"
+  value: "fallacy of quoting out of context"
+  xml:lang: "en"
+}
+```
+
+Actually, this is what we chose. We need a better description of what that function is doing. Lets have a look at the end of the tunnel for a moment before detailing a run through the item.store.ts functions being refactored.
+
+The fetchFirebaseItemAndUpdate() in the item-details-store.ts does the business logic to decide which description gets saved back to firebase, if any.
+
+Come to thing of it, this class should be called item-details.store.ts as is the naming convention, so that will change now also. It's worth putting it here in its current _almost working_ state as it will be refactored soon hopefully.
+
+```ts
+fetchFirebaseItemAndUpdate(
+  itemLabel: string,
+  description: string,
+  itemListLabelKey: string,
+  newDefaultUserDescription?: string
+) {
+  this.realtimeDbService
+    .readUserSubDataItem('items', itemLabel, itemListLabelKey)
+    .then(existingItem => {
+      if (newDefaultUserDescription && !existingItem && existingItem.userDescription !== '') {
+        this.state.itemDetails.userDescription = newDefaultUserDescription;
+        this.realtimeDbService.writeDescription(existingItem, itemLabel, itemListLabelKey);
+      } else if (existingItem && existingItem.userDescription === '') {
+        // pre-fill blank descriptions and save them back to the db
+        const defaultDescription = this.createDefaultDescription(description);
+        existingItem.userDescription = defaultDescription;
+        this.state.itemDetails.userDescription = defaultDescription;
+        this.realtimeDbService.writeDescription(existingItem, itemLabel, itemListLabelKey);
+      } else {
+        if (this.state.itemDetails && existingItem) {
+          // this appears to be overwriting the description.
+          this.state.itemDetails.userDescription = newDefaultUserDescription;
+          existingItem.userDescription = newDefaultUserDescription;
+          this.realtimeDbService.writeDescription(existingItem, itemLabel, itemListLabelKey);
+        } else {
+          this.state.itemDetails.userDescription = this.createDefaultDescription(this.state.wikimediaDescription);
+        }
+      }
+```
+
+Writing the description in the else { if this.state.itemDetails && existingItem ...} works to fix the brokeness since the last time we deployed to firebase and started the refactor. It's worth a commit here to mark the progress.
+
+The last thing that needs to be fixed before we continue with this refactor is that the Wikipedia description is showing up as a truncated version of the Wikimedia description, which it shouldn't do. The form is getting pre-filled also with that value, which we do want, so then we just have to complete the update if a user edits the field.
+
+Another bug at the moment is that the first time the user visits the detail that has no description, the wiki description is not being added to the input field. If the description is then added back to the firebase meta data user-description field, then the next time you visit the details page, the field is pre-filled with that user-description. So with the exception of those to issues and the refactor of the functions in items.store and item-details.store, we are only a month in on the [Get the description of a detail page and add it as the item list description](https://github.com/timofeysie/khipu/issues/25) issue #25 which was closed 20 days ago. Why was it closed. This is all part of that _simple_ feature. Work began on it at the beginning of the Christmas break 2020. Actually, #25 was created Nov 19. In order to respect what has gone into this feature since then, these issues have been closed:
+
+- A details page with descriptions is not always added to the item list page descriptions
+- Cannot read property 'uid' of null
+- New categories need a name field.
+- Create CRUD functions for the firebase realtime db
+- Setup firebase auth integration
+- Add description edit form
+
+The firebase auth and integration was the big part. The description form is almost ready. After the two issues above, and the refactor, there is still more to do. Here is currently what is on the plate:
+
+- Refactor the item.store service calls #38
+- appeal to common sense is an aka of Argument from incredulity #37
+- property 'value' of undefined at SafeSubscriber.\_next (item-details-store.ts:46) #36
+- Remove label text from default user descriptions and add tooltip with explanation #35
+- When using the description as a question user should be warned if it contains part of the item label #34
+- Create a backup plan for items with no link #29
+- Add selected item to the store
+
+Then, we can think about exporting a category as a lesson plan or test with a cmi5 format.
+
+Those issues to do are:
+
+1. the Wikipedia description is showing up as a truncated version of the Wikimedia description
+2. the first time the user visits the detail that has no description, the wiki description is not being added to the input field.
 
 ### Foreign language learning support and the item details
 
