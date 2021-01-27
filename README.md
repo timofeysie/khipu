@@ -1003,6 +1003,54 @@ Those issues to do are:
 1. the Wikipedia description is showing up as a truncated version of the Wikimedia description
 2. the first time the user visits the detail that has no description, the wiki description is not being added to the input field.
 
+The problem with #1 is that wikimediaDescription has the right name, but wikipedia description is showing the description. This was due to some naming confusion during the attempted refactor. As any programmer knows, naming is difficult. Here we have overuse of the word "description" and it's been tough to separate them out.
+
+What is the api call for the wikipedia details page? It could also be that the wikimedia description is getting mixed in there also. Wikipedia is the website, wikimedia is the content and querying of it that goes into the website. Wikidata is some of that content that is organized into lists and other connections.
+
+These are the two functions:
+
+getWikipediaDescription()
+
+getWikimediaDescription()
+
+I'm still seeing userDescription as a member of the firebase meta data response. If I look at the firebase console, I can only see the snake-case version "user-description".
+
+Wikipedia, which is the problem does this call:
+
+Request URL: https://www.wikidata.org/wiki/Special:EntityData/Q16948492.json
+
+Request Method: GET
+
+```json
+...
+descriptions: {
+  en: {
+    language: "en"
+    value: "propensity for humans to favor suggestions from automated decision-making systems and to ignore contradictory information made without automation"
+    id: "Q16948492"
+  },
+  labels: { ...
+}
+```
+
+The description is there, but not making it into the template, or is being replaced by the user-description. I don't know when it started, but the state was being set directly in the item.details.store. Darn, should have used Redux after all. We should just be dispatching an action to update the state, not this whatever goes. Just having a state doesn't mean we have to use it properly.
+
+We still have a naming issue, but this fix is worth a commit.
+
+```ts
+const initItemDetails: ItemDetails = {
+  descriptions: {},
+  ...
+  userDescription: ''
+};
+export class ItemDetailsState {
+  itemDetails: ItemDetails = initItemDetails;
+  description: any;
+  wikimediaDescription: any;
+  wikipediaDescription: any;
+}
+```
+
 ### Foreign language learning support and the item details
 
 Now that the item list has meta data stored in firebase and merged with the api results,

@@ -11,6 +11,7 @@ import { ItemDetails } from '@app/core/interfaces/item-details';
 export class ItemDetailsComponent implements OnInit, AfterViewInit {
   @Input() itemDetails: ItemDetails;
   @Input() wikimediaDescription: any;
+  @Input() wikipediaDescription: any;
   @Input() description: any;
   @Input() userDescription: string;
   @Input() language = 'en';

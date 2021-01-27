@@ -73,19 +73,18 @@ export class ItemDetailsStore extends Store<ItemDetailsState> {
 
   fetchDescriptionFromEndpoint(_title: string, _language: string, setDefaultDescription: boolean) {
     this.categoryItemDetailsService
-      .getItemDescription({ title: _title, language: _language })
+      .getWikipediaItemDescription({ title: _title, language: _language })
       .subscribe((response: string) => {
-        this.state.description = response['description'];
+        this.state.wikipediaDescription = response['description'];
         // If the first API call for the description text fails,
         // and there is no existing user description, then we want to
         // parse the HTML out of this response and set the description here
-        this.state.itemDetails.userDescription = response['description'].substrng(0, 100);
       });
   }
 
   fetchWikimediaDescriptionFromEndpoint(_title: string, _language: string, itemListLabelKey: string) {
     this.categoryItemDetailsService
-      .getWikidediaDescription({ title: _title, language: _language })
+      .getWikimediaDescription({ title: _title, language: _language })
       .subscribe((response: any) => {
         if (response['query']) {
           const firstItem = Object.keys(response['query']['pages'])[0];
@@ -103,7 +102,6 @@ export class ItemDetailsStore extends Store<ItemDetailsState> {
               newDefaultUserDescription
             );
           });
-        } else {
           const sparqlLanguageObject = this.getSPARQL();
           const setDefaultDescription = true;
           this.fetchDescriptionFromEndpoint(_title, sparqlLanguageObject.sparqlLanguage, setDefaultDescription);

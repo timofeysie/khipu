@@ -36,7 +36,7 @@ export class CategoryItemDetailsService {
       );
   }
 
-  getItemDescription(context: WikipediaContext): Observable<string> {
+  getWikipediaItemDescription(context: WikipediaContext): Observable<string> {
     return this.httpClient
       .cache()
       .get(routes.wikipedia(context))
@@ -46,7 +46,7 @@ export class CategoryItemDetailsService {
       );
   }
 
-  getWikidediaDescription(context: WikipediaContext): Observable<string> {
+  getWikimediaDescription(context: WikipediaContext): Observable<string> {
     return this.httpClient
       .cache()
       .get(routes.wikimedia(context))

@@ -68,10 +68,10 @@ export class RealtimeDbService {
           // if it doesn't, created a new default user description and counts
           // maybe the description should be set as the item description?
           const newItem = {
-            userDescription: item.description ? item.description : '',
+            'user-description': item.description ? item.description : '',
             'user-description-viewed-count': 0,
             'item-details-viewed-count': 0,
-            'item-details-viewed-date': new Date().getMilliseconds()
+            'item-details-viewed-date': new Date().getTime()
           };
           currentItems[item.label] = newItem;
         });
