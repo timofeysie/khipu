@@ -1112,6 +1112,10 @@ There is still some trouble with the user id, which is asynchronous, but so are 
 
 Also, we were not checking for the user-description properly in the template, so even though they were there, we weren't seeing them in the ui because the arrow character was not there indicating that am existing user-description had been found.
 
+### Enable copy and past of descriptions
+
+-webkit-user-select: text
+
 ### Foreign language learning support and the item details
 
 Now that the item list has meta data stored in firebase and merged with the api results,

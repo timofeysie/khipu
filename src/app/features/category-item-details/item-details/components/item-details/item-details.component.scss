@@ -1,5 +1,9 @@
 .card {
   width: 100%;
+  -webkit-user-select: text;
+}
+.description_container {
+  -webkit-user-select: text;
 }
 ion-item {
   cursor: pointer;
