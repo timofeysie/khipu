@@ -1,11 +1,10 @@
-<ion-label position="floating">Description</ion-label>
 <ion-textarea
   class="description_input"
   [formControl]="descriptionForm"
   placeholder="{{ descriptionForm.value }}"
 ></ion-textarea>
 <p>
-  <button (click)="updateName()">Update Name</button>
+  <ion-button (click)="updateName()">Update Name</ion-button>
 </p>
 valid {{ descriptionForm.valid }}
 <div *ngIf="descriptionForm.errors">

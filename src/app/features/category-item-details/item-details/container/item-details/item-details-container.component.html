@@ -24,5 +24,6 @@
     [userDescription]="(store.state$ | async).itemDetails.userDescription"
     [wikimediaDescription]="(store.state$ | async).wikimediaDescription"
     [wikipediaDescription]="(store.state$ | async).wikipediaDescription"
+    (descriptionUpdated)="onDescriptionUpdated($event)"
   ></item-details>
 </ion-content>

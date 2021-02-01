@@ -96,7 +96,6 @@ export class ItemDetailsStore extends Store<ItemDetailsState> {
           this.activatedRoute.paramMap.subscribe(params => {
             this.selectedCategory = params.get('selectedCategory');
             this.fetchFirebaseItemAndUpdate(
-              this.selectedCategory,
               this.state.wikimediaDescription,
               itemListLabelKey,
               newDefaultUserDescription
@@ -120,32 +119,34 @@ export class ItemDetailsStore extends Store<ItemDetailsState> {
    * @param itemListLabelKey the item key used to associate this item with it's entry in the item list.
    * @param newDefaultUserDescription If the previous API result had a description,
    */
-  fetchFirebaseItemAndUpdate(
-    itemLabel: string,
-    description: string,
-    itemListLabelKey: string,
-    newDefaultUserDescription?: string
-  ) {
+  fetchFirebaseItemAndUpdate(description: string, itemListLabelKey: string, newDefaultUserDescription?: string) {
     this.realtimeDbService
-      .readUserSubDataItem('items', itemLabel, itemListLabelKey)
+      .readUserSubDataItem('items', this.selectedCategory, itemListLabelKey)
       .then(existingItem => {
-        if (newDefaultUserDescription && !existingItem && existingItem.userDescription !== '') {
+        // console.log('1', newDefaultUserDescription);
+        // console.log('2', existingItem);
+        // console.log('3', existingItem.userDescription);
+        if (newDefaultUserDescription && existingItem && existingItem.userDescription !== '') {
+          // console.log('a');
           this.state.itemDetails.userDescription = newDefaultUserDescription;
-          this.realtimeDbService.writeDescription(existingItem, itemLabel, itemListLabelKey);
+          this.realtimeDbService.writeDescription(existingItem, this.selectedCategory, itemListLabelKey);
         } else if (existingItem && existingItem.userDescription === '') {
           // pre-fill blank descriptions and save them back to the db
           const defaultDescription = this.createDefaultDescription(description);
           existingItem.userDescription = defaultDescription;
           this.state.itemDetails.userDescription = defaultDescription;
-          this.realtimeDbService.writeDescription(existingItem, itemLabel, itemListLabelKey);
+          this.realtimeDbService.writeDescription(existingItem, this.selectedCategory, itemListLabelKey);
+          // console.log('b');
         } else {
           if (this.state.itemDetails && existingItem) {
             // this appears to be overwriting the description.
             this.state.itemDetails.userDescription = newDefaultUserDescription;
-            existingItem.userDescription = newDefaultUserDescription;
-            this.realtimeDbService.writeDescription(existingItem, itemLabel, itemListLabelKey);
+            // existingItem.userDescription = newDefaultUserDescription;
+            this.realtimeDbService.writeDescription(existingItem, this.selectedCategory, itemListLabelKey);
+            // console.log('c');
           } else {
             this.state.itemDetails.userDescription = this.createDefaultDescription(this.state.wikimediaDescription);
+            // console.log('d');
           }
         }
       })
@@ -164,5 +165,10 @@ export class ItemDetailsStore extends Store<ItemDetailsState> {
     const sparqlLanguages = environment.sparqlLanguages;
     const sparqlLanguageObject = sparqlLanguages.find(i => i.appLanguage === currentLanguage);
     return sparqlLanguageObject;
+  }
+
+  updateUserDescription(newDescription: string) {
+    log.info('what?');
+    console.log('ItemDetailsStore.updateUserDescription updating', newDescription);
   }
 }

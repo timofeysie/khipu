@@ -41,4 +41,10 @@ export class ItemDetailsContainerComponent implements OnInit {
   updateLanguage(event: any) {
     this.language = event.detail.value;
   }
+
+  onDescriptionUpdated(event: any) {
+    if (event.label['value']) {
+      this.itemsStore.updateUserDescription({ ...event, category: this.selectedCategory });
+    }
+  }
 }

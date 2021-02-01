@@ -1,5 +1,4 @@
-import { Component, OnInit, Input, AfterViewInit, ViewEncapsulation } from '@angular/core';
-import { DOCUMENT } from '@angular/common';
+import { Component, OnInit, Output, Input, AfterViewInit, ViewEncapsulation, EventEmitter } from '@angular/core';
 import { ItemDetails } from '@app/core/interfaces/item-details';
 
 @Component({
@@ -15,6 +14,7 @@ export class ItemDetailsComponent implements OnInit, AfterViewInit {
   @Input() description: any;
   @Input() userDescription: string;
   @Input() language = 'en';
+  @Output() descriptionUpdated = new EventEmitter<any>();
 
   constructor() {}
 
@@ -22,7 +22,7 @@ export class ItemDetailsComponent implements OnInit, AfterViewInit {
 
   ngAfterViewInit() {}
 
-  descriptionUpdated(event: any) {
-    console.log('descriptionUpdated', event);
+  onDescriptionUpdated(event: any) {
+    this.descriptionUpdated.emit({ event: event, label: this.itemDetails.labels[this.language] });
   }
 }

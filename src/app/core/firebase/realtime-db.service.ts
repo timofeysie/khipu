@@ -13,7 +13,10 @@ const log = new Logger('RealtimeDbService');
 @Injectable()
 export class RealtimeDbService {
   authSubscription: Subscription;
-  constructor() {}
+  userId: string;
+  constructor() {
+    this.setupFirebase();
+  }
 
   /**
    * TODO:  How to handle errors with the firebase functions?
@@ -27,16 +30,20 @@ export class RealtimeDbService {
     categories.forEach(category => {
       categoriesToWrite[category.name] = category;
     });
-    firebase
-      .database()
-      .ref('categories/' + userId)
-      .set(categoriesToWrite, error => {
-        if (error) {
-          log.error('write failed', error);
-        } else {
-          log.debug('write successful1', categoriesToWrite);
-        }
-      });
+    if (!userId) {
+      console.log('caught trying to use an undefined user in categories');
+    } else {
+      firebase
+        .database()
+        .ref('categories/' + userId)
+        .set(categoriesToWrite, error => {
+          if (error) {
+            log.error('write failed', error);
+          } else {
+            log.debug('write successful1', categoriesToWrite);
+          }
+        });
+    }
   }
 
   /**
@@ -75,16 +82,21 @@ export class RealtimeDbService {
           };
           currentItems[item.label] = newItem;
         });
-        firebase
-          .database()
-          .ref('items/' + userId + '/' + category)
-          .set(currentItems, error => {
-            if (error) {
-              log.error('write failed', error);
-            } else {
-              log.debug('write successful2');
-            }
-          });
+        const pathToData = 'items/' + userId + '/' + category;
+        if (pathToData.indexOf('undefined') !== -1) {
+          console.log('undefined in path to data', pathToData);
+        } else {
+          firebase
+            .database()
+            .ref(pathToData)
+            .set(currentItems, error => {
+              if (error) {
+                log.error('write failed', error);
+              } else {
+                log.debug('write successful2');
+              }
+            });
+        }
       })
       .catch(error => {
         // list doesn't exist yet?
@@ -106,11 +118,16 @@ export class RealtimeDbService {
       });
   }
 
-  readUserSubData(name: string, sub: string) {
-    const userId = this.setupFirebase();
+  async readUserSubData(name: string, sub: string) {
+    await this.setupFirebaseAsync();
+    let id = this.userId;
+    if (!this.userId) {
+      id = this.setupFirebase();
+    }
+
     return firebase
       .database()
-      .ref(name + '/' + userId + '/' + sub)
+      .ref(name + '/' + id + '/' + sub)
       .once('value')
       .then(snapshot => {
         return snapshot.val();
@@ -136,21 +153,59 @@ export class RealtimeDbService {
   }
 
   writeDescription(detail: any, itemLabel: string, category: string) {
-    const userId = this.setupFirebase();
-    const pathToData = 'items/' + userId + '/' + itemLabel + '/' + category;
-    firebase
-      .database()
-      .ref(pathToData)
-      .set(detail, error => {
-        if (error) {
-          log.error('write failed', error);
-        } else {
-          log.debug('write successful3', detail);
-        }
-      });
+    let userId = this.setupFirebase();
+    if (!userId) {
+      userId = firebase.auth().currentUser.uid;
+    }
+    const pathToData = 'items/' + userId + '/' + category + '/' + itemLabel + '/user-description';
+    if (pathToData.indexOf('undefined') !== -1) {
+      console.log('catching undefined', pathToData);
+    } else {
+      firebase
+        .database()
+        .ref(pathToData)
+        .set(detail, error => {
+          if (error) {
+            log.error('write failed', error);
+          } else {
+            log.debug('write successful3', detail);
+          }
+        });
+    }
   }
 
-  setupFirebase() {
+  setupFirebase(): any {
+    const firebaseConfig = {
+      apiKey: 'AIzaSyBDeqGbiib0fVFoc2yWr9WVE4MV6isWQ9Y',
+      authDomain: 'khipu1.firebaseapp.com',
+      databaseURL: 'https://khipu1.firebaseio.com',
+      projectId: 'khipu1',
+      storageBucket: 'khipu1.appspot.com',
+      messagingSenderId: '348969595626',
+      appId: '1:348969595626:web:a3094e5d87583fca551d93'
+    };
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+    firebase.auth().onAuthStateChanged(user => {
+      if (user) {
+        const database = firebase.database();
+      }
+      if (this.userId) {
+        return this.userId;
+      } else {
+        const id = firebase.auth().currentUser.uid;
+        if (id) {
+          this.userId = id;
+          return id;
+        } else {
+          return firebase.auth().currentUser.uid;
+        }
+      }
+    });
+  }
+
+  async setupFirebaseAsync() {
     const firebaseConfig = {
       apiKey: 'AIzaSyBDeqGbiib0fVFoc2yWr9WVE4MV6isWQ9Y',
       authDomain: 'khipu1.firebaseapp.com',

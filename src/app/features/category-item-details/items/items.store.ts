@@ -25,6 +25,14 @@ export class ItemsStore extends Store<ItemsState> {
     const wikidataItemList = this.getItemsFromWikidataEndpoint(category, currentPage);
   }
 
+  updateUserDescription(newDescriptionObject: any) {
+    this.realtimeDbService.writeDescription(
+      newDescriptionObject.event,
+      newDescriptionObject.label.value,
+      newDescriptionObject.category
+    );
+  }
+
   /**
    * Read a user items table and return a list which may have
    * a user description.
@@ -142,7 +150,8 @@ export class ItemsStore extends Store<ItemsState> {
       incomingItemLabelKey = incomingItem[properties[0] + 'Label'].value;
     }
     if (existingItems && existingItems[incomingItemLabelKey]) {
-      existingDescription = incomingItem[incomingItem[properties[1]].value];
+      existingDescription = existingItems[incomingItem[properties[1]].value];
+      descriptionToUse = existingDescription;
     } else {
       needToSave = true;
       existingItems = [];
@@ -163,7 +172,7 @@ export class ItemsStore extends Store<ItemsState> {
       description: descriptionToUse,
       uri: incomingItem[properties[0]].value,
       binding: existingItems[incomingItemLabelKey],
-      metaData: existingItems[incomingItem[properties[1]].value]
+      metaData: existingItems[incomingItemLabelKey]
     };
     return { needToSave, item };
   }

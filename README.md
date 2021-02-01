@@ -1051,6 +1051,67 @@ export class ItemDetailsState {
 }
 ```
 
+That's fine, like a room on fire, so we can move on to getting the user description into the form.
+
+```html
+<app-description-form [userDescription]="itemDetails.userDescription" ...
+```
+
+To write a new description, we need this:
+
+this.realtimeDbService.writeDescription(existingItem, itemLabel, itemListLabelKey);
+
+fetchFirebaseItemAndUpdate(
+itemLabel: string,
+description: string,
+itemListLabelKey: string,
+newDefaultUserDescription?: string
+) {
+this.realtimeDbService
+.readUserSubDataItem('items', itemLabel, itemListLabelKey)
+
+this.selectedCategory = params.get('selectedCategory');
+
+It's ridiculous to pass around a member variable like this.selectedCategory. But, if the calling function is not sure it has been set yet, then, I supposed it's a little OK. This is a good example of why functional programming is a good idea. Arguments go in, results come out. There is no altering the state inside a function. If a variable has to be used in a template, it should be possibly different from the way it is set, and named differently from the argument passed into a function. Wish we were using React for this project.
+
+I just thought now that the idea that a detail page can be shared and work the way we want it to work is not really a good idea. If we don't know the category, how are we going to take the detail code and figure out which category it's in? It could be in multiple categories, so really, there is no way to be able to store the new description?
+
+Or maybe it's OK just to add a detail with a new description to items without a category? I don't know. Will have to think about this. For now, if the category is not there, we are not going to be saving it.
+
+To save the description, we need to establish the exact path to the description, which requires only two things:
+
+items/_user-id_/category/_detail-name_/user-description
+
+items/X0YFaM8hXHdm89FWEQsj0Aqhcln1/cognitive_bias/Automation bias/user-description
+
+writeDescription(detail: any, itemLabel: string, category: string) {
+
+const pathToData = 'items/' + userId + '/' + itemLabel + '/' + category;
+
+There is also the content to write, which is the new user description. But the two at the end of the path are switched. It should be category/label
+
+Updating the description goes like this:
+
+item-details.component.ts:26
+item-details-container.component.ts:46
+items.store.ts:29
+
+We can write the description, but the wikidata description is being used instead of the new one.
+
+1. if you delete a meta data object for an item on firebase, when you get the category list again, that one is not added to the list.
+
+2. the first time the user visits the detail that has no description, the user description is not being added to the input field.
+
+3. the user-description updated by the form does not show up in the list.
+
+Number 1 is kind of a different direction from the description epic underway, so we can do that later. We shouldn't really be deleting items outside the app, and that functionality hasn't really been tested or supported so I'm not surprised it's an issue now. We did discuss that as a potential pitfall when we started storing paginated views of the categories list.
+
+Number 3 is a regression, as the currently deployed app does not have this issue. It looks like realtimeDbService.readUserSubData('items', category.name) is failing. And guess why? The user id is undefined. What gives with this error? All the functions that use the db were converted to use the version that returns the id. So the id is definitely an asynchronous thing.
+
+There is still some trouble with the user id, which is asynchronous, but so are the other functions that call them. Putting the user id into the constructor has helped a bit, but will still fail the first time.
+
+Also, we were not checking for the user-description properly in the template, so even though they were there, we weren't seeing them in the ui because the arrow character was not there indicating that am existing user-description had been found.
+
 ### Foreign language learning support and the item details
 
 Now that the item list has meta data stored in firebase and merged with the api results,
