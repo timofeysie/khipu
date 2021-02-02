@@ -30,19 +30,21 @@
     </ion-card-content>
   </ion-card>
 </ion-item>
-<ion-card>
+<ion-card [ngClass]="{ wikimedia_description_card: wikimediaDescriptionToggle }">
   <ion-card-header>
-    <ion-card-subtitle></ion-card-subtitle>
-    <ion-card-title>Wikimedia Description</ion-card-title>
+    <ion-toolbar>
+      <ion-card-title slot="start" (click)="toggleDescription()">Wikimedia Description</ion-card-title>
+      <ion-icon slot="end" color="primary" name="add-outline" *ngIf="!wikimediaDescriptionToggle"></ion-icon>
+      <ion-icon slot="end" color="primary" name="remove-outline" *ngIf="wikimediaDescriptionToggle"></ion-icon>
+    </ion-toolbar>
   </ion-card-header>
-  <ion-card-content>
-    <p class="description_container">{{ wikimediaDescription }}</p>
+  <ion-card-content [ngClass]="{ wikimedia_description_content: wikimediaDescriptionToggle }">
+    <textarea class="description_container">{{ wikimediaDescription }}</textarea>
   </ion-card-content>
 </ion-card>
 <ion-card>
   <!-- <img src="./madison.jpg" /> -->
   <ion-card-header>
-    <ion-card-subtitle></ion-card-subtitle>
     <ion-card-title>Wikipedia Description</ion-card-title>
   </ion-card-header>
   <ion-card-content>

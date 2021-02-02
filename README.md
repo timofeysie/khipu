@@ -1114,7 +1114,19 @@ Also, we were not checking for the user-description properly in the template, so
 
 ### Enable copy and past of descriptions
 
--webkit-user-select: text
+Text select is not enabled by default in Ionic. Trying these works in the browser, but not on the device:
+
+```css
+-webkit-user-select: text;
+-moz-user-select: text;
+-ms-user-select: text;
+user-select: text;
+-khtml-user-select: text;
+-o-user-select: text;
+cursor: default;
+```
+
+Using a textarea for now to get things going.
 
 ### Foreign language learning support and the item details
 

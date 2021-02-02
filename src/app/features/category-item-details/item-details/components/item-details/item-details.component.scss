@@ -2,8 +2,23 @@
   width: 100%;
   -webkit-user-select: text;
 }
+.wikimedia_description_card {
+  height: 50%;
+  margin-bottom: -20%;
+}
+.wikimedia_description_content {
+  height: 50%;
+}
 .description_container {
   -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+  -khtml-user-select: text;
+  -o-user-select: text;
+  cursor: default;
+  width: 100%;
+  height: 100%;
 }
 ion-item {
   cursor: pointer;

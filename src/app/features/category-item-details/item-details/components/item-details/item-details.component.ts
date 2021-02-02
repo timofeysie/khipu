@@ -15,7 +15,7 @@ export class ItemDetailsComponent implements OnInit, AfterViewInit {
   @Input() userDescription: string;
   @Input() language = 'en';
   @Output() descriptionUpdated = new EventEmitter<any>();
-
+  wikimediaDescriptionToggle: boolean;
   constructor() {}
 
   ngOnInit() {}
@@ -24,5 +24,11 @@ export class ItemDetailsComponent implements OnInit, AfterViewInit {
 
   onDescriptionUpdated(event: any) {
     this.descriptionUpdated.emit({ event: event, label: this.itemDetails.labels[this.language] });
+  }
+
+  toggleDescription() {
+    console.log('this.wikimediaDescriptionToggle', this.wikimediaDescriptionToggle);
+    this.wikimediaDescriptionToggle = !this.wikimediaDescriptionToggle;
+    console.log('this.wikimediaDescriptionToggle', this.wikimediaDescriptionToggle);
   }
 }
