@@ -22,7 +22,7 @@ export class DescriptionFormComponent implements AfterViewInit, AfterContentChec
   @Input() userDescription: string;
   @Output() descriptionUpdated = new EventEmitter<string>();
 
-  descriptionForm = new FormControl('', [Validators.maxLength(100)]);
+  descriptionForm = new FormControl('', [Validators.maxLength(103)]);
 
   constructor(private cdref: ChangeDetectorRef) {}
 

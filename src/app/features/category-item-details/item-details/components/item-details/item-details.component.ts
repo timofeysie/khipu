@@ -27,8 +27,6 @@ export class ItemDetailsComponent implements OnInit, AfterViewInit {
   }
 
   toggleDescription() {
-    console.log('this.wikimediaDescriptionToggle', this.wikimediaDescriptionToggle);
     this.wikimediaDescriptionToggle = !this.wikimediaDescriptionToggle;
-    console.log('this.wikimediaDescriptionToggle', this.wikimediaDescriptionToggle);
   }
 }

@@ -4,9 +4,8 @@
   placeholder="{{ descriptionForm.value }}"
 ></ion-textarea>
 <p>
-  <ion-button (click)="updateName()">Update Name</ion-button>
+  <ion-button (click)="updateName()">Update description</ion-button>
 </p>
-valid {{ descriptionForm.valid }}
 <div *ngIf="descriptionForm.errors">
   <div color="error" *ngIf="descriptionForm.errors.maxlength">
     Name must be less than 100 characters long.

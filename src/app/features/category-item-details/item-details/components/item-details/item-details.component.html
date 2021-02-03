@@ -2,22 +2,22 @@
   <ion-card class="card ion-text-center" *ngIf="itemDetails">
     <ion-card-content *ngIf="itemDetails.labels[language]">
       <ion-card-header>
-        <p *ngIf="itemDetails.sitelinks[language + 'wiki']; else noLinkTitle">
+        <h2 *ngIf="itemDetails.sitelinks[language + 'wiki']; else noLinkTitle">
           <a href="{{ itemDetails.sitelinks[language + 'wiki']['url'] }}">
             {{ itemDetails.sitelinks[language + 'wiki']['title'] }}</a
           >
-        </p>
+        </h2>
         <ng-template #noLinkTitle>
           <p class="title_no_link" *ngIf="itemDetails.labels[language]">
             {{ itemDetails.labels[language]['value'] }}
           </p>
         </ng-template>
       </ion-card-header>
-      <div *ngIf="itemDetails.aliases && itemDetails.aliases.length > 0">
+      <div *ngIf="itemDetails.aliases && itemDetails.aliases[language].length > 0">
         Aliases:
-        <div *ngFor="let alias of itemDetails.aliases[language]">
-          {{ alias.value }}
-        </div>
+        <span *ngFor="let alias of itemDetails.aliases[language]; let i = index">
+          {{ alias.value }}<span *ngIf="i < itemDetails.aliases[language].length - 1">,</span>
+        </span>
       </div>
       <app-description-form
         (descriptionUpdated)="onDescriptionUpdated($event)"
@@ -34,8 +34,6 @@
   <ion-card-header>
     <ion-toolbar>
       <ion-card-title slot="start" (click)="toggleDescription()">Wikimedia Description</ion-card-title>
-      <ion-icon slot="end" color="primary" name="add-outline" *ngIf="!wikimediaDescriptionToggle"></ion-icon>
-      <ion-icon slot="end" color="primary" name="remove-outline" *ngIf="wikimediaDescriptionToggle"></ion-icon>
     </ion-toolbar>
   </ion-card-header>
   <ion-card-content [ngClass]="{ wikimedia_description_content: wikimediaDescriptionToggle }">

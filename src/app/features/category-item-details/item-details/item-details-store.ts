@@ -92,13 +92,14 @@ export class ItemDetailsStore extends Store<ItemDetailsState> {
           // TODO: set in db also
           // check if a user description exists,
           // if not, set a portion of the description.
-          const newDefaultUserDescription = this.createDefaultDescription(this.state.wikimediaDescription);
+          const newDefaultUserDescription = this.createDefaultDescription(this.state.wikimediaDescription, _language);
           this.activatedRoute.paramMap.subscribe(params => {
             this.selectedCategory = params.get('selectedCategory');
             this.fetchFirebaseItemAndUpdate(
               this.state.wikimediaDescription,
               itemListLabelKey,
-              newDefaultUserDescription
+              newDefaultUserDescription,
+              _language
             );
           });
           const sparqlLanguageObject = this.getSPARQL();
@@ -119,34 +120,35 @@ export class ItemDetailsStore extends Store<ItemDetailsState> {
    * @param itemListLabelKey the item key used to associate this item with it's entry in the item list.
    * @param newDefaultUserDescription If the previous API result had a description,
    */
-  fetchFirebaseItemAndUpdate(description: string, itemListLabelKey: string, newDefaultUserDescription?: string) {
+  fetchFirebaseItemAndUpdate(
+    description: string,
+    itemListLabelKey: string,
+    newDefaultUserDescription?: string,
+    language?: string
+  ) {
     this.realtimeDbService
       .readUserSubDataItem('items', this.selectedCategory, itemListLabelKey)
       .then(existingItem => {
-        // console.log('1', newDefaultUserDescription);
-        // console.log('2', existingItem);
-        // console.log('3', existingItem.userDescription);
         if (newDefaultUserDescription && existingItem && existingItem.userDescription !== '') {
-          // console.log('a');
           this.state.itemDetails.userDescription = newDefaultUserDescription;
           this.realtimeDbService.writeDescription(existingItem, this.selectedCategory, itemListLabelKey);
         } else if (existingItem && existingItem.userDescription === '') {
           // pre-fill blank descriptions and save them back to the db
-          const defaultDescription = this.createDefaultDescription(description);
+          const defaultDescription = this.createDefaultDescription(description, language);
           existingItem.userDescription = defaultDescription;
           this.state.itemDetails.userDescription = defaultDescription;
           this.realtimeDbService.writeDescription(existingItem, this.selectedCategory, itemListLabelKey);
-          // console.log('b');
         } else {
           if (this.state.itemDetails && existingItem) {
             // this appears to be overwriting the description.
             this.state.itemDetails.userDescription = newDefaultUserDescription;
             // existingItem.userDescription = newDefaultUserDescription;
             this.realtimeDbService.writeDescription(existingItem, this.selectedCategory, itemListLabelKey);
-            // console.log('c');
           } else {
-            this.state.itemDetails.userDescription = this.createDefaultDescription(this.state.wikimediaDescription);
-            // console.log('d');
+            this.state.itemDetails.userDescription = this.createDefaultDescription(
+              this.state.wikimediaDescription,
+              language
+            );
           }
         }
       })
@@ -155,8 +157,25 @@ export class ItemDetailsStore extends Store<ItemDetailsState> {
       });
   }
 
-  createDefaultDescription(description: string) {
+  createDefaultDescription(description: string, language: string) {
     const n = 100; // TODO: move this value into user preferences.
+    // remove label from the description
+    description = description.toLocaleLowerCase();
+    const label = this.state.itemDetails.sitelinks[language + 'wiki']['title'].toLowerCase();
+    if (label !== -1) {
+      const newDescription = description.replace(label, '');
+      description = newDescription;
+    }
+    if (this.state.itemDetails.aliases) {
+      const aliases = this.state.itemDetails.aliases[language];
+      // remove alieases from the description.
+      aliases.forEach((item: any) => {
+        if (description.indexOf(item.value) !== -1) {
+          const newDescription = description.replace(item.value, '');
+          description = newDescription;
+        }
+      });
+    }
     return description.length > n ? description.substr(0, n - 1) + '...' : description;
   }
 
@@ -165,10 +184,5 @@ export class ItemDetailsStore extends Store<ItemDetailsState> {
     const sparqlLanguages = environment.sparqlLanguages;
     const sparqlLanguageObject = sparqlLanguages.find(i => i.appLanguage === currentLanguage);
     return sparqlLanguageObject;
-  }
-
-  updateUserDescription(newDescription: string) {
-    log.info('what?');
-    console.log('ItemDetailsStore.updateUserDescription updating', newDescription);
   }
 }
