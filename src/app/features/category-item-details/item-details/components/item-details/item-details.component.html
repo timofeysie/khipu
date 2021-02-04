@@ -13,7 +13,7 @@
           </p>
         </ng-template>
       </ion-card-header>
-      <div *ngIf="itemDetails.aliases && itemDetails.aliases[language].length > 0">
+      <div *ngIf="itemDetails.aliases && itemDetails.aliases[language] && itemDetails.aliases[language].length > 0">
         Aliases:
         <span *ngFor="let alias of itemDetails.aliases[language]; let i = index">
           {{ alias.value }}<span *ngIf="i < itemDetails.aliases[language].length - 1">,</span>

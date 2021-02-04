@@ -157,26 +157,38 @@ export class ItemDetailsStore extends Store<ItemDetailsState> {
       });
   }
 
+  /**
+   * Remove occurrences of the label and aliases from the chosen default
+   * item description.
+   * Limit the string to n-characters.
+   * Add ellipsis ...
+   * @param description
+   * @param language
+   */
   createDefaultDescription(description: string, language: string) {
     const n = 100; // TODO: move this value into user preferences.
-    // remove label from the description
     description = description.toLocaleLowerCase();
     const label = this.state.itemDetails.sitelinks[language + 'wiki']['title'].toLowerCase();
+    // remove label from the description
     if (label !== -1) {
       const newDescription = description.replace(label, '');
       description = newDescription;
     }
+    // remove aliases from the description.
     if (this.state.itemDetails.aliases) {
       const aliases = this.state.itemDetails.aliases[language];
-      // remove alieases from the description.
-      aliases.forEach((item: any) => {
-        if (description.indexOf(item.value) !== -1) {
-          const newDescription = description.replace(item.value, '');
-          description = newDescription;
-        }
-      });
+      if (aliases) {
+        aliases.forEach((item: any) => {
+          if (description.indexOf(item.value) !== -1) {
+            const newDescription = description.replace(item.value, '');
+            description = newDescription;
+          }
+        });
+      }
     }
-    return description.length > n ? description.substr(0, n - 1) + '...' : description;
+    // add ellipsis ...
+    description = description.length > n ? description.substr(0, n - 1) + '...' : description;
+    return description;
   }
 
   getSPARQL() {

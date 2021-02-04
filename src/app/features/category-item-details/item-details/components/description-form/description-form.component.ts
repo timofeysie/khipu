@@ -28,7 +28,6 @@ export class DescriptionFormComponent implements AfterViewInit, AfterContentChec
 
   ngAfterViewInit() {
     this.descriptionForm.setValue(this.userDescription);
-    console.log('this.userDescription', this.userDescription);
   }
 
   ngAfterContentChecked() {
