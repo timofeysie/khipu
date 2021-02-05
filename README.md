@@ -1128,6 +1128,32 @@ cursor: default;
 
 Using a textarea for now to get things going.
 
+### Removing the label/aliases from the description
+
+This section covers the [Issue \$35: Remove label text from default user descriptions and add tooltip with explanation](https://github.com/timofeysie/khipu/issues/35).
+
+What we want here may be extremely difficult. Here is a difficult example from the first page of the fallacies category.
+
+The "association fallacy" has the following wikidata description:
+
+_An association fallacy is an informal inductive fallacy of the hasty-generalization or red-herring type and which asserts, by irrelevant association and often by appeal to emotion, that qualities of one thing are inherently qualities of another. Two types of association fallacies are sometimes referred to as guilt by association and honor by association._
+
+With out current functionality, it becomes:
+
+"an is an informal inductive fallacy of the hasty-generalization or red-herring type and which asse..."
+
+But ideally should be something like:
+
+"Qualities of one thing are inherently qualities of another."
+
+The pattern to catch this particular description and transform it might be:
+
+"an <label/alias> is <sub-type> of the <type> or <type/alias> and which asserts, by xxx, that"
+
+There are more examples on the issue linked to above. They are each individually different grammatical type situations.
+
+So obviously, we need some kind of natural language processing capability to perform this kind of functionality. Or we need to collect as many patterns as possible and deal with them all by hand. Either way, that's a lot of work when we can just let the user edit their own description.
+
 ### Foreign language learning support and the item details
 
 Now that the item list has meta data stored in firebase and merged with the api results,
