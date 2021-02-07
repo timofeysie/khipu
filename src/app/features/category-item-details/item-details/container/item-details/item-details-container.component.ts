@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { AfterViewInit, Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { I18nService } from '@app/core';
 import { ItemDetailsStore } from '../../item-details-store';
@@ -14,7 +14,7 @@ interface Label {
   styleUrls: ['./item-details-container.component.scss'],
   providers: [ItemDetailsStore]
 })
-export class ItemDetailsContainerComponent implements OnInit {
+export class ItemDetailsContainerComponent implements OnInit, AfterViewInit {
   isLoading = false;
   label: Label;
   siteLink: string;
@@ -37,6 +37,8 @@ export class ItemDetailsContainerComponent implements OnInit {
       this.language = this.i18nService.language.substring(0, 2);
     }, 1600);
   }
+
+  ngAfterViewInit() {}
 
   updateLanguage(event: any) {
     this.language = event.detail.value;

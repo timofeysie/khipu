@@ -23,7 +23,6 @@
         (descriptionUpdated)="onDescriptionUpdated($event)"
         [itemDetails]="itemDetails"
         [language]="language"
-        [description]="description"
         [userDescription]="itemDetails.userDescription"
       ></app-description-form>
       <p>Modified: {{ itemDetails.modified | date: 'medium' }}</p>
@@ -31,7 +30,7 @@
   </ion-card>
 </ion-item>
 <ion-card [ngClass]="{ wikimedia_description_card: wikimediaDescriptionToggle }">
-  <ion-card-header>
+  <ion-card-header class="wikimedia_description_title">
     <ion-toolbar>
       <ion-card-title slot="start" (click)="toggleDescription()">Wikimedia Description</ion-card-title>
     </ion-toolbar>

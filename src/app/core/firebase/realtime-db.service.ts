@@ -31,7 +31,7 @@ export class RealtimeDbService {
       categoriesToWrite[category.name] = category;
     });
     if (!userId) {
-      console.log('caught trying to use an undefined user in categories');
+      log.error('caught trying to use an undefined user in categories');
     } else {
       firebase
         .database()
@@ -84,7 +84,7 @@ export class RealtimeDbService {
         });
         const pathToData = 'items/' + userId + '/' + category;
         if (pathToData.indexOf('undefined') !== -1) {
-          console.log('undefined in path to data', pathToData);
+          log.error('undefined in path to data', pathToData);
         } else {
           firebase
             .database()
@@ -138,18 +138,26 @@ export class RealtimeDbService {
   }
 
   readUserSubDataItem(tableName: string, category: string, itemName: string) {
-    const userId = this.setupFirebase();
-    const routeToData = tableName + '/' + userId + '/' + category + '/' + itemName;
-    return firebase
-      .database()
-      .ref(routeToData)
-      .once('value')
-      .then(snapshot => {
-        return snapshot.val();
-      })
-      .catch(error => {
-        log.error('error', error);
+    return new Promise((resolve, reject) => {
+      firebase.auth().onAuthStateChanged(user => {
+        if (user) {
+          const database = firebase.database();
+        }
+        const userId = firebase.auth().currentUser.uid;
+        const routeToData = tableName + '/' + userId + '/' + category + '/' + itemName;
+        firebase
+          .database()
+          .ref(routeToData)
+          .once('value')
+          .then(snapshot => {
+            resolve(snapshot.val());
+          })
+          .catch(error => {
+            log.error('error', error);
+            reject(error);
+          });
       });
+    });
   }
 
   writeDescription(detail: any, itemLabel: string, category: string) {
@@ -159,7 +167,7 @@ export class RealtimeDbService {
     }
     const pathToData = 'items/' + userId + '/' + category + '/' + itemLabel + '/user-description';
     if (pathToData.indexOf('undefined') !== -1) {
-      console.log('catching undefined', pathToData);
+      log.error('catching undefined', pathToData);
     } else {
       firebase
         .database()

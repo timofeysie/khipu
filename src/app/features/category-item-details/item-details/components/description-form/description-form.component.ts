@@ -18,11 +18,10 @@ import { FormControl } from '@angular/forms';
 export class DescriptionFormComponent implements AfterViewInit, AfterContentChecked {
   @Input() itemDetails: any;
   @Input() language: string;
-  @Input() description: string;
   @Input() userDescription: string;
   @Output() descriptionUpdated = new EventEmitter<string>();
 
-  descriptionForm = new FormControl('', [Validators.maxLength(103)]);
+  descriptionForm = new FormControl('', [Validators.maxLength(150)]);
 
   constructor(private cdref: ChangeDetectorRef) {}
 

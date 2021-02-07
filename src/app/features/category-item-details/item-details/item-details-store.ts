@@ -128,16 +128,23 @@ export class ItemDetailsStore extends Store<ItemDetailsState> {
   ) {
     this.realtimeDbService
       .readUserSubDataItem('items', this.selectedCategory, itemListLabelKey)
-      .then(existingItem => {
-        if (newDefaultUserDescription && existingItem && existingItem.userDescription !== '') {
-          this.state.itemDetails.userDescription = newDefaultUserDescription;
-          this.realtimeDbService.writeDescription(existingItem, this.selectedCategory, itemListLabelKey);
-        } else if (existingItem && existingItem.userDescription === '') {
-          // pre-fill blank descriptions and save them back to the db
+      .then((existingItem: any) => {
+        if (existingItem && existingItem['user-description'] && existingItem['user-description'] !== '') {
+          // if the firebase meta info user description exists, use that
+          this.state.itemDetails.userDescription = existingItem['user-description'];
+        } else if (existingItem && existingItem['user-description'] === '') {
+          // pre-fill a blank descriptions and save them back to the db
+          // not sure if this is a possible situation.  if we have stored a blank description,
+          // something is wrong and that should be fixed, and we wont need this block.
           const defaultDescription = this.createDefaultDescription(description, language);
           existingItem.userDescription = defaultDescription;
           this.state.itemDetails.userDescription = defaultDescription;
           this.realtimeDbService.writeDescription(existingItem, this.selectedCategory, itemListLabelKey);
+        } else if (newDefaultUserDescription && existingItem && existingItem.userDescription !== '') {
+          // if the result of the fetchWikimediaDescriptionFromEndpoint has a new default description, use that
+          this.state.itemDetails.userDescription = newDefaultUserDescription;
+          // p.s. we don't need to write what has just come from the db!
+          // this.realtimeDbService.writeDescription(existingItem, this.selectedCategory, itemListLabelKey);
         } else {
           if (this.state.itemDetails && existingItem) {
             // this appears to be overwriting the description.
@@ -145,6 +152,9 @@ export class ItemDetailsStore extends Store<ItemDetailsState> {
             // existingItem.userDescription = newDefaultUserDescription;
             this.realtimeDbService.writeDescription(existingItem, this.selectedCategory, itemListLabelKey);
           } else {
+            // backup to wikimedia description
+            // this will most likely result in markup being put into the description,
+            // so if this is really something we want, then it should be stripped.
             this.state.itemDetails.userDescription = this.createDefaultDescription(
               this.state.wikimediaDescription,
               language
@@ -167,11 +177,12 @@ export class ItemDetailsStore extends Store<ItemDetailsState> {
    */
   createDefaultDescription(description: string, language: string) {
     const n = 100; // TODO: move this value into user preferences.
+    const replacementChar = '*';
     description = description.toLocaleLowerCase();
     const label = this.state.itemDetails.sitelinks[language + 'wiki']['title'].toLowerCase();
     // remove label from the description
     if (label !== -1) {
-      const newDescription = description.replace(label, '');
+      const newDescription = description.replace(label, replacementChar);
       description = newDescription;
     }
     // remove aliases from the description.
@@ -180,7 +191,7 @@ export class ItemDetailsStore extends Store<ItemDetailsState> {
       if (aliases) {
         aliases.forEach((item: any) => {
           if (description.indexOf(item.value) !== -1) {
-            const newDescription = description.replace(item.value, '');
+            const newDescription = description.replace(item.value, replacementChar);
             description = newDescription;
           }
         });

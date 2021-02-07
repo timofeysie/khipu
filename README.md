@@ -1112,6 +1112,17 @@ There is still some trouble with the user id, which is asynchronous, but so are 
 
 Also, we were not checking for the user-description properly in the template, so even though they were there, we weren't seeing them in the ui because the arrow character was not there indicating that am existing user-description had been found.
 
+As a short term fix to get things working, a Promise was used in the realtimeDbService.readUserSubDataItem function. When you refresh the details page, the problem with the user id being undefined breaks getting the user description, so it is empty the first time the user goes to that page.
+
+An RxJs solution would be better, but since at this point we are still considering our options for the architecture here, a Promise is a straight forward short term solution so that we can get everything working before the big refactor. The problem with refactoring a broken solution is that you don't know if what you did is working or not, or if you have just introduced a new difficult to diagnose bug.
+
+So fix [the problems with the description](https://github.com/timofeysie/khipu/issues), then refactor using incremental development from a position of a working app is the way to go. Don't judge me for reaching for the Promise, please.
+
+After a bit of work, things have improved slightly. The proper item list user-description shows up in the text area ready to edit in the details page. There are still a few issues however:
+
+1. the wikidata description shows up for a brief moment and then is replaced by the proper user-description.
+2. the fallacy "if-by-whisky" shows up with the wikidata description, and then flashes to the automatically created default description with the label removed. There actually is a saved user-description for this item, so where is that?
+
 ### Enable copy and past of descriptions
 
 Text select is not enabled by default in Ionic. Trying these works in the browser, but not on the device:
@@ -1153,6 +1164,8 @@ The pattern to catch this particular description and transform it might be:
 There are more examples on the issue linked to above. They are each individually different grammatical type situations.
 
 So obviously, we need some kind of natural language processing capability to perform this kind of functionality. Or we need to collect as many patterns as possible and deal with them all by hand. Either way, that's a lot of work when we can just let the user edit their own description.
+
+For now we will just include an \* where words were removed and deal with this later.
 
 ### Foreign language learning support and the item details
 

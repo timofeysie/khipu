@@ -25,16 +25,16 @@ export class CategoriesStore extends Store<CategoriesState> {
     this.realtimeDbService
       .readUserData('categories')
       .then(result => {
-        let cats: any = [];
-        Object.keys(result).forEach(function(key) {
-          var value = result[key];
+        const cats: any = [];
+        Object.keys(result).forEach(key => {
+          const value = result[key];
           cats.push(value);
         });
         this.state.categories = cats;
       })
       .catch(error => {
-        log.debug('error', error);
-        log.debug('get categories form endpoint');
+        log.debug('error fetching list', error);
+        log.debug('try getting categories form endpoint');
         this.getCategoriesFromEndpoint();
       });
   }
