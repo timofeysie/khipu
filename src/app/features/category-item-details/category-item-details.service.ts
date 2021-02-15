@@ -8,7 +8,11 @@ const routes = {
   wikidata: (c: WikidataContext) => `www.wikidata.org/wiki/Special:EntityData/${c.qcode}.json`,
   wikipedia: (c: WikipediaContext) =>
     `https://radiant-springs-38893.herokuapp.com/api/detail/${c.title}/${c.language}/false`,
-  wikimedia: (c: WikipediaContext) => `https://radiant-springs-38893.herokuapp.com/api/details/${c.language}/${c.title}`
+  wikimedia: (c: WikipediaContext) =>
+    `https://radiant-springs-38893.herokuapp.com/api/details/${c.language}/${c.title}`,
+  wikilist: (c: WikilistContext) =>
+    `https://radiant-springs-38893.herokuapp.com/api/wiki-list/
+    ${c.title}/${c.section}/${c.language}`
 };
 
 export interface WikidataContext {
@@ -18,6 +22,12 @@ export interface WikidataContext {
 export interface WikipediaContext {
   language: string;
   title: string;
+}
+
+export interface WikilistContext {
+  title: string;
+  section: string;
+  language: string;
 }
 
 @Injectable({
@@ -53,6 +63,16 @@ export class CategoryItemDetailsService {
       .pipe(
         map((body: any) => body),
         catchError(() => of('Error, could not load details.'))
+      );
+  }
+
+  getWikilist(context: WikilistContext): Observable<string> {
+    return this.httpClient
+      .cache()
+      .get(routes.wikilist(context))
+      .pipe(
+        map((body: any) => body),
+        catchError(() => of('Error, could not load wikilist.'))
       );
   }
 }

@@ -1184,11 +1184,29 @@ Right now we have two updates that need to happen if the current user descriptio
 
 If we are checking the description each time, then we could do it all, but it seems strange to put this business logic in a function called fetchFirebaseItem(). What is the best practice here? Return the portion of the description from this function and then
 
-### Item statistics
+## Item statistics & the list order
 
-Another thing we want is statistics about each category list and each item on the list. For example, every time an item short description is viewed, every time an item detail is viewed, we want to increment a counter, as well as what date the item was viewed. We also want to let the user indicate that they have committed an item to long term memory now, and it no longer needs to be on the list of things to be learned.
+Another thing we want is statistics about each category list and each item on the list. For example, every time an item short user description is viewed and every time an item detail is viewed, we want to increment a counter, as well as what date the item was viewed. We also want to let the user indicate that they have committed an item to long term memory now, and it no longer needs to be on the list of things to be learned.
 
 The reason for this is when a student is learning a list of things, they want to know how often they have studied a particular item. We will want to display some kind of indicator based on this information. It's kind of like a classic to do list with extra features.
+
+The reasoning behind this is often called the Leitner method, or spaced repetition. Schools also casually implement this spaced repetition using reviews, a quiz and a other tests.
+
+Using the xAPI method, we send a statement of activity to an LRS, and then query the LRS to get the info we need to present the items in need of review.
+
+We also want to offer a simple list order, where the items at the top need to be reviewed, and the items at the bottom are well known.
+
+### The order of the list (Issue #42)
+
+Before implementing an actual LRS-based statistical feature, we want to explore a simple approach using just the order of the list.
+
+The first idea for this order is based on:
+
+1. how long ago the detail was viewed
+2. the number of times its detail page has been viewed.
+3. the number of times the slide out description has been viewed.
+
+### xAPI & cmi5
 
 This is where the xAPI/cmi5 comes in. cmi5 which appears to be a stripped down/focused use case of the xAPI. You can [read about xAPI and cmi5 here](https://xapi.com/cmi5/?utm_source=google&utm_medium=natural_search) and see a picture of the [whole ecosystem here](https://xapi.com/ecosystem/).
 
@@ -1209,6 +1227,465 @@ For this reason, we don't want to include this state data in our firebase storag
 However, getting the LRS set up with xAPI/cmi5 reporting and querying is another rabbit hole of work. It would be so easy to add a counter to each item and increment it each time it's viewed. With that only, we could implement some viewed/un-viewed styles and think about how best to handle the UX we seek.
 
 The other apps that got this far didn't really do a good job of this, so trying things out while the above is underway is a good idea.
+
+## Merging lists
+
+This has been on the back burner for about a year. It would be nice to know where we stand with the current api to get a list. I believe right now it's hardwired to load the list of cognitive biases from Wikipedia. Can someone confirm this please?
+
+The reference implementation app from the past is still hosted here: https://radiant-springs-38893.herokuapp.com/
+
+Hit the refresh list button and we get this api call:
+
+```txt
+Request URL: https://radiant-springs-38893.herokuapp.com/api/list/en
+Request Method: GET
+Status Code: 503 Service Unavailable
+```
+
+The app calls this api from our backend:
+
+```js
+// /api/contacts
+getList(lang) {
+    return this.httpClient.get<ListModel>(this.backendListUrl+'/'+lang)
+  private backendListUrl = '/api/list';
+```
+
+Running that api locall:  http://localhost:5000/api/list/en
+
+```txt
+Returns this wikiUrl: https://query.wikidata.org/sparql?format=json&query=%0A%20%20%20%20%20%20%20%20SELECT%20%3Fcognitive_bias%20%3Fcognitive_biasLabel%20%3Fcognitive_biasDescription%20WHERE%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20SERVICE%20wikibase%3Alabel%20%7B%20%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20bd%3AserviceParam%20wikibase%3Alanguage%20%22%5BAUTO_LANGUAGE%5D%2Cen%22.%20%0A%20%20%20%20%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%20%20%20%20%20%20%3Fcognitive_bias%20wdt%3AP31%20wd%3AQ1127759.%0A%20%20%20%20%20%20%20%20%7D%0A%09%09LIMIT%201000
+Request Failed.
+Status Code: 403
+```
+
+403 is forbidden.  Anyhow, that's a SPARQL query.  That would return the same list we are already getting:
+
+```json
+  "results" : {
+    "bindings" : [ {
+      "cognitive_bias" : { },
+      "cognitive_biasLabel" : { },
+      "cognitive_biasDescription" : {}
+    },
+    ...
+```
+
+I think this is the api we want: /api/wiki-list/:id/:lang
+
+Or maybe not.  What is the id?  It's actually the section number.
+
+Let see how Loranthifolia does it.
+
+An unhandled exception occurred: Cannot find module '@angular-devkit/build-angular/package.json'
+
+That's an old app, so trying this:
+npm install --save-dev @angular-devkit/build-angular
+
+Hmm, the apps not that old: "@angular/core": "~8.1.2",
+
+Try 8
+
+No matching version found for @angular/http@8
+
+So forget about running the app for now.  Look at the Service
+
+Here is the service from the Ionic Loranthifolia client:
+
+```ts
+return this.httpClient.get(
+  this.backendWikiListUrl + '/' + sectionNum + '/' + lang
+);
+```
+
+This is the function there that gets each section:
+
+```ts
+/** Use a promise chain to get the WikiMedia section lists.
+ * Sort the list after all calls have completed.
+ * Save the sorted list in the local data storage.
+ */
+getWikiMediaLists() {
+    let promises = [];
+    for (let i = 0; i < this.mediaSections; i++) {
+    promises.push(new Promise((resolve) => {
+        this.myDataService.loadWikiMedia(i+1,this.langChoice).subscribe((data) => {
+        if (data['parse']) {
+            let parsedData = this.parseList(data);
+            resolve(parsedData);
+        }
+        });
+    }));
+    }
+    Promise.all(promises)
+    .then(data => { return data })
+    .then(data => { return data })
+    .then(data => {
+        // after all the WikiMedia lists have been merged into one,
+        // include those into the list and sort it
+        this.addItems(data[0]); // TODO: fix array of dupes
+        this.addItems(data[1]); // TODO: fix array of dupes
+        this.list.sort(this.dynamicSort('sortName'));
+        this.dataStorageService.setItem(this.langChoice+'-'+this.itemName, this.list);
+        // UI doesn't refresh here on a device so this will force the page to reload
+        console.log('list',this.list);
+        //location.reload();
+    });
+}
+```
+
+```txt
+http://localhost:5000/api/wiki-list/0/en = preamble
+http://localhost:5000/api/wiki-list/1/en = first section of Belief, decision-making and behavioral
+http://localhost:5000/api/wiki-list/2/en = social
+http://localhost:5000/api/wiki-list/3/en = memory
+http://localhost:5000/api/wiki-list/4/en = see also.
+```
+
+We could actually get all the sections at once via a call like this:
+
+https://en.wikipedia.org/w/api.php?action=parse&prop=text&format=json&page=List_of_fallacies
+
+It's a big result.  But I can see sections all the way up to 16
+
+http://localhost:5000/api/wiki-list/fallacies/16/en
+
+So, 16 small api calls or one big one?
+
+One big one please!
+
+So it is hardwired for cognitive biases.  That page has tables.  Would be nice to see how the api does for fallacies to see if it's worth making a new one to accept a page name.
+
+I looks like curator is actually where that is hardwired.  It creates the url for the app:
+wikiMediaUrl http://en.wikipedia.org/w/api.php?action=parse&section=1&prop=text&format=json&page=List_of_cognitive_biases
+
+http://en.wikipedia.org/w/api.php?action=parse&section=1&prop=text&format=json&page=List_of_fallacies
+
+```json
+{
+  "parse": {
+    "title": "List of fallacies",
+    "pageid": 8042940,
+    "text": {
+      "*": "<div class=\"mw-parser-output\"> ..."
+    }
+  }
+}
+```
+
+That response has 1 Formal fallacies split into three parts:
+
+```txt
+1.1 Propositional fallacies
+1.2 Quantification fallacies
+1.3 Formal syllogistic fallacies
+```
+
+The formal fallacies has its own list starting with:  Appeal to probability: a statement that takes something for granted because it would probably be the case (or might be the case).
+
+After a bit of thought, I wondered why we don't just pull down the whole page and parse it all in one go instead of multiple sections. At least for the calls used here, getting a specific section actually has different content. So if we want descriptions at this point, get the sections as we go. I suppose it's all going to be paginated anyhow, so we should probably only show one section at a time and let the user decide to keep of lose the contents.
+
+### Parsing the name-description pairs
+
+The first idea of how to deal with this is to look for the first H3 tag and parse it for the category. Then look for all the <li> tags and create an item for each one and then attach the category to each. The path to the first item looks like this:
+
+```html
+<h2>
+  <span class="mw-headline" id="Formal_fallacies">Formal fallacies</span>
+</h2>
+<div role="note" class="hatnote navigation-not-searchable">
+  Main article:
+  <a href="/wiki/Formal_fallacy" title="Formal fallacy">Formal fallacy</a>
+</div>
+<p>
+  A formal fallacy is an error in the
+  <a href="/wiki/Argument_form" class="mw-redirect" title="Argument form"
+    >argument's form</a
+  >.
+  <sup
+    id='cite_ref-FOOTNOTEBunninYu2004&#91;httpwwwblackwellreferen/y"&#93;_1-0'
+    class="reference"
+  >
+    <a href='#cite_note-FOOTNOTEBunninYu2004[httpw5_"formal_fallacy"]-1'></a>
+  </sup>
+  All formal fallacies are types of
+  <i lang="la" title="Latin-language text">
+    <a
+      href="/wiki/Non_sequitur_(logic)"
+      class="mw-redirect"
+      title="Non sequitur (logic)"
+      >non sequitur</a
+    ></i
+  >.
+</p>
+<ul>
+  <li>
+    <a href="/wiki/Appeal_to_probability" title="Appeal to probability">
+      Appeal to probability
+    </a>
+    – a statement that takes something for granted because it would probably be
+    the case (or might be the case).
+    <sup id="cite_ref-2" class="reference">
+      <a href="#cite_note-2">[2]</a>
+    </sup>
+    <sup id="cite_ref-3" class="reference">
+      <a href="#cite_note-3">[3]</a>
+    </sup>
+  </li>
+  ...
+</ul>
+```
+
+There are only four occurrences of the class mw-headline, so that's exactly what we want.  Who remembers Cheerio?  Does Curator do this parse for us already?
+
+So the simple approach is to create a new curator call that looks like this:
+
+```js
+const wikiMediaUrl = curator.createWikiMediaUrl(req.params.id, req.params.lang);
+```
+
+And call it this:
+
+```js
+const wikiMediaUrlWithName = curator.createWikiMediaUrlWithName(
+  req.params.name,
+  req.params.id,
+  req.params.lang
+);
+```
+
+Curator could also have the parse function: parseWikiMediaResult
+
+parseWikiMediaWithNameResult that looks for our h2/h3/ul items and returns the label-description pairs.
+
+Then create a new conchifolia server endpoint which takes the name and uses that function like this:
+
+```js
+.get("/api/wiki-list/:id/:lang", function (req, res) {
+```
+
+And make a function like this:
+
+```js
+.get("/api/wiki-list/:name/:id/:lang", function (req, res) {
+```
+
+It turned out I was not able to work on curator on a windows laptop.
+
+```txt
+'rm' is not recognized as an internal or external command,
+```
+
+Tried a few things:
+
+```
+npm install rimraf
+npm install mkdirp
+```
+
+Doesn't help.  Have to get rid of the pre and post lines.  Will have to do that step manually.
+
+```json
+"prebuild": "rm -rf dist && mkdir dist && rm -rf data && mkdir data",
+"postbuild": "copy -rf src/data dist/data",
+```
+
+Even then, we get this error:
+
+```txt
+> art-curator@2.4.1 test C:\Users\timof\repos\timofeysie\curator
+> istanbul cover -x *.test.js _mocha -- -R spec src/index.test.js -w --compilers js:babel/register
+No coverage information was collected, exit without writing coverage information
+C:\Users\timof\repos\timofeysie\curator\node_modules\.bin\_mocha.CMD:1
+@IF EXIST "%~dp0\node.exe" (
+^
+SyntaxError: Invalid or unexpected token
+    at Module._compile (internal/modules/cjs/loader.js:703:23)
+    at Object.Module._extensions..js (internal/modules/cjs/loader.js:770:10)
+```
+
+The above means that we cannot develop this library on Windows.  The only Mac laptop I have is now six years old and suffering, so future development on this lib is now in doubt.  A serverless approach would be a good choice moving forward.
+
+### Parsing the Wikimedia list of result
+
+After creating the createWikiMediaUrlWithName() function to accept the name of a "list of x" type url to access a Wikimedia page, we also wanted to create a parsing function which creates the name-description list from the result.
+
+However, the two functions parseWikiMedia() and parseWikiMediaListResult() require the browser document object to exists.
+
+Since development and testing of this lib is done in a node environment, testing these functions is a work in progress for [the art curator](https://www.npmjs.com/package/art-curator) library.
+
+This is the function from Conchifolia that parses the contents of a Wikimedia result:
+
+```ts
+  parseSectionList(data: any) {
+    if (data['parse']) {
+      const content = data['parse']['text']['*'];
+      let one = this.createElementFromHTML(content);
+      const desc:any = one.getElementsByClassName('mw-parser-output')[0].children;
+      let descriptions: any [] = [];
+      let category = desc[0].getElementsByClassName('mw-headline')[0].innerText;
+      const allDesc = desc[2];
+```
+
+The createElementFromHTML() function will throw the following error if used in a pure Node context:
+
+ReferenceError: document is not defined
+The document relates to the DOM in a web browser.
+Node.js, however, is not browser Javascript. It is a server, so you can't access the browser's DOM or do anything specific to browser-based Javascript.
+The closest you could get is:
+
+1. using something like browserify to include Node.js modules in your client-side code.
+2. use JSDom to add Dom support to Node.
+3. do the parsing in the client
+4. use a cloud function
+
+For now we will be doing the parsing in this project (option #3).
+
+To see what we are working with, it's good to see this again:
+
+```html
+<li>
+  <a href="/wiki/Appeal_to_probability" title="Appeal to probability">
+    Appeal to probability
+  </a>
+  – a statement that takes something for granted because it would probably be
+  the case (or might be the case).
+  <sup id="cite_ref-2" class="reference">
+    <a href="#cite_note-2">[2]</a>
+  </sup>
+  <sup id="cite_ref-3" class="reference">
+    <a href="#cite_note-3">[3]</a>
+  </sup>
+</li>
+```
+
+The Javascript object model here might be:
+
+```ts
+interface WikiListItem {
+  category?: string;
+  href: string;
+  title: string;
+  description: string;
+  sup: string[];
+  metaData?;
+}
+```
+
+Compare that to our wikidata item:
+
+```ts
+interface Item {
+  categoryType?: string;
+  label: string;
+  description: string;
+  type: string;
+  uri: string;
+  binding?: any;
+  metaData?: any;
+}
+```
+
+Hmmm, pretty similar. href is uri in the other. It doesn't make that much sense to have two different interfaces when they will both be on the list. I propose the following:
+
+```ts
+export interface Item {
+  categoryType?: string;
+  label: string;
+  description: string;
+  type: string;
+  uri: string;
+  binding?: any;
+  metaData?: any;
+  sup?: string[]; // supplemental references
+  source?: 'Wikidata' | 'Wikilist';
+}
+```
+
+This covers all the bases and tracks which source they came from. Since we are just starting out with the Wikilist items, it's easy to massage the href, label and other differences starting from now.
+
+Just so you know, if you this this kind of error:
+
+_Expected property shorthand in object literal ('{label}'). (object-literal-shorthand)_
+
+It's because this:
+
+```js
+const wikiItem: WikiListItem = {
+  categoryType: firstCategory
+  uri: '',
+  label: label,
+  description: description,
+  sup: '',
+}
+```
+
+Could be this:
+
+```ts
+const wikiItem: Item = {
+  sectionTitle: firstCategory,
+  uri: '',
+  label,
+  description
+};
+```
+
+Scraping/parsing HTML is a pretty old school affair, but TypeScript does try to keep the code in line with warnings like this:
+
+```txt
+Expected a 'for-of' loop instead of a 'for' loop with this simple iteration (prefer-for-of)tslint(1)
+```
+
+That error comes from this block which tries to determine if a link is a citation like [1], or a link that we want the uri from.
+
+```ts
+for (
+  let numberOfLabels = 0;
+  numberOfLabels < liAnchor.length;
+  numberOfLabels++
+) {
+  const potentialLabel = liAnchor[numberOfLabels].innerHTML;
+  if (potentialLabel.indexOf('[') === -1) {
+    // it's not a citation, keep this one.
+    label = potentialLabel;
+    uri = liAnchor[numberOfLabels].getAttribute('href');
+  }
+}
+```
+
+## Order
+
+So far, when a user clicks on a category, we make a wikidata call to get the items for that category. It was also paginated. Now that we also want to get the wikipedia page and parse it for items which we create from the markup, we need to start thinking about the order of the list.
+
+It's not just as simple as some sort algorithm. The order will have to change in various ways. Items can be removed and added to the list manually. There is also the possibility that items can be added and removed from the wikidata or wikipedia source, and we need a way to deal with that.
+
+We will also need to worry about the user descriptions that can be added for each item. But the situation is different from the wikidata user descriptions which are iffy. The Wikipedia descriptions are, as far as I know, complete for the two categories we have started with. It may not always be the case, so maybe this is not a real difference we should worry about.
+
+If we knew the list was being loaded for the first time, we could just automatically copy the item description into the meta object to be written to firebase. In this case, the difference is right now, that we don't have to wait for the user to click on the item, go to the detail page which loads the wikipedia content for the item, and then we have a choice of what to set as the user description.
+
+The reason that difference doesn't really matter is that the user will in this case see all those descriptions in the slide out content, so functionally, it should be the same, even though the performance is better in this case. So the answer for now is, no, don't set the user description on first load (which we have no concept of yet).
+
+I guess the issue is that do we need the idea of the first load, refresh and check for changes? On Conchifolia, the reference app had a refresh button which would load the lists and do all the work whenever the user wanted that. But they had no user descriptions to worry about.
+
+We will have to deal with this functionality in the future.
+
+So it's another wormhole of work, but we also want to go in stages, and start with the simplest features first. What's really important in this prototype MVP is the range of features and how they work together which can later inform a super mature pattern for dealing with all the features we want.
+
+But first, lets get a list of features on the table here.
+
+Features
+
+1. first load wikidata & wikipedia content
+2. create an order for both merged lists
+3. refresh and check for changes
+4. load firebase category meta data list and map those to the result
+
+The simplest part actually is just to add the wikipedia "wiki-list" items to the list, and let the operate the same way the current wikidata items operate. There is a bug right now where items that were say deleted on firebase get loaded again when the category is chosen from the list of categories but do not get added again to the firebase until a description is edited.
+
+Even then, the other meta data don't get added. What would be a good next step after merging the lists is to fix this by looking to match the result item with it's wikidata items, and add the order number to that, so that the new ordered list will have only items that exist on firebase.
+
+In that way, we fix the bug while adding a lot of functionality in one fell swoop. Wow, this went from being a deep wormhole of work into a big win! And I don't use exclamation marks often either. So, on with the parsing.
 
 ## Observable Store Pattern
 

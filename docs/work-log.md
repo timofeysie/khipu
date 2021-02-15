@@ -28,3 +28,13 @@ We only need one there. Which one is it? The first one is not used, so get rid o
 Next, of the details page, there is a Wikimedia description.
 
 That uses the wikimediaDescription value. So it being undefined is just until the async nature of the api calls being made.
+
+Fallacy Correlation_does_not_imply_causation first had slide out user description of "Phrase"
+Go to detail page, user-description edit field blank. No prefrill after details load.
+Next, go back to list, then the following is in the slide out description:
+"The inability to legitimately deduce a cause-and-effect relationship between two events or variables solely on the basis of an observed association"
+
+To do: add tasks:
+
+- add "create default description" button?
+- add spinner and confirmation alert when description is updated.
