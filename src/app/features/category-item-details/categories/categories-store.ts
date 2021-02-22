@@ -26,6 +26,7 @@ export class CategoriesStore extends Store<CategoriesState> {
       .readUserData('categories')
       .then(result => {
         const cats: any = [];
+        console.log('result', result);
         Object.keys(result).forEach(key => {
           const value = result[key];
           cats.push(value);

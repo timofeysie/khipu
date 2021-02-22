@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
-import { Subject } from 'rxjs';
+import { Subject, Observable, forkJoin } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { ItemsState } from './items.store.state';
 import { Item } from '@app/core/interfaces/item';
 import { Category } from '@app/core/interfaces/categories';
@@ -7,7 +8,6 @@ import { ItemMetaData } from '@app/core/interfaces/item-meta-data';
 import { RealtimeDbService } from '@app/core/firebase/realtime-db.service';
 import { ItemsListEndpoint } from './items.endpoint';
 import { CategoryItemDetailsService } from '../category-item-details.service';
-import { map } from 'rxjs/operators';
 import { Store } from '@app/store';
 import { Logger } from '@app/core/logger.service';
 
@@ -17,6 +17,7 @@ const log = new Logger('ItemsStore');
 export class ItemsStore extends Store<ItemsState> {
   private reloadItems$: Subject<undefined> = new Subject();
   private currentPage = 0;
+  tempItems: any;
   constructor(
     private itemListEndpoint: ItemsListEndpoint,
     private realtimeDbService: RealtimeDbService,
@@ -30,9 +31,72 @@ export class ItemsStore extends Store<ItemsState> {
    * @param category
    * @param currentPage
    */
-  doWork(category: Category, currentPage: number) {
-    const listFromFirebaseCategory = this.fetchListFromFirebase(category);
-    const wikidataItemList = this.getItemsFromWikidataEndpoint(category, currentPage);
+  async doWork(category: Category, currentPage: number) {
+    const listFromFirebaseCategory = await this.fetchListFromFirebase(category);
+    forkJoin(
+      this.getItemsFromWikidataEndpoint(category, currentPage),
+      this.getWikilistFromEndpoint(category.name, 'en', '1')
+    )
+      .pipe(
+        map(async ([wikidataItemList, wikiListResponse]) => {
+          const wikiDataList = await this.mapItemsFromWikidata(wikidataItemList, listFromFirebaseCategory, category);
+          const wikiListItems = await this.parseParticularCategoryTypes(wikiListResponse, category.name, 'en', '1');
+          const newList = wikiDataList.concat(wikiListItems);
+          this.updateItemsState(newList, this.currentPage);
+          // this.realtimeDbService.writeItemsList(newList, category.name);
+          // do we delete items that are not there?
+          return newList;
+        })
+      )
+      .subscribe(result => {
+        // result ZoneAwarePromise
+        console.log('result', result);
+      });
+  }
+
+  /**
+   * From the previously named getItemsFromEndpoint which is now
+   * getItemsFromWikidataEndpoint()
+   * @param inc incoming response
+   * @param existingItems
+   * @param category
+   */
+  async mapItemsFromWikidata(inc: Array<any>, existingItems: any, category: any): Promise<Item[]> {
+    let list: Item[] = [];
+    let listChanged = false;
+    list = inc.map((incomingItem: any) => {
+      const results = this.getItemWithDescription(incomingItem, existingItems);
+      listChanged = results.needToSave;
+      return results.item;
+    });
+    if (listChanged) {
+      this.realtimeDbService.writeItemsList(list, category.name);
+    }
+    return list;
+  }
+
+  /**
+   * Originally from fetchWikilistFromEndpoint which is now called
+   * getWikilistFromEndpoint()
+   * @param response
+   */
+  async parseParticularCategoryTypes(
+    response: any,
+    _title: string,
+    _language: string,
+    _section: string
+  ): Promise<Item[]> {
+    if (response) {
+      const markup = response['parse']['text']['*'];
+      if (_title === 'fallacies') {
+        const fallyList = this.getItemsFromFallaciesList(markup);
+        return fallyList;
+      } else if (_title === 'cognitive_bias') {
+        const cogbyList = this.getItemsFromCognitiveBiasesList(markup);
+        return cogbyList;
+      }
+    }
+    return [];
   }
 
   updateUserDescription(newDescriptionObject: any) {
@@ -67,7 +131,6 @@ export class ItemsStore extends Store<ItemsState> {
    * @param currentPage
    */
   fetchList(category: Category, currentPage: number) {
-    this.fetchWikilistFromEndpoint(category.name, 'en', '1');
     this.realtimeDbService
       .readUserSubData('items', category.name)
       .then(existingItems => {
@@ -87,8 +150,8 @@ export class ItemsStore extends Store<ItemsState> {
    * @param currentPage paginated view
    * @returns firebase metadata json.
    */
-  fetchListFromFirebase(category: Category): ItemMetaData | any {
-    this.realtimeDbService
+  async fetchListFromFirebase(category: Category): Promise<ItemMetaData> {
+    return this.realtimeDbService
       .readUserSubData('items', category.name)
       .then(existingItems => {
         return existingItems;
@@ -129,6 +192,9 @@ export class ItemsStore extends Store<ItemsState> {
         // we need to overwrite the
         // API result meta-data (user-description)
         // with the previous version.
+        this.currentPage = currentPage;
+        this.tempItems = items;
+        // this.fetchWikilistFromEndpoint(category.name, 'en', '1');
         this.updateItemsState(items, currentPage);
       });
   }
@@ -138,7 +204,7 @@ export class ItemsStore extends Store<ItemsState> {
    * @param category
    * @param currentPage
    */
-  getItemsFromWikidataEndpoint(category: Category, currentPage: number) {
+  getItemsFromWikidataEndpoint(category: Category, currentPage: number): Observable<any> {
     return this.itemListEndpoint.listItems(category, currentPage);
   }
 
@@ -196,6 +262,12 @@ export class ItemsStore extends Store<ItemsState> {
     });
   }
 
+  /**
+   * Replaced by getWikilistFromEndpoint
+   * @param _title
+   * @param _language
+   * @param _section
+   */
   fetchWikilistFromEndpoint(_title: string, _language: string, _section: string) {
     this.categoryItemDetailsService
       .getWikilist({ title: _title, language: _language, section: _section })
@@ -207,18 +279,32 @@ export class ItemsStore extends Store<ItemsState> {
             const markup = response['parse']['text']['*'];
             if (_title === 'fallacies') {
               wikiList = this.getItemsFromFallaciesList(markup);
+              const newList = this.tempItems.concat(wikiList);
+              this.updateItemsState(newList, this.currentPage);
             } else if (_title === 'cognitive_bias') {
+              this.getItemsFromCognitiveBiasesList(markup);
             }
           }
         }
       });
   }
 
+  /**
+   * Replaces fetchWikilistFromEndpoint
+   * @param _title
+   * @param _language
+   * @param _section
+   */
+  getWikilistFromEndpoint(_title: string, _language: string, _section: string) {
+    return this.categoryItemDetailsService
+      .getWikilist({ title: _title, language: _language, section: _section })
+      .pipe(response => response);
+  }
+
   getItemsFromFallaciesList(markup: any) {
-    const wikiList: Item[] = [];
     const main = this.createElementFromHTML(markup);
     const wikiItem: Item[] = this.getFirstWikiItem(main);
-    return wikiList;
+    return wikiItem;
   }
 
   /**
@@ -232,52 +318,50 @@ export class ItemsStore extends Store<ItemsState> {
     // the first category is an H2 regarding the whole subject
     const firstCategory = main.getElementsByClassName('mw-headline')[0].innerHTML;
     const ul = main.getElementsByTagName('ul')[2];
-    const li = ul.getElementsByTagName('li');
-    const numberOfItems = li.length;
-    for (let i = 0; i < numberOfItems; i++) {
-      const item = li[i];
-      const liAnchor: HTMLCollection = item.getElementsByTagName('a');
-      // find the label and uri values
-      let label;
-      let uri;
-      for (let numberOfLabels = 0; numberOfLabels < liAnchor.length; numberOfLabels++) {
-        const potentialLabel = liAnchor[numberOfLabels].innerHTML;
-        if (potentialLabel.indexOf('[') === -1) {
-          // it's not a citation, keep this one.
-          label = potentialLabel;
-          uri = liAnchor[numberOfLabels].getAttribute('href');
+    if (ul) {
+      const li = ul.getElementsByTagName('li');
+      const numberOfItems = li.length;
+      for (let i = 0; i < numberOfItems; i++) {
+        const item = li[i];
+        const liAnchor: HTMLCollection = item.getElementsByTagName('a');
+        // find the label and uri values
+        let label;
+        let uri;
+        for (let numberOfLabels = 0; numberOfLabels < liAnchor.length; numberOfLabels++) {
+          const potentialLabel = liAnchor[numberOfLabels].innerHTML;
+          if (potentialLabel.indexOf('[') === -1) {
+            // it's not a citation, keep this one.
+            label = potentialLabel;
+            uri = liAnchor[numberOfLabels].getAttribute('href');
+          }
         }
+        // find the description
+        const descriptionContentMarkup = ul.getElementsByTagName('li')[i].innerHTML;
+        const descriptionContent = this.removeHtml(descriptionContentMarkup);
+        // remove the slash and get the content from the end of the anchor tag until the next element.
+        const dash = descriptionContent.indexOf('–');
+        let description = descriptionContent.substring(dash + 2, descriptionContent.length);
+        description = this.removePotentialCitations(description);
+        // create object
+        const wikiItem: Item = {
+          sectionTitle: firstCategory,
+          sectionTitleTag: 'H2',
+          uri,
+          label,
+          description
+        };
+        wikiList.push(wikiItem);
       }
-      // find the description
-      const descriptionContentMarkup = ul.getElementsByTagName('li')[i].innerHTML;
-      const descriptionContent = this.removeHtml(descriptionContentMarkup);
-      // remove the slash and get the content from the end of the anchor tag until the next element.
-      const dash = descriptionContent.indexOf('–');
-      let description = descriptionContent.substring(dash + 2, descriptionContent.length);
-      description = this.removePotentialCitations(description);
-      // create object
-      const wikiItem: Item = {
-        sectionTitle: firstCategory,
-        sectionTitleTag: 'H2',
-        uri,
-        label,
-        description
-      };
-      wikiList.push(wikiItem);
+      return wikiList;
     }
-    return wikiList;
   }
 
-  getItemsFromCognitiveBiasesList(data: any) {
+  getItemsFromCognitiveBiasesList(content: any) {
     const wikiList: Item[] = [];
-    if (data['parse']) {
-      const content = data['parse']['text']['*'];
-      const one = this.createElementFromHTML(content);
-      const desc: any = one.getElementsByClassName('mw-parser-output')[0].children;
-      const category = desc[0].getElementsByClassName('mw-headline')[0].innerText;
-      const allDesc = desc[2];
-      console.log(desc, category, allDesc);
-    }
+    const one = this.createElementFromHTML(content);
+    const desc: any = one.getElementsByClassName('mw-parser-output')[0].children;
+    const category = desc[0].getElementsByClassName('mw-headline')[0].innerText;
+    const allDesc = desc[2];
     return wikiList;
   }
 
