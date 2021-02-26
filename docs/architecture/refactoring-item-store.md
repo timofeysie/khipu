@@ -587,3 +587,11 @@ Symbol(Symbol.toStringTag): (...)
 We are skipping the write there, and there is still no order to the list, and the extra items are just merged with the paginated views on each page.
 
 The ordering should be done and then the paginated views updated to use that ordering. That's up next.
+
+So far this month, GitHub shows these stats:
+
+```txt
+timofeysie/khipu 9 commits
+timofeysie/curator 3 commits
+timofeysie/conchifolia 1 commit
+```

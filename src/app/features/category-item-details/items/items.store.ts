@@ -15,9 +15,9 @@ const log = new Logger('ItemsStore');
 
 @Injectable()
 export class ItemsStore extends Store<ItemsState> {
+  tempItems: any;
   private reloadItems$: Subject<undefined> = new Subject();
   private currentPage = 0;
-  tempItems: any;
   constructor(
     private itemListEndpoint: ItemsListEndpoint,
     private realtimeDbService: RealtimeDbService,
@@ -33,6 +33,8 @@ export class ItemsStore extends Store<ItemsState> {
    */
   async doWork(category: Category, currentPage: number) {
     const listFromFirebaseCategory = await this.fetchListFromFirebase(category);
+    // this.updateItemsState(newList, this.currentPage);
+
     forkJoin(
       this.getItemsFromWikidataEndpoint(category, currentPage),
       this.getWikilistFromEndpoint(category.name, 'en', '1')

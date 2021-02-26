@@ -10,15 +10,18 @@ import { CategoriesStore } from '../../categories-store';
   providers: [CategoriesStore]
 })
 export class AddCategoryContainerComponent implements OnInit {
+  categoryForm = new FormGroup({
+    categoryName: new FormControl('fallacies'),
+    label: new FormControl('Fallacies'),
+    language: new FormControl('en'),
+    wdt: new FormControl('P31'),
+    wd: new FormControl('Q186150')
+  });
   constructor(public store: CategoriesStore) {}
 
-  categoryForm = new FormGroup({
-    categoryName: new FormControl(''),
-    label: new FormControl(''),
-    language: new FormControl(''),
-    wdt: new FormControl(''),
-    wd: new FormControl('')
-  });
-
   ngOnInit() {}
+
+  loadNewCategory(event: any) {
+    this.store.loadNewCategory(event);
+  }
 }

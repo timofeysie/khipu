@@ -26,6 +26,7 @@ export class ItemsListEndpoint {
       sparqlEndpoint: 'https://query.wikidata.org/sparql'
     });
 
+    console.log('environment', environment);
     const sparql = `
             SELECT ?${category.name} ?${category.name}Label ?${category.name}Description WHERE {
                 SERVICE wikibase:label {
@@ -36,6 +37,7 @@ export class ItemsListEndpoint {
             ORDER BY (LCASE(?label))
             LIMIT ${environment.paginationItemsPerPage}
             OFFSET ${currentPage * environment.paginationItemsPerPage}`;
+    console.log('sparql', sparql);
     return wbk.sparqlQuery(sparql);
   }
 }

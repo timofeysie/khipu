@@ -4,7 +4,9 @@ import { RealtimeDbService } from '@app/core/firebase/realtime-db.service';
 import { Logger } from '@app/core/logger.service';
 import { CategoriesState } from './categories-store-state';
 import { CategoriesEndpoint } from './categories.endpoint';
+import { ItemsListEndpoint } from '../items/items.endpoint';
 import { Category } from '@app/core/interfaces/categories';
+import { Subject, Observable, forkJoin } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { I18nService } from '@app/core';
 import { environment } from '@env/environment.prod';
@@ -16,6 +18,7 @@ export class CategoriesStore extends Store<CategoriesState> {
   constructor(
     private realtimeDbService: RealtimeDbService,
     private categoriesEndpoint: CategoriesEndpoint,
+    private itemListEndpoint: ItemsListEndpoint,
     private i18nService: I18nService
   ) {
     super(new CategoriesState());
@@ -26,7 +29,6 @@ export class CategoriesStore extends Store<CategoriesState> {
       .readUserData('categories')
       .then(result => {
         const cats: any = [];
-        console.log('result', result);
         Object.keys(result).forEach(key => {
           const value = result[key];
           cats.push(value);
@@ -62,7 +64,29 @@ export class CategoriesStore extends Store<CategoriesState> {
   }
 
   saveNewCategory(newCategory: Category) {
-    this.setState({ ...this.state, categories: [newCategory] });
-    this.categoriesEndpoint.addCategory(newCategory);
+    console.log('save disabled');
+    // this.setState({ ...this.state, categories: [newCategory] });
+    // this.categoriesEndpoint.addCategory(newCategory);
+  }
+
+  loadNewCategory(newCategory: Category) {
+    newCategory.name = newCategory['categoryName'];
+    const currentPage = 0;
+    forkJoin(this.getItemsFromWikidataEndpoint(newCategory, currentPage))
+      .pipe(
+        map(async wikidataItemList => {
+          console.log('wikidataItemList', wikidataItemList);
+        })
+      )
+      .subscribe();
+  }
+
+  /**
+   * Replacement for getItemsFromEndpoint()
+   * @param category
+   * @param currentPage
+   */
+  getItemsFromWikidataEndpoint(category: Category, currentPage: number): Observable<any> {
+    return this.itemListEndpoint.listItems(category, currentPage);
   }
 }

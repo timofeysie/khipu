@@ -11,14 +11,20 @@ import { Router } from '@angular/router';
 export class AddCategoryComponent implements OnInit {
   @Input() categoryAddForm: FormGroup;
   @Output() onPerformSave = new EventEmitter();
+  @Output() onPerformLoad = new EventEmitter();
   constructor(private router: Router) {}
 
   ngOnInit() {}
 
+  performLoad() {
+    const category: Category = { ...this.categoryAddForm.value };
+    this.onPerformLoad.emit(category);
+  }
+
   performSave() {
     const category: Category = { ...this.categoryAddForm.value };
-    this.categoryAddForm.reset();
+    // this.categoryAddForm.reset();
     this.onPerformSave.emit(category);
-    this.router.navigateByUrl('/options');
+    // this.router.navigateByUrl('/options');
   }
 }

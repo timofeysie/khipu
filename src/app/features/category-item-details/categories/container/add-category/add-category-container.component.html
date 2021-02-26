@@ -7,5 +7,9 @@
   </ion-toolbar>
 </ion-header>
 <ion-content>
-  <app-add-category [categoryAddForm]="categoryForm" (onPerformSave)="store.saveNewCategory($event)"></app-add-category>
+  <app-add-category
+    [categoryAddForm]="categoryForm"
+    (onPerformLoad)="loadNewCategory($event)"
+    (onPerformSave)="store.saveNewCategory($event)"
+  ></app-add-category>
 </ion-content>
