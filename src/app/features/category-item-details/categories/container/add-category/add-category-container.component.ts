@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormControl } from '@angular/forms';
 import { Category } from '@app/core/interfaces/categories';
+import { Item } from '@app/core/interfaces/item';
 import { CategoriesStore } from '../../categories-store';
 
 @Component({
@@ -17,9 +18,17 @@ export class AddCategoryContainerComponent implements OnInit {
     wdt: new FormControl('P31'),
     wd: new FormControl('Q186150')
   });
+  wikidataItemList: Category[];
+  wikiListItems: Item[];
+
   constructor(public store: CategoriesStore) {}
 
-  ngOnInit() {}
+  ngOnInit() {
+    this.store.state$.subscribe(state => {
+      this.wikidataItemList = state.wikidataItemList;
+      this.wikiListItems = state.wikiListItems;
+    });
+  }
 
   loadNewCategory(event: any) {
     this.store.loadNewCategory(event);

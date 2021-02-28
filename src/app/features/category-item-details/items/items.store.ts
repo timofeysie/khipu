@@ -41,8 +41,8 @@ export class ItemsStore extends Store<ItemsState> {
     )
       .pipe(
         map(async ([wikidataItemList, wikiListResponse]) => {
-          const wikiDataList = await this.mapItemsFromWikidata(wikidataItemList, listFromFirebaseCategory, category);
           const wikiListItems = await this.parseParticularCategoryTypes(wikiListResponse, category.name, 'en', '1');
+          const wikiDataList = await this.mapItemsFromWikidata(wikidataItemList, listFromFirebaseCategory, category);
           const newList = wikiDataList.concat(wikiListItems);
           this.updateItemsState(newList, this.currentPage);
           // this.realtimeDbService.writeItemsList(newList, category.name);
@@ -78,6 +78,7 @@ export class ItemsStore extends Store<ItemsState> {
   }
 
   /**
+   * @deprecated
    * Originally from fetchWikilistFromEndpoint which is now called
    * getWikilistFromEndpoint()
    * @param response
@@ -310,6 +311,7 @@ export class ItemsStore extends Store<ItemsState> {
   }
 
   /**
+   * @deprecated moved to categories-store.
    * For the list of fallacies, there is an h3 signalling the arrival of spring.
    * I mean the first list which contains basic fallacies before the later sections
    * which are more finely grained..
@@ -375,6 +377,7 @@ export class ItemsStore extends Store<ItemsState> {
   }
 
   /**
+   * @deprecated moved
    * Removes html and special characters from an html string.
    * @param {html string} content
    */
@@ -395,6 +398,10 @@ export class ItemsStore extends Store<ItemsState> {
     return unescapedHtml;
   }
 
+  /**
+   * @deprecated
+   * @param description
+   */
   removePotentialCitations(description: string) {
     const openingBracket = description.indexOf('[');
     if (openingBracket !== -1) {

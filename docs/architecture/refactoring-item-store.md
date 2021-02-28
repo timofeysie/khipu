@@ -595,3 +595,17 @@ timofeysie/khipu 9 commits
 timofeysie/curator 3 commits
 timofeysie/conchifolia 1 commit
 ```
+
+There has been some additional scope added to this issue. It relates to parsing Wikipedia for content and adding that functionality to the add category page, not the item list as originally planned. We will be separating the first time creating a list from the simple retrieval of the firebase list. There will now be the load/edit mode and the list mode.
+
+Here are the issues raised for this. It's kind of become it's own epic, or has hijacked other epics, not sure.
+
+- Issue #45 Move list loading features from items.store to the add category page
+- Issue #42 Add an order to the list
+- Issue #44 parse the wiki-list api results for items
+- Issue #38 Refactor the item.store service calls enhancement
+- Issue #6 Merge the two lists
+
+Once we have the list creation functionality moved to the add category page, we need to remove it from the item.store.
+
+We will need to expand the meta data stored in firebase to include links to the detail pages so that the list page will still be able to route to a detail page when a user chooses an item.

@@ -16,6 +16,7 @@ export class ItemsContainerComponent implements OnInit {
     this.activatedRoute.params.subscribe((category: Category) => {
       this.category = category;
       // this.store.fetchList(category, this.store.state.currentPage);
+
       this.store.doWork(category, this.store.state.currentPage);
     });
   }

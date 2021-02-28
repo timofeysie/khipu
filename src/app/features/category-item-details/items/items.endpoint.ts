@@ -10,8 +10,26 @@ declare function require(name: string): any;
 export class ItemsListEndpoint {
   constructor(private httpClient: HttpClient) {}
 
+  /**
+   * Create a SPARQL query for paginated views.
+   * @param category
+   * @param currentPage
+   */
   listItems(category: Category, currentPage: number): Observable<any> {
     const url = this.generateUrl(category, currentPage);
+    return this.httpClient.get<any[]>(url).pipe(
+      map(response => {
+        return response['results']['bindings'];
+      })
+    );
+  }
+
+  /**
+   * Get the whole list SPARQL.
+   * @param category
+   */
+  listAllItems(category: Category): Observable<any> {
+    const url = this.generateUrlForFullList(category);
 
     return this.httpClient.get<any[]>(url).pipe(
       map(response => {
@@ -26,7 +44,6 @@ export class ItemsListEndpoint {
       sparqlEndpoint: 'https://query.wikidata.org/sparql'
     });
 
-    console.log('environment', environment);
     const sparql = `
             SELECT ?${category.name} ?${category.name}Label ?${category.name}Description WHERE {
                 SERVICE wikibase:label {
@@ -37,7 +54,23 @@ export class ItemsListEndpoint {
             ORDER BY (LCASE(?label))
             LIMIT ${environment.paginationItemsPerPage}
             OFFSET ${currentPage * environment.paginationItemsPerPage}`;
-    console.log('sparql', sparql);
+    return wbk.sparqlQuery(sparql);
+  }
+
+  generateUrlForFullList(category: Category): string {
+    const wbk = require('wikibase-sdk')({
+      instance: 'https://query.wikidata.org/sparql',
+      sparqlEndpoint: 'https://query.wikidata.org/sparql'
+    });
+
+    const sparql = `
+            SELECT ?${category.name} ?${category.name}Label ?${category.name}Description WHERE {
+                SERVICE wikibase:label {
+                    bd:serviceParam wikibase:language "[AUTO_LANGUAGE],${category.language}".
+                }
+                ?${category.name} wdt:${category.wdt} wd:${category.wd}.
+            }
+            ORDER BY (LCASE(?label))`;
     return wbk.sparqlQuery(sparql);
   }
 }

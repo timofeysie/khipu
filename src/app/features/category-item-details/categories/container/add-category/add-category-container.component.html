@@ -9,6 +9,8 @@
 <ion-content>
   <app-add-category
     [categoryAddForm]="categoryForm"
+    [wikidataItemList]="(store.state$ | async).wikidataItemList"
+    [wikiListItems]="(store.state$ | async).wikiListItems"
     (onPerformLoad)="loadNewCategory($event)"
     (onPerformSave)="store.saveNewCategory($event)"
   ></app-add-category>

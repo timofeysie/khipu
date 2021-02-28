@@ -35,3 +35,37 @@
     </ion-toolbar>
   </ion-footer>
 </ion-card>
+
+<ion-card>
+  <ion-header>
+    <ion-toolbar>
+      <span slot="start" *ngIf="category" class="ion-margin"> Wikidata list {{ wikidataItemList.length }}</span>
+      <span slot="end" class="ion-margin" (click)="onWikidataToggle()">
+        <span *ngIf="wikidataToggle">-</span>
+        <span *ngIf="!wikidataToggle">+</span>
+      </span>
+    </ion-toolbar>
+  </ion-header>
+  <ion-card-content *ngIf="wikidataToggle">
+    <ion-item *ngFor="let item of wikidataItemList">
+      {{ item[category.name + 'Label'].value }}
+    </ion-item>
+  </ion-card-content>
+</ion-card>
+
+<ion-card>
+  <ion-header>
+    <ion-toolbar>
+      <span slot="start" *ngIf="category" class="ion-margin"> Wikipedia list {{ wikiListItems.length }}</span>
+      <span slot="end" class="ion-margin" (click)="onWikiListItemsToggle()">
+        <span *ngIf="wikiListItemsToggle">-</span>
+        <span *ngIf="!wikiListItemsToggle">+</span>
+      </span>
+    </ion-toolbar>
+  </ion-header>
+  <ion-card-content *ngIf="wikiListItemsToggle">
+    <ion-item *ngFor="let item of wikiListItems">
+      {{ item.label }}
+    </ion-item>
+  </ion-card-content>
+</ion-card>
