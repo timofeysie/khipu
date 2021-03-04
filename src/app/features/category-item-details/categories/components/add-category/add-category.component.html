@@ -36,13 +36,17 @@
   </ion-footer>
 </ion-card>
 
-<ion-card>
+<ion-card *ngIf="wikidataItemList.length > 0">
   <ion-header>
     <ion-toolbar>
-      <span slot="start" *ngIf="category" class="ion-margin"> Wikidata list {{ wikidataItemList.length }}</span>
+      <span slot="start" *ngIf="category" class="ion-margin">Wikidata list {{ wikidataItemList.length }}</span>
       <span slot="end" class="ion-margin" (click)="onWikidataToggle()">
-        <span *ngIf="wikidataToggle">-</span>
-        <span *ngIf="!wikidataToggle">+</span>
+        <span *ngIf="wikidataToggle">
+          <ion-icon name="remove-outline"></ion-icon>
+        </span>
+        <span *ngIf="!wikidataToggle">
+          <ion-icon name="add-outline"></ion-icon>
+        </span>
       </span>
     </ion-toolbar>
   </ion-header>
@@ -53,13 +57,17 @@
   </ion-card-content>
 </ion-card>
 
-<ion-card>
+<ion-card *ngIf="wikiListItems.length > 0">
   <ion-header>
     <ion-toolbar>
-      <span slot="start" *ngIf="category" class="ion-margin"> Wikipedia list {{ wikiListItems.length }}</span>
+      <span slot="start" class="ion-margin">Wikipedia list {{ wikiListItems.length }}</span>
       <span slot="end" class="ion-margin" (click)="onWikiListItemsToggle()">
-        <span *ngIf="wikiListItemsToggle">-</span>
-        <span *ngIf="!wikiListItemsToggle">+</span>
+        <span *ngIf="wikiListItemsToggle">
+          <ion-icon name="remove-outline"></ion-icon>
+        </span>
+        <span *ngIf="!wikiListItemsToggle">
+          <ion-icon name="add-outline"></ion-icon>
+        </span>
       </span>
     </ion-toolbar>
   </ion-header>

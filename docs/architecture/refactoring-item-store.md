@@ -609,3 +609,32 @@ Here are the issues raised for this. It's kind of become it's own epic, or has h
 Once we have the list creation functionality moved to the add category page, we need to remove it from the item.store.
 
 We will need to expand the meta data stored in firebase to include links to the detail pages so that the list page will still be able to route to a detail page when a user chooses an item.
+
+Basically, we want to offer the same edit functions even if the firebase backup is not there. This means separating the firebase functionality from everything. A guest user could also use this feature to create one-off lesson plan and have no need to update it themselves as their school LRS would manage that later.
+
+This is all good stuff.
+
+Next, enable links on the temporary items list, and paginate the wikipedia objects to add different ones to each page.
+
+Enable routing to the details page from the add categories page.
+Disable load without a warning that the current list will be list. Could have a refresh button to do this. Load might only be enabled when the data in the form is changed. Currently it will be helpful to change the category and see the number of results from each in an interactive way.
+
+If it was as simple as adding https://en.wikipedia.org/ to the uri parsed, then that would be great:
+
+```python
+description: "a statement that takes something for granted because it would probably be the case (or might be the case)."
+label: "Appeal to probability"
+sectionTitle: "Formal fallacies"
+sectionTitleTag: "H2"
+uri: "/wiki/Appeal_to_probability"
+```
+
+The problem is we route to our details page like this:
+
+```ts
+this.router.navigate([
+  `/categories/item-details/${this.categoryName}/${qCode}`
+]);
+```
+
+As you can see, we don't have the qr code. And in fact we don't need it. All we need it the uri fragment. So we need another route in the router to provide that, and more functionality on the details page to deal with the snake case name only.
