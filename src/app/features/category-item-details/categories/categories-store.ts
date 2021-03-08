@@ -77,11 +77,11 @@ export class CategoriesStore extends Store<CategoriesState> {
     const currentPage = 0;
     forkJoin(
       this.getAllItemsFromWikidataEndpoint(newCategory, currentPage),
-      this.getWikilistFromEndpoint(newCategory.name, 'en', '1')
+      this.getWikilistFromEndpoint(newCategory.name, 'en', 'all')
     )
       .pipe(
         map(async ([wikidataItemList, wikiListResponse]) => {
-          const wikiListItems = await this.parseParticularCategoryTypes(wikiListResponse, newCategory.name, 'en', '1');
+          const wikiListItems = await this.parseParticularCategoryTypes(wikiListResponse, newCategory.name, 'en');
           this.state.wikidataItemList = wikidataItemList;
           this.state.wikiListItems = wikiListItems;
         })
@@ -90,17 +90,11 @@ export class CategoriesStore extends Store<CategoriesState> {
   }
 
   /**
-   * @deprecated
    * Originally from fetchWikilistFromEndpoint which is now called
    * getWikilistFromEndpoint()
    * @param response
    */
-  async parseParticularCategoryTypes(
-    response: any,
-    _title: string,
-    _language: string,
-    _section: string
-  ): Promise<Item[]> {
+  async parseParticularCategoryTypes(response: any, _title: string, _language: string): Promise<Item[]> {
     if (response) {
       const markup = response['parse']['text']['*'];
       if (_title === 'fallacies') {
@@ -123,10 +117,69 @@ export class CategoriesStore extends Store<CategoriesState> {
     return wikiList;
   }
 
+  /**
+   * Create an element from the document passed in
+   * and parse it for an array of items and descriptions.
+   * @param markup
+   */
   getItemsFromFallaciesList(markup: any) {
     const main = this.createElementFromHTML(markup);
-    const wikiItem: Item[] = this.getFirstWikiItem(main);
+    const wikiItem: Item[] = [];
+    this.parseAllWikipediaPageItems(main);
+    console.log('wikiItem', wikiItem);
     return wikiItem;
+  }
+
+  parseAllWikipediaPageItems(main: HTMLDivElement) {
+    const unorderedLists = main.getElementsByTagName('ul');
+    const numberOfUnorderedLists = unorderedLists.length;
+    console.log('numberOfUnorderedLists', numberOfUnorderedLists);
+    for (let i = 0; i < numberOfUnorderedLists; i++) {
+      const ul = unorderedLists[i];
+      const li = ul.getElementsByTagName('li');
+      const numberOfItems = li.length;
+      for (let j = 0; j < numberOfItems; j++) {
+        const item = li[j];
+        const liAnchor: HTMLCollection = item.getElementsByTagName('a');
+        const label = this.parseAchorTag(liAnchor);
+        const content = item.textContent || item.innerText || '';
+        const descriptionWithoutLabel = this.removeLabelFromDescription(content);
+        const descWithoutCitations = this.removePotentialCitations(descriptionWithoutLabel);
+        // TODO: get the link from the anchor
+        if (label !== null) {
+          // console.log(label + ': ' + descWithoutCitations);
+          // create item and add it to the list
+          if (label === 'Lists portal') {
+            console.log('end of list item', item);
+          }
+        } else {
+          // skipped
+        }
+      }
+    }
+  }
+
+  /**
+   *
+   * @param item string full contents of li tag.
+   */
+  removeLabelFromDescription(item: string) {
+    const dash = item.indexOf('–');
+    let start = 0;
+    let end = item.length;
+    if (dash > 0) {
+      start = dash;
+    }
+    return item.substr(start + 1, end);
+  }
+
+  parseAchorTag(liAnchor: HTMLCollection) {
+    let label = liAnchor[0].innerHTML;
+    if (label.indexOf('tocnumber') === -1) {
+      return label;
+    } else {
+      return null;
+    }
   }
 
   /**
@@ -135,7 +188,7 @@ export class CategoriesStore extends Store<CategoriesState> {
    * which are more finely grained..
    * @param main
    */
-  getFirstWikiItem(main: any) {
+  getFirstWikiItemOfSection(main: any) {
     const wikiList: Item[] = [];
     // the first category is an H2 regarding the whole subject
     const firstCategory = main.getElementsByClassName('mw-headline')[0].innerHTML;

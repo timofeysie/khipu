@@ -1,5 +1,125 @@
 # Parsing Wikipedia Content
 
+## list of fallacies parsing
+
+After doing a lot of work to parse the first section of the fallacies list, it turns out that we will have to start over in order to parse the whole list, and not worry about the sections. Before the decision was made to use the sections because we were not getting the descriptions we wanted from the full list. Now, after realizing how difficult it was going to be to get an arbitrary amount of sections to parse, and seeing that the full list does appear to have the descriptions we want, it's time to get the full list and do the work it takes to parse that.
+
+The first item created using the old code which worked for section 1 looks like this:
+
+```json
+description: ".1 Improper premise"
+label: "<span class="tocnumber">2.1</span> <span class="toctext">Improper premise</span>"
+sectionTitle: "Formal fallacies"
+sectionTitleTag: "H2"
+uri: "#Improper_premise"
+```
+
+A copy of the markup from the call result is [here](docs\fallacies-all-wikidata-list.html).
+
+An example of the first item is this:
+
+```html
+<li>
+  <a href="/wiki/Appeal_to_probability" title="Appeal to probability">
+    Appeal to probability
+  </a>
+  u2013 a statement that takes something for granted because it would probably
+  be the case (or might be the case).
+  <sup id="cite_ref-3" class="reference">
+    <a href="#cite_note-3">&#91;3&#93;</a>
+  </sup>
+  <sup id="cite_ref-4" class="reference">
+    <a href="#cite_note-4">&#91;4&#93;</a>
+  </sup>
+</li>
+```
+
+The current list for the first part currently looks like this:
+
+```txt
+2 Informal fallacies
+2.1 Improper premise
+2.2 Faulty generalizations
+2.3 Questionable cause
+2.4 Relevance fallacies
+2.4.1 Red herring fallacies
+```
+
+So it's basically all wrong. The category (section title) is captured as formal fallacy when it's actually informal. This would be from the contents section.
+
+Also, the description and label are switched.
+
+First, rename the current functions to preserve the working section parsing functions in case we need to do that later for some reason.
+
+Next, what is the structure that will let us know what are label-description pairs we want?
+
+The surrounding div has class="mw-parser-output".
+
+There is an H2 which signals the category. There is a div with role="note" and <P> tag with a description of the category. Having the category and it's description is nice to have, but not essential. It is also problematic for a simple list that we want.
+
+The next section is a unordered list. It looks like we could just get these and be done with it. But there are other <ul> sections such as the id="toc" signifying the table of contents.
+
+So we could get the id="toc" element and know that the next <ul> is the start of the content.
+
+```html
+<div id="toc">
+  <h2>
+    <div role="note">
+      <p></p>
+      <ul></ul>
+    </div>
+  </h2>
+</div>
+```
+
+Not sure if we can count on this for the rest of the page, or other subjects, but it's the only structure we have right now.
+
+Actually it was easier than that. Just looping the <ul> tags and then looping through the <li> tags within those, and getting the contents and then removing the label and the citations works to give us this:
+
+Number of unordered lists: 83
+
+And a long list of easily parsed labels and descriptions, from this:
+
+Appeal to probability: a statement that takes something for granted because it would probably be the case (or might be the case).
+
+There are a few problem items in the middle:
+
+Ambiguous middle term: using a middle term with multiple meanings.
+
+[21]: changing the meaning of a word when an objection is raised. Often paired with moving the goalposts (see below), as when an argument is challenged using a common definition of a term in the argument, and the arguer presents a different definition of the term and thereby demands different evidence to debunk the argument.
+
+Then at some point, we get to the end of the list we want.
+
+Is–ought fallacy: Ought fallacy – claims about what ought to be, on the basis of what is.
+
+Then the end of the list starts off like this:
+
+Lists portal: sts portal
+
+On the web page, you can see it's the "See also[edit]" section. We don't want anything after this.
+
+So next it's determine how to cut off the parsing, and then fix up the issues of the items that are captured.
+
+Commit message: #44 #35 parsing label and description from wikipedia page wip
+
+Issue #35 is: Remove label text from default user descriptions and add tooltip with explanation
+
+Since we will be removing labels from descriptions here for the wikipedia parsing, it's related to that issue.
+
+The only thing that sticks out right now to determine the end of the list is this:
+
+```html
+<span
+  ><img alt=""
+  src="//upload.wikimedia.org/wikipedia/commons/thumb/2/20/Text-x-generic.svg/28px-Text-x-generic.svg.png"
+  decoding="async"</span
+>
+```
+
+That's as good as any at this point. We are going to have to provide the user with easy list editing tools, and one of these could be an end of list delimiter which would discard anything after a particular item. So on with the show!
+
+## Previous notes on Cognitive biases parsing
+
 After doing a bit of work to get the fallacies from the list of page, the next task is to also make it work for cognitive biases.
 
 In the past, this was the first wikipedia page that was used, so there should be some code lying around that does just this. Currently, we get this error from the api:
