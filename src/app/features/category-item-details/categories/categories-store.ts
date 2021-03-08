@@ -96,7 +96,7 @@ export class CategoriesStore extends Store<CategoriesState> {
    */
   async parseParticularCategoryTypes(response: any, _title: string, _language: string): Promise<Item[]> {
     if (response) {
-      const markup = response['parse']['text']['*'];
+      const markup = response.parse.text['*'];
       if (_title === 'fallacies') {
         const fallyList = this.getItemsFromFallaciesList(markup);
         return fallyList;
@@ -108,6 +108,10 @@ export class CategoriesStore extends Store<CategoriesState> {
     return [];
   }
 
+  /**
+   * To be re-implemented from a previous version.
+   * @param content
+   */
   getItemsFromCognitiveBiasesList(content: any) {
     const wikiList: Item[] = [];
     const one = this.createElementFromHTML(content);
@@ -124,39 +128,64 @@ export class CategoriesStore extends Store<CategoriesState> {
    */
   getItemsFromFallaciesList(markup: any) {
     const main = this.createElementFromHTML(markup);
-    const wikiItem: Item[] = [];
-    this.parseAllWikipediaPageItems(main);
-    console.log('wikiItem', wikiItem);
+    const wikiItem: Item[] = this.parseAllWikipediaPageItems(main);
     return wikiItem;
   }
 
+  /**
+   * TODO: refactor this into a rules engine or some kind of pattern that
+   * can match various item/description layouts to create a list.
+   * We have not captured the type (category, sub-category, citations, etc).
+   * Since they are not part of the simple list, we wont need them yet.
+   * @param main
+   */
   parseAllWikipediaPageItems(main: HTMLDivElement) {
+    const wikiList: Item[] = [];
     const unorderedLists = main.getElementsByTagName('ul');
     const numberOfUnorderedLists = unorderedLists.length;
-    console.log('numberOfUnorderedLists', numberOfUnorderedLists);
+    let endOfList = false;
     for (let i = 0; i < numberOfUnorderedLists; i++) {
+      if (endOfList) {
+        break;
+      }
       const ul = unorderedLists[i];
       const li = ul.getElementsByTagName('li');
       const numberOfItems = li.length;
       for (let j = 0; j < numberOfItems; j++) {
         const item = li[j];
         const liAnchor: HTMLCollection = item.getElementsByTagName('a');
-        const label = this.parseAchorTag(liAnchor);
+        const label = this.parseAnchorTag(liAnchor);
         const content = item.textContent || item.innerText || '';
         const descriptionWithoutLabel = this.removeLabelFromDescription(content);
         const descWithoutCitations = this.removePotentialCitations(descriptionWithoutLabel);
-        // TODO: get the link from the anchor
         if (label !== null) {
-          // console.log(label + ': ' + descWithoutCitations);
+          const uri = liAnchor[0].getAttribute('href');
           // create item and add it to the list
           if (label === 'Lists portal') {
-            console.log('end of list item', item);
+            const span = item.getElementsByTagName('span');
+            const img = span[0].innerHTML;
+            if (img.indexOf('//upload.wikimedia.org/wikipedia/commons/thumb/2/20/Text-x-generic.svg/') !== -1) {
+              endOfList = true;
+              break;
+            }
           }
+          const newWikiItem = this.createNewItem(label, descWithoutCitations, uri);
+          wikiList.push(newWikiItem);
         } else {
-          // skipped
+          // skipped - with check if it's by mistake and a different layout that we've seen before.
         }
       }
     }
+    return wikiList;
+  }
+
+  createNewItem(label: string, description: string, uri: string) {
+    const wikiItem: Item = {
+      uri,
+      label,
+      description
+    };
+    return wikiItem;
   }
 
   /**
@@ -166,15 +195,20 @@ export class CategoriesStore extends Store<CategoriesState> {
   removeLabelFromDescription(item: string) {
     const dash = item.indexOf('–');
     let start = 0;
-    let end = item.length;
+    const end = item.length;
     if (dash > 0) {
       start = dash;
     }
-    return item.substr(start + 1, end);
+    const startChar = item.charAt(start + 1);
+    let increment = 0;
+    if (startChar === ' ') {
+      increment = 1;
+    }
+    return item.substr(start + increment, end);
   }
 
-  parseAchorTag(liAnchor: HTMLCollection) {
-    let label = liAnchor[0].innerHTML;
+  parseAnchorTag(liAnchor: HTMLCollection) {
+    const label = liAnchor[0].innerHTML;
     if (label.indexOf('tocnumber') === -1) {
       return label;
     } else {
