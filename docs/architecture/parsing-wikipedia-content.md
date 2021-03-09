@@ -98,7 +98,7 @@ Lists portal: sts portal
 
 On the web page, you can see it's the "See also[edit]" section. We don't want anything after this.
 
-So next it's determine how to cut off the parsing, and then fix up the issues of the items that are captured.
+So next it's determine how to cut off the parsing, and then fix up the issues of the items that are not right.
 
 Commit message: #44 #35 parsing label and description from wikipedia page wip
 
@@ -106,17 +106,133 @@ Issue #35 is: Remove label text from default user descriptions and add tooltip w
 
 Since we will be removing labels from descriptions here for the wikipedia parsing, it's related to that issue.
 
-The only thing that sticks out right now to determine the end of the list is this:
+### Finding the end of the list
+
+Everything after the "See Also" point should be discarded.
+
+The ending section looks like this:
 
 ```html
-<span
-  ><img alt=""
-  src="//upload.wikimedia.org/wikipedia/commons/thumb/2/20/Text-x-generic.svg/28px-Text-x-generic.svg.png"
-  decoding="async"</span
->
+<li>
+  <a href="/wiki/Vacuous_truth" title="Vacuous truth">Vacuous truth</a>
+  u2013 a claim that is technically true but meaningless, in the form no
+  <i>A</i> in <i>B</i> has <i>C</i>, when there is no <i>A</i> in <i>B</i>. For example, claiming that no mobile
+  phones in the room are on when there are no mobile phones in the room.
+</li>
+</ul>
+<h2>
+<span class="mw-headline" id="See_also">See also</span>
+<span class="mw-editsection">
+  <span class="mw-editsection-bracket">[</span>
+  <a href="/w/index.php?title=List_of_fallacies&amp;action=edit&amp;section=11"
+    title="Edit section: See also">
+    edit
+  </a>
+  <span class="mw-editsection-bracket">]</span>
+</span>
+</h2>
+<style data-mw-deduplicate="TemplateStyles:r936637989">
+.mw-parser-output .portal {
+  border: solid #aaa 1px;
+  padding: 0;
+}
 ```
 
-That's as good as any at this point. We are going to have to provide the user with easy list editing tools, and one of these could be an end of list delimiter which would discard anything after a particular item. So on with the show!
+It is easy to find the see also tag, but how to know where that is in the for loops? We can't. We would need a different mechanism to create the list, one that had a notion of what number it is during the list.
+
+The easiest way right now is to look for this particular src attribute which is unique in the list:
+
+```html
+<span>
+  <img alt="" src=
+  "//upload.wikimedia.org/wikipedia/commons/thumb/2/20/Text-x-generic.svg/28px-Text-x-generic.svg.png"
+  decoding="async"
+</span>
+```
+
+That's as good as any at this point. We are going to have to provide the user with easy list editing tools, and one of these could be an end of list delimiter which would discard anything after a particular item.
+
+This method appears to work. But the last item is not what is expected. In the example markup (/docs/fallacies-all-wikidata-list.html) we see this as the last item before the "See also" section.
+
+Vacuous truth - a claim that is technically true but meaningless, in the form no A in B has C, when there is no A in B. For example, claiming that no mobile phones in the room are on when there are no mobile phones in the room.
+
+But on the parsed list we are seeing:
+
+Is-ought fallacy.
+
+### List within list
+
+Next, the edge cases. Some of the items have citation numbers for labels, and some have descriptions made of up an entire sub-category. Case in point, equivocation.
+
+The case in point looks like this:
+
+```html
+<li>
+  <a href="/wiki/Equivocation" title="Equivocation">Equivocation</a>
+  u2013 using a term with more than one meaning in a statement without
+  specifying which meaning is intended.
+  <sup id="cite_ref-FOOTNOTEDamer2009121_19-0" class="reference">
+    <a href="#cite_note-FOOTNOTEDamer2009121-19">&#91;19&#93;</a>
+  </sup>
+  <ul>
+    <li>
+      <a
+        href="/wiki/Ambiguous_middle_term"
+        class="mw-redirect"
+        title="Ambiguous middle term"
+      >
+        Ambiguous middle term
+      </a>
+      u2013 using a
+      <a href="/wiki/Middle_term" title="Middle term">
+        middle term
+      </a>
+      with multiple meanings.
+      <sup
+        id="cite_ref-FOOTNOTECopiCohen1990&#91;httpsarchiveorgdetailsintroductiontol00copipage206_206-207&#93;_20-0"
+        class="reference"
+      >
+        <a
+          href="#cite_note-FOOTNOTECopiCohen1990[httpsarchiveorgdetailsintroductiontol00copipage206_206-207]-20"
+        >
+          &#91;20&#93;
+        </a>
+      </sup>
+    </li>
+  </ul>
+</li>
+```
+
+### The reference as label case
+
+```html
+<li>
+  Definitional retreat u2013 changing the meaning of a word when an objection is
+  raised.
+  <sup id="cite_ref-Pirie2006_21-0" class="reference">
+    <a href="#cite_note-Pirie2006-21">
+      &#91;21&#93;
+    </a>
+  </sup>
+  Often paired with moving the goalposts (see below), as when an argument is
+  challenged using a common definition of a term in the argument, and the arguer
+  presents a different definition of the term and thereby demands different
+  evidence to debunk the argument.
+</li>
+```
+
+This one shows up as:
+
+```txt
+label: [21]
+definition: changing the meaning of a word when an objection is raised.  Often paired with ...
+```
+
+The definition is fine, but the label in this cas is not the contents of the anchor. I suppose the simple way to go here is to check if the anchor tag is the child of a <sup> tag.
+
+It would be nice if whoever created the list could use a title attribute. But that only works if the label is a link to a detail page. In the case of "Definitional retreat", this is not the case.
+
+It's a related term in the Motte-and-bailey fallacy on the Equivocation page with the link: "(see List of fallacies § Informal fallacies)" which is not going to help us.
 
 ## Previous notes on Cognitive biases parsing
 
@@ -132,6 +248,10 @@ info: "There is no section 1 in List of cognitive bias."
 __proto__: Object
 servedby: "mw1281"
 ```
+
+### Truncated descriptions with dashes in the description
+
+The is-ought fallacy, since it has a dash in it, is causing the description to be truncated.
 
 ## Starting off with the firebase list
 

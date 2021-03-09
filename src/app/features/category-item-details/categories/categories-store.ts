@@ -92,6 +92,9 @@ export class CategoriesStore extends Store<CategoriesState> {
   /**
    * Originally from fetchWikilistFromEndpoint which is now called
    * getWikilistFromEndpoint()
+   * We will hopefully remove these hard-coded decisions based on subject types
+   * when we can parse an arbitrary list of items and get the label/description
+   * pairs without specific format handling.
    * @param response
    */
   async parseParticularCategoryTypes(response: any, _title: string, _language: string): Promise<Item[]> {
@@ -150,17 +153,17 @@ export class CategoriesStore extends Store<CategoriesState> {
       }
       const ul = unorderedLists[i];
       const li = ul.getElementsByTagName('li');
-      const numberOfItems = li.length;
-      for (let j = 0; j < numberOfItems; j++) {
+      for (let j = 0; j < li.length; j++) {
         const item = li[j];
         const liAnchor: HTMLCollection = item.getElementsByTagName('a');
         const label = this.parseAnchorTag(liAnchor);
         const content = item.textContent || item.innerText || '';
         const descriptionWithoutLabel = this.removeLabelFromDescription(content);
-        const descWithoutCitations = this.removePotentialCitations(descriptionWithoutLabel);
+        let descWithoutCitations = this.removePotentialCitations(descriptionWithoutLabel);
+        // Only capture items that have a label, which excludes table of contents, etc.
         if (label !== null) {
           const uri = liAnchor[0].getAttribute('href');
-          // create item and add it to the list
+          // check for end of list and break out of loops if it is
           if (label === 'Lists portal') {
             const span = item.getElementsByTagName('span');
             const img = span[0].innerHTML;
@@ -169,6 +172,13 @@ export class CategoriesStore extends Store<CategoriesState> {
               break;
             }
           }
+          // If the item has a sub-list, capture those items also and remove them from the description.
+          const subList: Item[] = this.checkForSubListAndParseIfExists(item, label);
+          if (subList) {
+            wikiList.push(...subList);
+            descWithoutCitations = this.removeSubListMaterial(descriptionWithoutLabel, subList);
+          }
+          // create item and add it to the list
           const newWikiItem = this.createNewItem(label, descWithoutCitations, uri);
           wikiList.push(newWikiItem);
         } else {
@@ -177,6 +187,72 @@ export class CategoriesStore extends Store<CategoriesState> {
       }
     }
     return wikiList;
+  }
+
+  /**
+   * If an item in a list has a sub-list of items, then after parsing the sub-list,
+   * we want to remove that from the description which would have beed created for
+   * the list item.  We do that by looking for the first item on the sub-list, and
+   * removing everything from that point to the end.  Hope it works for other categories!
+   * @param descriptionWithoutLabel
+   * @param subList
+   */
+  removeSubListMaterial(descriptionWithoutLabel: string, subList: Item[]) {
+    if (subList.length > 0) {
+      const firstLabel = subList[0].label;
+      const end = descriptionWithoutLabel.indexOf(firstLabel);
+      const descriptionWithoutCitations = descriptionWithoutLabel.substr(0, end);
+      const newDescription = this.removePotentialCitations(descriptionWithoutCitations);
+      return newDescription;
+    } else {
+      return descriptionWithoutLabel;
+    }
+  }
+
+  /**
+   * This repeats the loops in the previous function, but might have
+   * some specific differences.  If we can combine all these into a
+   * reusable looping function using a for-of loop, that would be great.
+   * @param item
+   * @param label
+   */
+  checkForSubListAndParseIfExists(item: HTMLLIElement, label: string) {
+    const subWikiList: Item[] = [];
+    const subUnorderedList = item.getElementsByTagName('ul');
+    if (subUnorderedList.length > 0) {
+      for (let k = 0; k < subUnorderedList.length; k++) {
+        const subul = subUnorderedList[k];
+        const subli = subul.getElementsByTagName('li');
+        for (let l = 0; l < subli.length; l++) {
+          const subItem = subli[l];
+          const liAnchor: HTMLCollection = subItem.getElementsByTagName('a');
+          const subLabel = this.parseAnchorTag(liAnchor);
+          const content = subItem.textContent || subItem.innerText || '';
+          const descriptionWithoutLabel = this.removeLabelFromDescription(content);
+          const descWithoutCitations = this.removePotentialCitations(descriptionWithoutLabel);
+          const uri = liAnchor[0].getAttribute('href');
+          const newWikiItem = this.createNewItem(subLabel, descWithoutCitations, uri);
+          subWikiList.push(newWikiItem);
+        }
+      }
+    }
+    return subWikiList;
+  }
+
+  /**
+   * Needs work.
+   * @param label
+   * @param item
+   */
+  checkForEndOfList(label: string, item: HTMLLIElement): boolean {
+    if (label === 'Lists portal') {
+      const span = item.getElementsByTagName('span');
+      const img = span[0].innerHTML;
+      if (img.indexOf('//upload.wikimedia.org/wikipedia/commons/thumb/2/20/Text-x-generic.svg/') !== -1) {
+        return true;
+      }
+    }
+    return false;
   }
 
   createNewItem(label: string, description: string, uri: string) {

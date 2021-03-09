@@ -73,7 +73,8 @@
   </ion-header>
   <ion-card-content *ngIf="wikiListItemsToggle">
     <ion-item *ngFor="let item of wikiListItems">
-      {{ item.label }}
+      <span class="label">{{ item.label }}</span>
+      <span class="description">{{ item.description }}</span>
     </ion-item>
   </ion-card-content>
 </ion-card>
