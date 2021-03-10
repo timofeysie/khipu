@@ -160,6 +160,10 @@ But on the parsed list we are seeing:
 
 Is-ought fallacy.
 
+It might just be an ordering situation with out loops and breaking out. Not sure yet.
+
+In any event, we are going to need a better way to determine the end of the list, but that can wait until we look at a few more categories to find one that will work for all of them.
+
 ### List within list
 
 Next, the edge cases. Some of the items have citation numbers for labels, and some have descriptions made of up an entire sub-category. Case in point, equivocation.
@@ -234,6 +238,10 @@ It would be nice if whoever created the list could use a title attribute. But th
 
 It's a related term in the Motte-and-bailey fallacy on the Equivocation page with the link: "(see List of fallacies § Informal fallacies)" which is not going to help us.
 
+### Truncated descriptions with dashes in the description
+
+The is-ought fallacy, since it has a dash in it, is causing the description to be truncated.
+
 ## Previous notes on Cognitive biases parsing
 
 After doing a bit of work to get the fallacies from the list of page, the next task is to also make it work for cognitive biases.
@@ -248,10 +256,6 @@ info: "There is no section 1 in List of cognitive bias."
 __proto__: Object
 servedby: "mw1281"
 ```
-
-### Truncated descriptions with dashes in the description
-
-The is-ought fallacy, since it has a dash in it, is causing the description to be truncated.
 
 ## Starting off with the firebase list
 

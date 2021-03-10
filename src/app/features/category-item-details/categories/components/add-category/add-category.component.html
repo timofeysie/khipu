@@ -48,11 +48,21 @@
           <ion-icon name="add-outline"></ion-icon>
         </span>
       </span>
+      <ion-item *ngIf="!category">
+        <span class="instructions ion-margin">
+          Tap load to get a list of items from Wikipedia and Wikidata. Choose save to create the category and view the
+          list and view the details to edit the descriptions if you want.
+        </span>
+      </ion-item>
     </ion-toolbar>
   </ion-header>
   <ion-card-content *ngIf="wikidataToggle">
     <ion-item *ngFor="let item of wikidataItemList">
       {{ item[category.name + 'Label'].value }}
+    </ion-item>
+    <ion-item *ngIf="!category">
+      Tap load to get a list of items from Wikipedia and Wikidata. Choose save to create the category and view the list
+      and view the details to edit the descriptions if you want.
     </ion-item>
   </ion-card-content>
 </ion-card>
@@ -73,8 +83,18 @@
   </ion-header>
   <ion-card-content *ngIf="wikiListItemsToggle">
     <ion-item *ngFor="let item of wikiListItems">
-      <span class="label">{{ item.label }}</span>
-      <span class="description">{{ item.description }}</span>
+      <ion-grid>
+        <ion-row>
+          <ion-col class="ion-float-left">
+            <span class="label">{{ item.label }}</span>
+          </ion-col>
+        </ion-row>
+        <ion-row>
+          <ion-col class="ion-float-right">
+            <p class="description">{{ item.description }}</p>
+          </ion-col>
+        </ion-row>
+      </ion-grid>
     </ion-item>
   </ion-card-content>
 </ion-card>

@@ -7,8 +7,18 @@
 .label {
   white-space: nowrap;
   padding: 7px;
+  text-transform: uppercase;
 }
 .description {
   font-weight: 400;
   font-size: small;
+}
+p::first-letter {
+  font-weight: bold;
+  color: red;
+  text-transform: capitalize;
+}
+.instructions {
+  color: gray;
+  font-weight: 100;
 }

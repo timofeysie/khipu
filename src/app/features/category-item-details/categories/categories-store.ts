@@ -164,25 +164,21 @@ export class CategoriesStore extends Store<CategoriesState> {
         if (label !== null) {
           const uri = liAnchor[0].getAttribute('href');
           // check for end of list and break out of loops if it is
-          if (label === 'Lists portal') {
-            const span = item.getElementsByTagName('span');
-            const img = span[0].innerHTML;
-            if (img.indexOf('//upload.wikimedia.org/wikipedia/commons/thumb/2/20/Text-x-generic.svg/') !== -1) {
-              endOfList = true;
-              break;
-            }
+          if (this.checkForEndOfList(label, item)) {
+            endOfList = true;
+            break;
           }
           // If the item has a sub-list, capture those items also and remove them from the description.
           const subList: Item[] = this.checkForSubListAndParseIfExists(item, label);
           if (subList) {
             wikiList.push(...subList);
             descWithoutCitations = this.removeSubListMaterial(descriptionWithoutLabel, subList);
+            // This call again seems redundant, which is a bit of a smell and should be sorted out.
+            descWithoutCitations = this.removePotentialCitations(descWithoutCitations);
           }
           // create item and add it to the list
           const newWikiItem = this.createNewItem(label, descWithoutCitations, uri);
           wikiList.push(newWikiItem);
-        } else {
-          // skipped - with check if it's by mistake and a different layout that we've seen before.
         }
       }
     }
