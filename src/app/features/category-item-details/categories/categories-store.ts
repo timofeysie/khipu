@@ -156,7 +156,7 @@ export class CategoriesStore extends Store<CategoriesState> {
       for (let j = 0; j < li.length; j++) {
         const item = li[j];
         const liAnchor: HTMLCollection = item.getElementsByTagName('a');
-        const label = this.parseAnchorTag(liAnchor);
+        const label = this.parseLabel(item);
         const content = item.textContent || item.innerText || '';
         const descriptionWithoutLabel = this.removeLabelFromDescription(content);
         let descWithoutCitations = this.removePotentialCitations(descriptionWithoutLabel);
@@ -222,7 +222,7 @@ export class CategoriesStore extends Store<CategoriesState> {
         for (let l = 0; l < subli.length; l++) {
           const subItem = subli[l];
           const liAnchor: HTMLCollection = subItem.getElementsByTagName('a');
-          const subLabel = this.parseAnchorTag(liAnchor);
+          const subLabel = this.parseLabel(subItem);
           const content = subItem.textContent || subItem.innerText || '';
           const descriptionWithoutLabel = this.removeLabelFromDescription(content);
           const descWithoutCitations = this.removePotentialCitations(descriptionWithoutLabel);
@@ -279,8 +279,39 @@ export class CategoriesStore extends Store<CategoriesState> {
     return item.substr(start + increment, end);
   }
 
-  parseAnchorTag(liAnchor: HTMLCollection) {
+  /**
+   * Check for a dash and remove all the text after that.
+   * @param item
+   */
+  removemDescriptionFromLabel(item: string) {
+    const dash = item.indexOf('–');
+    let start = 0;
+    if (dash > 0) {
+      start = dash;
+    }
+    const startChar = item.charAt(start - 1);
+    let increment = 0;
+    if (startChar === ' ') {
+      increment = 1;
+    }
+    return item.substr(0, start - increment);
+  }
+
+  /** Get the label from an anchor tag.
+   * If there is no anchor tag, then get the contents of the <li> tag and
+   * cut it off at the first slash.
+   * Exclude table of contents numbers: returning null will mean this item is skipped.
+   */
+  parseLabel(item: any) {
+    const liAnchor: HTMLCollection = item.getElementsByTagName('a');
     const label = liAnchor[0].innerHTML;
+    let newLabel = null;
+    if (label.indexOf('[') !== -1) {
+      const content = item.textContent || item.innerText || '';
+      newLabel = this.removemDescriptionFromLabel(content);
+      console.log('parse out label for ' + label + ' parsed to ' + newLabel);
+      return newLabel;
+    }
     if (label.indexOf('tocnumber') === -1) {
       return label;
     } else {

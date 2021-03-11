@@ -207,6 +207,8 @@ The case in point looks like this:
 </li>
 ```
 
+The initial solution to this was kind of reproducing the way the main list items are parsed. A recursive solution comes to mind as more elegant. But I'm sure we will all have a chance to revisit this again. Hopefully a wikipedia-first solution will emerge in the future and we wont need to worry about parsing content like this.
+
 ### The reference as label case
 
 ```html
@@ -238,9 +240,13 @@ It would be nice if whoever created the list could use a title attribute. But th
 
 It's a related term in the Motte-and-bailey fallacy on the Equivocation page with the link: "(see List of fallacies § Informal fallacies)" which is not going to help us.
 
+After changing the parseAnchor function and calling it parseLabel, we are not getting titles, but seeing duplicates. There are two "baconian fallacy" items. We could (and should) make the list exclusive so that no duplicates are allowed, not not sure how feasible this is.
+
 ### Truncated descriptions with dashes in the description
 
 The is-ought fallacy, since it has a dash in it, is causing the description to be truncated.
+
+I think it's because we are removing the first part of the the description which is actually the label. For example, the definition of "is-ought fallacy" is "-ought fallacy - claims about what ought to be, on the basis of what is." Obviously, we are failing at removing the label from the description here.
 
 ## Previous notes on Cognitive biases parsing
 
