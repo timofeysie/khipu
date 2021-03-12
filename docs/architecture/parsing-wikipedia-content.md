@@ -242,11 +242,114 @@ It's a related term in the Motte-and-bailey fallacy on the Equivocation page wit
 
 After changing the parseAnchor function and calling it parseLabel, we are not getting titles, but seeing duplicates. There are two "baconian fallacy" items. We could (and should) make the list exclusive so that no duplicates are allowed, not not sure how feasible this is.
 
+### Duplications
+
+There is in fact duplicate items. As mentioned before, there are two "baconian fallacy" items. Looking at the list of items getting added the main array, we can see that the sub-item actually comes from the item itself.
+
+```txt
+...
+new item Historian's fallacy
+new sub item Baconian fallacy
+new item Historical fallacy
+new item Baconian fallacy
+...
+```
+
+This is easier to fix than the other way around. If we wanted to use the oddly names JavaScript array function some() in the sub-item loop, then we have to pass the whole array there each time.
+
+Trying out checking both item and sub-items on the whole array each time works. Then we only have 141 items instead of over 200, which indicates that this was actually a widespread issue which is good to have solved.
+
+The code looks like this:
+
+```ts
+if (wikiList.some(thisItem => thisItem.label === newWikiItem.label)) {
+  // skip adding duplicates
+} else {
+  wikiList.push(newWikiItem);
+}
+```
+
+It's not good to have two blocks like that when we only need one. But this doesn't work:
+
+```ts
+if (wikiList.some(thisItem => thisItem.label !== newWikiItem.label)) {
+  wikiList.push(newWikiItem);
+}
+```
+
+In this case, none of the items will get added. Does anyone know how to do this in the most readable way? For now, it's working and time for a commit.
+
+Before making the commit to fix this however I updated VSCode and then saw this error:
+
+```txt
+This syntax requires an imported helper named '__spreadArray' which does not exist in 'tslib'. Consider upgrading your version of 'tslib'.ts(2343)
+```
+
+The previously fine code is this:
+
+```ts
+wikiList.push(...subList);
+```
+
+The Stack Overflow solution: _Update tsLib dependency to get rid of the highlighting. In my case it was version 1.9.0. Update to 1.10.0 solved the issue._
+
+How do you update a lib in VSCode? I note that we have version 1.9 in package-lock.
+
+The code still compiles, so I have mixed feelings on this.
+
+In the package lock, we see this:
+
+```json
+    "tslib": "^1.11.1"
+  },
+  "dependencies": {
+    "tslib": {
+      "version": "1.14.1",
+      "resolved": "https://registry.npmjs.org/tslib/-/tslib-1.14.1.tgz",
+    }
+  }
+```
+
+New VSCode version 1.54.2. I'm not sure what it was before the updated.
+
 ### Truncated descriptions with dashes in the description
 
 The is-ought fallacy, since it has a dash in it, is causing the description to be truncated.
 
 I think it's because we are removing the first part of the the description which is actually the label. For example, the definition of "is-ought fallacy" is "-ought fallacy - claims about what ought to be, on the basis of what is." Obviously, we are failing at removing the label from the description here.
+
+If we just remove the label, then three extra characters, it should be OK, right? Nope.
+
+Another example is "Straw Man" which has a description "Straw Man fallacy - misrepresenting an opponent's argument ..."
+So here, we would end up with the description starting with "Llacy - misrepresenting ...".
+
+### A label with no description
+
+After all the work to solve the above problems, this just showed up: "Correlative-Based Fallacies".
+
+The markup for it looks like this:
+
+```html
+<tr>
+  <th scope="row" class="navbox-group" style="width: 1%">
+    <a
+      href="/wiki/Correlative-based_fallacies"
+      title="Correlative-based fallacies"
+      >Correlative-based fallacies</a
+    >
+  </th>
+</tr>
+```
+
+So how do we rule out that one?
+
+Check if it's a <tr> first? How many places would that cover? I'm thinking that to really do this right is to create an interactive form that has options such as:
+
+- list of ul.
+- list table of cells
+- list of whatever else the writer threw in
+
+OK. Just add that to the list.
 
 ## Previous notes on Cognitive biases parsing
 

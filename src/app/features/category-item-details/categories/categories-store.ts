@@ -156,9 +156,13 @@ export class CategoriesStore extends Store<CategoriesState> {
       for (let j = 0; j < li.length; j++) {
         const item = li[j];
         const liAnchor: HTMLCollection = item.getElementsByTagName('a');
+        const tr: HTMLCollectionOf<any> = item.getElementsByTagName('tr');
+        if (tr.length) {
+          console.log('hi');
+        }
         const label = this.parseLabel(item);
         const content = item.textContent || item.innerText || '';
-        const descriptionWithoutLabel = this.removeLabelFromDescription(content);
+        const descriptionWithoutLabel = this.removeLabelFromDescription(content, label);
         let descWithoutCitations = this.removePotentialCitations(descriptionWithoutLabel);
         // Only capture items that have a label, which excludes table of contents, etc.
         if (label !== null) {
@@ -169,7 +173,7 @@ export class CategoriesStore extends Store<CategoriesState> {
             break;
           }
           // If the item has a sub-list, capture those items also and remove them from the description.
-          const subList: Item[] = this.checkForSubListAndParseIfExists(item, label);
+          const subList: Item[] = this.checkForSubListAndParseIfExists(item, label, wikiList);
           if (subList) {
             wikiList.push(...subList);
             descWithoutCitations = this.removeSubListMaterial(descriptionWithoutLabel, subList);
@@ -178,7 +182,11 @@ export class CategoriesStore extends Store<CategoriesState> {
           }
           // create item and add it to the list
           const newWikiItem = this.createNewItem(label, descWithoutCitations, uri);
-          wikiList.push(newWikiItem);
+          if (wikiList.some(thisItem => thisItem.label === newWikiItem.label)) {
+            // skip adding duplicates
+          } else {
+            wikiList.push(newWikiItem);
+          }
         }
       }
     }
@@ -212,7 +220,7 @@ export class CategoriesStore extends Store<CategoriesState> {
    * @param item
    * @param label
    */
-  checkForSubListAndParseIfExists(item: HTMLLIElement, label: string) {
+  checkForSubListAndParseIfExists(item: HTMLLIElement, label: string, wikiList: Item[]) {
     const subWikiList: Item[] = [];
     const subUnorderedList = item.getElementsByTagName('ul');
     if (subUnorderedList.length > 0) {
@@ -224,11 +232,15 @@ export class CategoriesStore extends Store<CategoriesState> {
           const liAnchor: HTMLCollection = subItem.getElementsByTagName('a');
           const subLabel = this.parseLabel(subItem);
           const content = subItem.textContent || subItem.innerText || '';
-          const descriptionWithoutLabel = this.removeLabelFromDescription(content);
+          const descriptionWithoutLabel = this.removeLabelFromDescription(content, subLabel);
           const descWithoutCitations = this.removePotentialCitations(descriptionWithoutLabel);
           const uri = liAnchor[0].getAttribute('href');
           const newWikiItem = this.createNewItem(subLabel, descWithoutCitations, uri);
-          subWikiList.push(newWikiItem);
+          if (wikiList.some(thisItem => thisItem.label === newWikiItem.label)) {
+            // don't add duplicates
+          } else {
+            subWikiList.push(newWikiItem);
+          }
         }
       }
     }
@@ -264,7 +276,11 @@ export class CategoriesStore extends Store<CategoriesState> {
    *
    * @param item string full contents of li tag.
    */
-  removeLabelFromDescription(item: string) {
+  removeLabelFromDescription(item: string, label: string) {
+    const indexOfLabel = item.indexOf(label);
+    if (indexOfLabel !== -1) {
+      item = item.substr(label.length, item.length);
+    }
     const dash = item.indexOf('–');
     let start = 0;
     const end = item.length;
@@ -276,12 +292,13 @@ export class CategoriesStore extends Store<CategoriesState> {
     if (startChar === ' ') {
       increment = 1;
     }
-    return item.substr(start + increment, end);
+    const result = item.substr(start + increment, end);
+    return result;
   }
 
   /**
-   * Check for a dash and remove all the text after that.
    * @param item
+   * Check for a dash and remove all the text after that.
    */
   removemDescriptionFromLabel(item: string) {
     const dash = item.indexOf('–');
@@ -309,7 +326,6 @@ export class CategoriesStore extends Store<CategoriesState> {
     if (label.indexOf('[') !== -1) {
       const content = item.textContent || item.innerText || '';
       newLabel = this.removemDescriptionFromLabel(content);
-      console.log('parse out label for ' + label + ' parsed to ' + newLabel);
       return newLabel;
     }
     if (label.indexOf('tocnumber') === -1) {
