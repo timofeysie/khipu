@@ -58,8 +58,22 @@
   </ion-header>
   <ion-card-content *ngIf="wikidataToggle">
     <ion-item *ngFor="let item of wikidataItemList">
-      {{ item[category.name + 'Label'].value }}
+      <ion-grid>
+        <ion-row>
+          <ion-col class="ion-float-left">
+            <span class="label"
+              ><a href="{{ item[category.name].value }}"> {{ item[category.name + 'Label'].value }}</a>
+            </span>
+          </ion-col>
+        </ion-row>
+        <ion-row>
+          <ion-col class="ion-float-right" *ngIf="item[category.name + 'Description']">
+            <p class="description">{{ item[category.name + 'Description'].value }}</p>
+          </ion-col>
+        </ion-row>
+      </ion-grid>
     </ion-item>
+
     <ion-item *ngIf="!category">
       Tap load to get a list of items from Wikipedia and Wikidata. Choose save to create the category and view the list
       and view the details to edit the descriptions if you want.

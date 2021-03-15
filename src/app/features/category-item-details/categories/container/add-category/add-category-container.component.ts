@@ -27,7 +27,9 @@ export class AddCategoryContainerComponent implements OnInit {
     this.store.state$.subscribe(state => {
       this.wikidataItemList = state.wikidataItemList;
       this.wikiListItems = state.wikiListItems;
+      console.log('set', this.wikidataItemList);
     });
+    console.log('found', this.wikidataItemList);
   }
 
   loadNewCategory(event: any) {

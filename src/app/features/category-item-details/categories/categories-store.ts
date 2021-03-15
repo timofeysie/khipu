@@ -67,7 +67,50 @@ export class CategoriesStore extends Store<CategoriesState> {
   }
 
   saveNewCategory(newCategory: Category) {
-    console.log('save disabled');
+    const newList = [];
+    this.state.wikidataItemList.forEach(wikiDataItem => {
+      let label = '';
+      const labelPropertyName = newCategory['categoryName'] + 'Label';
+      const wikiData = wikiDataItem[labelPropertyName];
+      if (wikiData && typeof wikiData.value !== 'undefined') {
+        label = wikiData.value;
+      }
+      let description = '';
+      const wikidataItem = wikiDataItem[newCategory['categoryName'] + 'Description'];
+      if (wikidataItem && typeof wikiDataItem['value'] !== 'undefined') {
+        description = wikiDataItem['value'];
+      }
+      let wikidataUri = '';
+      const wikidataItemUri = wikiDataItem[newCategory['categoryName']];
+      if (wikidataItemUri && typeof wikidataItemUri.value !== 'undefined') {
+        wikidataUri = wikidataItemUri.value;
+      }
+      const newItem = this.createNewItem(label, description, null, wikidataUri);
+      if (this.state.wikiListItems.some(thisItem => thisItem.label === newItem.label)) {
+        // duplicate
+        // add wikidataUri as well as uri?
+      } else {
+        newList.push(newItem);
+      }
+    });
+    newList.push(...this.state.wikiListItems);
+    console.log('new list', newList);
+
+    // convert the wikidata list into Item objects
+    // check if they exist also on the wikipedia parsed list
+
+    // get the current list?
+    // if any items already exist on firebase, no need to add
+    // Collect a list of items that are on firebase but not on wikidata:
+    // these items might have been deleted and the user should be notified.
+    // Collect a list of items that or on wikidata, but no firebase:
+    // this should be all items on a new list that is created for the first time.
+    // If there is a pre-existing firebase list, collect a new list of items that
+    // don't exist on it as these are newly added items and the user should be notified.
+
+    this.realtimeDbService.writeItemsList(newList, newCategory['categoryName']);
+
+    // create item objects out of wikidataItemList.
     // this.setState({ ...this.state, categories: [newCategory] });
     // this.categoriesEndpoint.addCategory(newCategory);
   }
@@ -84,6 +127,7 @@ export class CategoriesStore extends Store<CategoriesState> {
           const wikiListItems = await this.parseParticularCategoryTypes(wikiListResponse, newCategory.name, 'en');
           this.state.wikidataItemList = wikidataItemList;
           this.state.wikiListItems = wikiListItems;
+          console.log('set state', this.state.wikidataItemList);
         })
       )
       .subscribe();
@@ -158,7 +202,7 @@ export class CategoriesStore extends Store<CategoriesState> {
         const liAnchor: HTMLCollection = item.getElementsByTagName('a');
         const tr: HTMLCollectionOf<any> = item.getElementsByTagName('tr');
         if (tr.length) {
-          console.log('hi');
+          // what was this to catch?
         }
         const label = this.parseLabel(item);
         const content = item.textContent || item.innerText || '';
@@ -263,11 +307,12 @@ export class CategoriesStore extends Store<CategoriesState> {
     return false;
   }
 
-  createNewItem(label: string, description: string, uri: string) {
+  createNewItem(label: string, description: string, uri: string, wikidataUri?: string) {
     const wikiItem: Item = {
       uri,
       label,
-      description
+      description,
+      wikidataUri
     };
     return wikiItem;
   }

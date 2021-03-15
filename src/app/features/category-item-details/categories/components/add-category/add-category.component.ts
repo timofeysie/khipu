@@ -37,9 +37,9 @@ export class AddCategoryComponent implements OnInit {
   }
 
   performSave() {
-    // const category: Category = { ...this.categoryAddForm.value };
+    const category: Category = { ...this.categoryAddForm.value };
     // this.categoryAddForm.reset();
-    // this.onPerformSave.emit(category);
+    this.onPerformSave.emit(category);
     // this.router.navigateByUrl('/options');
     console.log('save disabled');
   }

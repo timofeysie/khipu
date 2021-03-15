@@ -312,6 +312,10 @@ In the package lock, we see this:
 
 New VSCode version 1.54.2. I'm not sure what it was before the updated.
 
+npm install --save tslib
+
+This seems to solve the issue.
+
 ### Truncated descriptions with dashes in the description
 
 The is-ought fallacy, since it has a dash in it, is causing the description to be truncated.
@@ -350,6 +354,78 @@ Check if it's a <tr> first? How many places would that cover? I'm thinking that 
 - list of whatever else the writer threw in
 
 OK. Just add that to the list.
+
+### Label with citation note
+
+Just when it seemed we were finished, when trying to save the merged lists, we got this error from firebase:
+
+```txt
+[RealtimeDbService] error Error: Reference.set failed: First argument  contains an invalid key (Naturalistic fallacy fallacy[100] (anti-naturalistic fallacy)[101]) in property 'items.X0YFaM8hXHdm89FWEQsj0Aqhcln1.fallacies'.  Keys must be non-empty strings and can't contain ".", "#", "$", "/", "[", or "]"
+```
+
+There are two items in the list that relate to this error:
+
+```txt
+149:
+label: "Naturalistic fallacy"
+description: " inferring evaluative conclusions from purely factual premises in violation of fact-value distinction. Naturalistic fallacy (sometimes confused with appeal to nature) is the inverse of moralistic fallacy.↵"
+uri: "/wiki/Naturalistic_fallacy"
+wikidataUri: undefined
+150:
+label: "Naturalistic fallacy fallacy[100] (anti-naturalistic fallacy)[101]"
+description: " inferring an impossibility to infer any instance of ought from is from the general invalidity of is-ought fallacy, mentioned above. For instance, is ↵  ↵    ↵      ↵        P↵        ∨↵        ¬↵        P↵      ↵    ↵    {\displaystyle P\lor \neg P}↵  ↵ does imply ought ↵  ↵    ↵      ↵        P↵        ∨↵        ¬↵        P↵      ↵    ↵    {\displaystyle P\lor \neg P}↵  ↵ for any proposition ↵  ↵    ↵      ↵        P↵      ↵    ↵    {\displaystyle P}↵  ↵, although the naturalistic fallacy fallacy would falsely declare such an inference invalid. Naturalistic fallacy fallacy is a type of argument from fallacy."
+uri: "#cite_note-100"
+wikidataUri: undefined
+```
+
+It's worth a look at the markup responsible for this is. There are actually five spots where the phrase 'naturalistic fallacy' occurs.
+
+1. Mentioned as being the opposite of the Moralistic fallacy.
+2. Similar to Appeal to nature.
+3. As the inverse of moralistic fallacy.
+4. Naturalistic fallacy fallacy[100] (anti-naturalistic fallacy)
+
+```html
+<li>
+  <i>Naturalistic fallacy</i>
+  fallacy
+  <sup id="cite_ref-100" class="reference">
+    <a href="#cite_note-100">&#91;100&#93;</a>
+  </sup>
+  (anti-naturalistic fallacy)
+  <sup id="cite_ref-101" class="reference">
+    <a href="#cite_note-101">&#91;101&#93;</a>
+  </sup>
+  u2013 inferring an impossibility to infer any instance of
+  <i>ought</i> from <i>is</i> from the general invalidity of
+  <i>is-ought fallacy</i>, mentioned above. For instance,
+  <i>is</i>
+  <span class="mwe-math-element">
+    <span
+      class="mwe-math-mathml-inline mwe-math-mathml-a11y"
+      style="display: none"
+    >
+      <math
+        xmlns="http://www.w3.org/1998/Math/MathML"
+        alttext="{displaystyle Plor neg P}"
+      >
+        <semantics>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mstyle displaystyle="true" scriptlevel="0">
+              <mi>P</mi>
+              <mo>&#x2228;<!-- u2228 --></mo>
+              <mi mathvariant="normal">&#x00AC;<!-- u00ac --></mi>
+              <mi>P</mi>
+            </mstyle>
+          </mrow></semantics
+        ></math
+      ></span
+    ></span
+  >
+</li>
+```
+
+There is a lot more of that. If you are wondering what the semantics section is, it's the logical semantic character for a proposal or statement. Maybe that is called propositional calculus represented with p, q, etc. using logical connectives like \displaystyle \And ,\rightarrow ,\lor ,\equiv ,\sim. It looks like an italics _P V (not) P_ in a browser, but the formulas are un-selectable like images. On other sites, they come out as escape characters.
 
 ## Previous notes on Cognitive biases parsing
 

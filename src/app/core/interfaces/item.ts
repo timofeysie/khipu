@@ -11,7 +11,8 @@ export interface Item {
   label: string;
   description: string;
   type?: string; // is usually set to "literal"
-  uri: string;
+  uri?: string; // link for the wikipedia detail page
+  wikidataUri?: string; // link for the wikidata page
   categoryType?: string; // may not need this
   sectionTitle?: string; // wikipedia section titles
   sectionTitleTag?: string; // h2/h3, etc?

@@ -66,3 +66,25 @@ export interface Item {
 ```
 
 There could be a containing h2/h3 section title that attaches to each item.
+
+### Item details business logic
+
+The item detail store component is responsible for a few different things at this point, and needs to be organized a bit better to deal with them.
+
+Case in point is the new feature to pre-fill blank user descriptions with a portion of the description from the details API response. We will need a new write method to write only that item details meta-data. There are a few places that need to do this, and it makes sense to do them all in one call instead of various calls to update the same object.
+
+Right now we have two updates that need to happen if the current user description is blank. In either case, we increment the count of the number of times the details page has been viewed. If the user description is blank, then we pre-fill it with part of the description from either of the API results. Which one remains to be decided.
+
+If we are checking the description each time, then we could do it all, but it seems strange to put this business logic in a function called fetchFirebaseItem(). What is the best practice here? Return the portion of the description from this function and then
+
+## Item statistics & the list order
+
+Another thing we want is statistics about each category list and each item on the list. For example, every time an item short user description is viewed and every time an item detail is viewed, we want to increment a counter, as well as what date the item was viewed. We also want to let the user indicate that they have committed an item to long term memory now, and it no longer needs to be on the list of things to be learned.
+
+The reason for this is when a student is learning a list of things, they want to know how often they have studied a particular item. We will want to display some kind of indicator based on this information. It's kind of like a classic to do list with extra features.
+
+The reasoning behind this is often called the Leitner method, or spaced repetition. Schools also casually implement this spaced repetition using reviews, a quiz and a other tests.
+
+Using the xAPI method, we send a statement of activity to an LRS, and then query the LRS to get the info we need to present the items in need of review.
+
+We also want to offer a simple list order, where the items at the top need to be reviewed, and the items at the bottom are well known.

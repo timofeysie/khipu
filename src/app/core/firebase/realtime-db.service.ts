@@ -62,7 +62,10 @@ export class RealtimeDbService {
    * @param items List of items to store.
    */
   writeItemsList(newItems: Item[], category: string) {
-    const userId = this.setupFirebase();
+    let userId = this.setupFirebase();
+    if (!userId) {
+      userId = firebase.auth().currentUser.uid;
+    }
     // load the current items list
     this.readUserSubData('items', category)
       .then((currentItems: any) => {
@@ -78,7 +81,9 @@ export class RealtimeDbService {
             'user-description': item.description ? item.description : '',
             'user-description-viewed-count': 0,
             'item-details-viewed-count': 0,
-            'item-details-viewed-date': new Date().getTime()
+            'item-details-viewed-date': new Date().getTime(),
+            uri: item.uri ? item.uri : '',
+            wikidataUri: item.wikidataUri ? item.wikidataUri : ''
           };
           currentItems[item.label] = newItem;
         });
