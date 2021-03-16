@@ -26,82 +26,6 @@ export class ItemsStore extends Store<ItemsState> {
     super(new ItemsState());
   }
 
-  /**
-   * Refactoring WIP.
-   * @param category
-   * @param currentPage
-   */
-  async doWork(category: Category, currentPage: number) {
-    const listFromFirebaseCategory = await this.fetchListFromFirebase(category);
-    // this.updateItemsState(newList, this.currentPage);
-
-    forkJoin(
-      this.getItemsFromWikidataEndpoint(category, currentPage),
-      this.getWikilistFromEndpoint(category.name, 'en', '1')
-    )
-      .pipe(
-        map(async ([wikidataItemList, wikiListResponse]) => {
-          const wikiListItems = await this.parseParticularCategoryTypes(wikiListResponse, category.name, 'en', '1');
-          const wikiDataList = await this.mapItemsFromWikidata(wikidataItemList, listFromFirebaseCategory, category);
-          const newList = wikiDataList.concat(wikiListItems);
-          this.updateItemsState(newList, this.currentPage);
-          // this.realtimeDbService.writeItemsList(newList, category.name);
-          // do we delete items that are not there?
-          return newList;
-        })
-      )
-      .subscribe(result => {
-        // result ZoneAwarePromise
-        console.log('result', result);
-      });
-  }
-
-  /**
-   * From the previously named getItemsFromEndpoint which is now
-   * getItemsFromWikidataEndpoint()
-   * @param inc incoming response
-   * @param existingItems
-   * @param category
-   */
-  async mapItemsFromWikidata(inc: Array<any>, existingItems: any, category: any): Promise<Item[]> {
-    let list: Item[] = [];
-    let listChanged = false;
-    list = inc.map((incomingItem: any) => {
-      const results = this.getItemWithDescription(incomingItem, existingItems);
-      listChanged = results.needToSave;
-      return results.item;
-    });
-    if (listChanged) {
-      this.realtimeDbService.writeItemsList(list, category.name);
-    }
-    return list;
-  }
-
-  /**
-   * @deprecated
-   * Originally from fetchWikilistFromEndpoint which is now called
-   * getWikilistFromEndpoint()
-   * @param response
-   */
-  async parseParticularCategoryTypes(
-    response: any,
-    _title: string,
-    _language: string,
-    _section: string
-  ): Promise<Item[]> {
-    if (response) {
-      const markup = response['parse']['text']['*'];
-      if (_title === 'fallacies') {
-        const fallyList = this.getItemsFromFallaciesList(markup);
-        return fallyList;
-      } else if (_title === 'cognitive_bias') {
-        const cogbyList = this.getItemsFromCognitiveBiasesList(markup);
-        return cogbyList;
-      }
-    }
-    return [];
-  }
-
   updateUserDescription(newDescriptionObject: any) {
     this.realtimeDbService.writeDescription(
       newDescriptionObject.event,
@@ -137,10 +61,7 @@ export class ItemsStore extends Store<ItemsState> {
     this.realtimeDbService
       .readUserSubData('items', category.name)
       .then(existingItems => {
-        // check if items exist already
-        // get the paginated item list from an API call and
-        // save the merged list
-        this.getItemsFromEndpoint(category, currentPage, existingItems);
+        this.setState(existingItems);
       })
       .catch(error => {
         log.error('error', error);
@@ -163,98 +84,6 @@ export class ItemsStore extends Store<ItemsState> {
         log.error('error', error);
         return error;
       });
-  }
-
-  /**
-   * Get items from the Wikidata endpoint.
-   * @param category
-   * @param currentPage
-   * @param existingItems
-   */
-  getItemsFromEndpoint(category: Category, currentPage: number, existingItems: any) {
-    this.itemListEndpoint
-      .listItems(category, currentPage)
-      .pipe(
-        map(inc => {
-          let list: Item[] = [];
-          let listChanged = false;
-          list = inc.map((incomingItem: any) => {
-            const results = this.getItemWithDescription(incomingItem, existingItems);
-            listChanged = results.needToSave;
-            return results.item;
-          });
-          if (listChanged) {
-            this.realtimeDbService.writeItemsList(list, category.name);
-          }
-          return list;
-        })
-      )
-      .subscribe((items: Item[]) => {
-        // merge in the existing
-        // if old objects exist,
-        // we need to overwrite the
-        // API result meta-data (user-description)
-        // with the previous version.
-        this.currentPage = currentPage;
-        this.tempItems = items;
-        // this.fetchWikilistFromEndpoint(category.name, 'en', '1');
-        this.updateItemsState(items, currentPage);
-      });
-  }
-
-  /**
-   * Replacement for getItemsFromEndpoint()
-   * @param category
-   * @param currentPage
-   */
-  getItemsFromWikidataEndpoint(category: Category, currentPage: number): Observable<any> {
-    return this.itemListEndpoint.listItems(category, currentPage);
-  }
-
-  /**
-   * The existing items might have a user description.
-   * @param incomingItem
-   * @param existingItems An entry from firebase with the user description and other metadata.
-   * @param needToSave we only save the results if anything has been
-   */
-  getItemWithDescription(incomingItem: any[], existingItems: any[]) {
-    const properties = Object.keys(incomingItem);
-    let incomingItemLabelKey; // user to
-    let descriptionToUse;
-    let existingDescription;
-    let incomingItemDescription;
-    let needToSave = false;
-    // check the existing items with the key in the incoming items and use that first,
-    // get the incoming item key
-    if (incomingItem[properties[0] + 'Label']) {
-      incomingItemLabelKey = incomingItem[properties[0] + 'Label'].value;
-    }
-    if (existingItems && existingItems[incomingItemLabelKey]) {
-      existingDescription = existingItems[incomingItem[properties[1]].value];
-      descriptionToUse = existingDescription;
-    } else {
-      needToSave = true;
-      existingItems = [];
-    }
-    // otherwise use the incoming API description if there is one.
-    if (incomingItem[properties[0] + 'Description']) {
-      incomingItemDescription = incomingItem[properties[0] + 'Description'].value;
-    }
-    if (existingDescription && existingDescription.length > 0) {
-      descriptionToUse = existingDescription;
-    } else {
-      descriptionToUse = incomingItemDescription;
-    }
-    const item: Item = {
-      categoryType: properties[0],
-      label: incomingItem[properties[1]].value,
-      type: incomingItem[properties[1]].type,
-      description: descriptionToUse,
-      uri: incomingItem[properties[0]].value,
-      binding: existingItems[incomingItemLabelKey],
-      metaData: existingItems[incomingItemLabelKey]
-    };
-    return { needToSave, item };
   }
 
   updateItemsState(items: Item[], currentPage: number) {

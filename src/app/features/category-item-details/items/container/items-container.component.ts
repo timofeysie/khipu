@@ -17,7 +17,7 @@ export class ItemsContainerComponent implements OnInit {
       this.category = category;
       // this.store.fetchList(category, this.store.state.currentPage);
 
-      this.store.doWork(category, this.store.state.currentPage);
+      this.store.fetchList(category, this.store.state.currentPage);
     });
   }
 

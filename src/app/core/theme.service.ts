@@ -37,7 +37,6 @@ export class ThemeService {
   }
 
   getTheme() {
-    console.log('called');
     return this.theme;
   }
 

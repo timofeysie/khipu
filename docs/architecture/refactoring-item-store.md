@@ -443,7 +443,7 @@ Then we should see if we want to get the wikidata or wikipedia content. A bit mo
 
 At least that's one option. Another option, as we have currently is to just treat new and old situations the same. We really need to find a way to check if any of the content has changed in the list via an api call. Who wants to handle that?
 
-### The ascyn approach
+### The async approach
 
 Introducing async/await as a basic way to get the result of one argument into another is one way to go. It's not ideal as we want all the async calls to be done in parallel, but it's a good first step to see if our new functions are working.
 
@@ -638,3 +638,9 @@ this.router.navigate([
 ```
 
 As you can see, we don't have the qr code. And in fact we don't need it. All we need it the uri fragment. So we need another route in the router to provide that, and more functionality on the details page to deal with the snake case name only.
+
+## Removing old code
+
+During the refactoring process it was decided to move all the list creating functionality from items.store into the add-categories.store. Now, we can really tighten up items.store and give it the single responsibility of loading the firebase list.
+
+At least that's the idea. The new model then will break the existing state and view, so there is actually a bit more involved.

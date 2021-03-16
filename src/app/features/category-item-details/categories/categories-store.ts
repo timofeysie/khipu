@@ -66,8 +66,36 @@ export class CategoriesStore extends Store<CategoriesState> {
       });
   }
 
+  /**
+   * Overwrite the current list by subject with the currently loaded list.
+   * @param newCategory
+   */
   saveNewCategory(newCategory: Category) {
-    const newList = [];
+    const newList = this.convertWikidataListToItems(newCategory);
+    newList.push(...this.state.wikiListItems);
+
+    // Other possible features:
+    // Collect a list of items that are on firebase but not on wikidata:
+    // these items might have been deleted and the user should be notified.
+    // Collect a list of items that or on wikidata, but no firebase:
+    // this should be all items on a new list that is created for the first time.
+    // If there is a pre-existing firebase list, collect a new list of items that
+    // don't exist on it as these are newly added items and the user should be notified.
+
+    this.realtimeDbService.writeNewItemList(newList, newCategory['categoryName']);
+
+    // create item objects out of wikidataItemList.
+    // this.setState({ ...this.state, categories: [newCategory] });
+    // this.categoriesEndpoint.addCategory(newCategory);
+  }
+
+  /**
+   * Convert from a wikidata object list to an Item list.
+   * @param newCategory
+   * @returns
+   */
+  convertWikidataListToItems(newCategory: Category): Item[] {
+    const newList: Item[] = [];
     this.state.wikidataItemList.forEach(wikiDataItem => {
       let label = '';
       const labelPropertyName = newCategory['categoryName'] + 'Label';
@@ -93,26 +121,7 @@ export class CategoriesStore extends Store<CategoriesState> {
         newList.push(newItem);
       }
     });
-    newList.push(...this.state.wikiListItems);
-    console.log('new list', newList);
-
-    // convert the wikidata list into Item objects
-    // check if they exist also on the wikipedia parsed list
-
-    // get the current list?
-    // if any items already exist on firebase, no need to add
-    // Collect a list of items that are on firebase but not on wikidata:
-    // these items might have been deleted and the user should be notified.
-    // Collect a list of items that or on wikidata, but no firebase:
-    // this should be all items on a new list that is created for the first time.
-    // If there is a pre-existing firebase list, collect a new list of items that
-    // don't exist on it as these are newly added items and the user should be notified.
-
-    this.realtimeDbService.writeItemsList(newList, newCategory['categoryName']);
-
-    // create item objects out of wikidataItemList.
-    // this.setState({ ...this.state, categories: [newCategory] });
-    // this.categoriesEndpoint.addCategory(newCategory);
+    return newList;
   }
 
   loadNewCategory(newCategory: Category) {
@@ -127,7 +136,6 @@ export class CategoriesStore extends Store<CategoriesState> {
           const wikiListItems = await this.parseParticularCategoryTypes(wikiListResponse, newCategory.name, 'en');
           this.state.wikidataItemList = wikidataItemList;
           this.state.wikiListItems = wikiListItems;
-          console.log('set state', this.state.wikidataItemList);
         })
       )
       .subscribe();
@@ -366,18 +374,45 @@ export class CategoriesStore extends Store<CategoriesState> {
    */
   parseLabel(item: any) {
     const liAnchor: HTMLCollection = item.getElementsByTagName('a');
-    const label = liAnchor[0].innerHTML;
+    let label = liAnchor[0].innerHTML;
     let newLabel = null;
     if (label.indexOf('[') !== -1) {
       const content = item.textContent || item.innerText || '';
       newLabel = this.removemDescriptionFromLabel(content);
+      newLabel = label = this.removeBrackets(newLabel);
       return newLabel;
+    } else {
     }
     if (label.indexOf('tocnumber') === -1) {
       return label;
     } else {
       return null;
     }
+  }
+
+  /**
+   * Remove citation blocks.
+   * TODO: handle the situation where there is only one part of the brackets left.
+   * @param str label
+   * @returns string Returns the part before and after brackets.
+   */
+  removeBrackets(str: string): string {
+    const openBracket = str.indexOf('[');
+    const closeBracket = str.indexOf(']');
+    if (openBracket === -1 || closeBracket === -1) {
+      return str;
+    }
+    const firstPart = str.substr(0, openBracket);
+    let offset = 0;
+    if (str.length > closeBracket + offset) {
+      offset = 1;
+    }
+    const secondPart = str.substr(closeBracket + offset, str.length);
+    let result = firstPart + secondPart;
+    if (str.indexOf('[')) {
+      result = this.removePotentialCitations(result);
+    }
+    return result;
   }
 
   /**

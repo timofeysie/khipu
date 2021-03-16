@@ -13,7 +13,7 @@
   <div class="ion-text-center">
     <ion-card-content>
       <ion-list *ngFor="let item of (store.state$ | async).items">
-        <app-items (selectedItem)="onSelectedItem($event)" [categoryName]="category.name" [item]="item"></app-items>
+        {{ item | json }}
       </ion-list>
     </ion-card-content>
   </div>

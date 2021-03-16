@@ -109,6 +109,43 @@ export class RealtimeDbService {
       });
   }
 
+  writeNewItemList(newItems: Item[], category: string) {
+    let userId = this.setupFirebase();
+    if (!userId) {
+      userId = firebase.auth().currentUser.uid;
+    }
+    const currentItems = {};
+    newItems.forEach((item: any) => {
+      // check if the item already exists?
+      // if it doesn't, created a new default user description and counts
+      // maybe the description should be set as the item description?
+      const newItem = {
+        'user-description': item.description ? item.description : '',
+        'user-description-viewed-count': 0,
+        'item-details-viewed-count': 0,
+        'item-details-viewed-date': new Date().getTime(),
+        uri: item.uri ? item.uri : '',
+        wikidataUri: item.wikidataUri ? item.wikidataUri : ''
+      };
+      currentItems[item.label] = newItem;
+    });
+    const pathToData = 'items/' + userId + '/' + category;
+    if (pathToData.indexOf('undefined') !== -1) {
+      log.error('undefined in path to data', pathToData);
+    } else {
+      firebase
+        .database()
+        .ref(pathToData)
+        .set(currentItems, error => {
+          if (error) {
+            log.error('write failed', error);
+          } else {
+            log.debug('write successful2');
+          }
+        });
+    }
+  }
+
   readUserData(name: string) {
     const userId = this.setupFirebase();
     return firebase

@@ -427,6 +427,30 @@ It's worth a look at the markup responsible for this is. There are actually five
 
 There is a lot more of that. If you are wondering what the semantics section is, it's the logical semantic character for a proposal or statement. Maybe that is called propositional calculus represented with p, q, etc. using logical connectives like \displaystyle \And ,\rightarrow ,\lor ,\equiv ,\sim. It looks like an italics _P V (not) P_ in a browser, but the formulas are un-selectable like images. On other sites, they come out as escape characters.
 
+### End of the sprint
+
+As a sprint retro, it's good to look back over what was accomplished.
+
+As part of the [epic to add an order to the list](https://github.com/timofeysie/khipu/issues/42), first there was urgent need to refactor the item.store
+
+This lead to a desire to see the fallacies list in action to make things more interesting. Thus the parse the wiki-list api results for items, issue #44 was begun about 30 days ago.
+
+During this time the docs directory gained a new sub=-directory for architecture, and some of the content from the long readme was added to their own files, such as this one.
+
+A long discussion on the firebase-realtime-db.md file led to more separation of concerns into load and save features accessed through a new FAB (fabulous action button) on the categories page which put our old add category feature to better use.
+
+Now we can create the list of fallacies from wikidata and wikipedia, and create (overwrite) the list on Firebase. Yes, it's only loaded up for fallacies, but needs to be thought out more as to how to enter new categories and opposed to edit an existing category.
+
+That, and the functionality from the item.store that was moved to add-category needs to be removed and that class now should only read the existing list from the db.
+
+And then, there would be the little question of ordering and pagination. So, we've got a long way to go/ But the last thirty days have shown some good work with only a little time spent every evening plodding away at the issues raised on GitHub.
+
+Oh, and milestones started getting put to use to try to tame the growing scope of this project. That's been another positive development.
+
+One regression was that now [no icons at all show up on the app](https://github.com/timofeysie/khipu/issues/47). They went from working, except newly added ones, to fixed, then to none at all. Not sure how rocket handles the ionic icons, but it needs to be addressed. It wasn't high priority, but it's a blocker for a release, which needs to be done soon.
+
+Commit message: closes #44 closes #45 closes #50 overwrite and save merged list of items working
+
 ## Previous notes on Cognitive biases parsing
 
 After doing a bit of work to get the fallacies from the list of page, the next task is to also make it work for cognitive biases.
