@@ -3,4 +3,6 @@ export interface ItemMetaData {
   itemDetailsViewedDate: number;
   userDescription: string;
   userDescriptionViewedCount: number;
+  uri: string;
+  wikidataUri: string;
 }

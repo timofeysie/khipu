@@ -176,7 +176,6 @@ getWikiMediaLists() {
         this.list.sort(this.dynamicSort('sortName'));
         this.dataStorageService.setItem(this.langChoice+'-'+this.itemName, this.list);
         // UI doesn't refresh here on a device so this will force the page to reload
-        console.log('list',this.list);
         //location.reload();
     });
 }

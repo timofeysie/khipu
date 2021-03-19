@@ -13,7 +13,7 @@
   <div class="ion-text-center">
     <ion-card-content>
       <ion-list *ngFor="let item of (store.state$ | async).items">
-        {{ item | json }}
+        <app-items (selectedItem)="onSelectedItem($event)" [categoryName]="category.name" [item]="item"></app-items>
       </ion-list>
     </ion-card-content>
   </div>
@@ -21,7 +21,7 @@
 
 <ion-footer>
   <ion-toolbar>
-    <ion-button
+    <!-- <ion-button
       *ngIf="store.state.currentPage > 0"
       slot="start"
       (click)="store.fetchList(category, store.state.currentPage - 1)"
@@ -32,6 +32,12 @@
       {{ store.state.currentPage * 7 }}
       - {{ store.state.currentPage * 7 + 7 }}
     </ion-button>
-    <ion-button slot="end" (click)="store.fetchList(category, store.state.currentPage + 1)"> Next</ion-button>
+    <ion-button slot="end" (click)="store.fetchList(category, store.state.currentPage + 1)">
+       Next</ion-button> -->
+
+    <!-- temporarily display number of items until pagination is refactored -->
+    <ion-button class="ion-text-center current_page" fill="outline">
+      {{ (store.state$ | async).items.length }}
+    </ion-button>
   </ion-toolbar>
 </ion-footer>

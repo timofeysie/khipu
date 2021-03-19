@@ -1,5 +1,78 @@
 # Refactor the item.store service calls
 
+These notes here help discuss refactoring ideas a problems involved. They probably wont be much fun to read in the future, but are here for now to help get the work done.
+
+## Refactoring the item-details.store
+
+After planning this months ago, it's finally happening for the item-details.store. First a "list of" Wikipedia page was parsed for a list of items in the add-category feature. This list was then merged with the former Wikidata list of items, and the user can then start to edit the list on the item.
+
+This means editing the user description, and having that user description then appear on the category list. This was difficult before, but now we have that available in the firebase db, it's a matter of CRUD functions.
+
+We still have to deal with removing the label from the item. There is plenty of that going on in the Wikipedia content, so this class needs to do as much as it can to get rid of stuff that's not appropriate for a label/description pair that can be reversed and used for automatic test generation purposes.
+
+Currently, some things are working such as the ad hominem item in the fallacies category. Others don't. Either way, right now, there is this error:
+
+```txt
+zone.js:3372 GET https://www.wikidata.org/wiki/Special:EntityData/q.json 400
+scheduleTask @ zone.js:3372
+push../node_modules/zone.js/dist/zone.js.ZoneDelegate.scheduleTask @ zone.js:410
+onScheduleTask @ zone.js:301
+...
+Show 170 more frames
+logger.service.ts:107 [ErrorHandlerInterceptor] Request error HttpErrorResponse {headers: HttpHeaders, status: 400, statusText: "OK", url: "https://www.wikidata.org/wiki/Special:EntityData/q.json", ok: false, …}
+...
+[HttpCacheService] Cache set for key: "https://radiant-springs-38893.herokuapp.com/api/details/en/[object Object]"
+```
+
+The title of the page is also [object Object]
+
+That's a big hint there.
+
+Moving on, itemDetails.aliases don't exist in Wikipedia parsed items. Actually they might, but would require extra specific parsing which we don't need more of at the moment.
+
+An example of a working Wikipedia-parsed item is:
+
+```json
+description: " attacking the arguer instead of the argument. (Note that "ad hominem" can also refer to the dialectical strategy of arguing on the basis of the opponent's own commitments. This type of ad hominem is not a fallacy.)↵"
+label: "Ad hominem"
+uri: "/wiki/Ad_hominem"
+wikidataUri: undefined
+```
+
+This represents the simplest approach that covers both sources. The old item details that were created from the Wikidata items which we expected to combine with Wikipedia parsed items is this:
+
+```ts
+export interface ItemDetails {
+  aliases: any;
+  claims: any;
+  descriptions: any;
+  id: string;
+  labels: any;
+  lastrevid: number;
+  modified: string;
+  ns: number;
+  pageid: number;
+  sitelinks: any;
+  title: string;
+  type: string;
+  userDescription?: string;
+}
+```
+
+But now we need to adjust the details page to accept just the basics and not error out if something is missing.
+
+Commit message: closes #46 #48 #38 added uri and wikidataUri to item-meta-data, path for wikipedia-parsed items and updating the item details wip
+
+Issues involved:
+
+- Load only the firebase list on the items list page #48 opened 16 days ago by timofeysie Refactor items.store
+
+- Include links to the detail pages to the meta data stored in firebase #46 opened 20 days ago by timofeysie Refactor items.store
+
+- Refactor the item.store service calls enhancement #38 opened on Jan 23 by timofeysie Refactor items.store
+
+## Planning the refactor
+
 The ItemDetailsStore class is a brittle string of functions passing each other too many arguments.
 
 ```ts
@@ -114,33 +187,29 @@ The existing items might have a user description.
 
 - @param existingItems An entry from firebase with the user description and other metadata.
 - @param needToSave we only save the results if anything has been
-  // check the existing items with the key in the incoming items and use that first,
-  // get the incoming item key
-  if (incomingItem[properties[0] + 'Label']) {
+
+```ts
+// check the existing items with the key in the incoming items and use that first,
+// get the incoming item key
+if (incomingItem[properties[0] + 'Label']) {
   incomingItemLabelKey = incomingItem[properties[0] + 'Label'].value;
-  console.log('A');
-  }
-  if (existingItems && existingItems[incomingItemLabelKey]) {
+}
+if (existingItems && existingItems[incomingItemLabelKey]) {
   existingDescription = incomingItem[incomingItem[properties[1]].value];
-  console.log('B');
-  } else {
   needToSave = true;
+} else {
   existingItems = [];
-  console.log('C');
-  }
   // otherwise use the incoming API description if there is one.
-  if (incomingItem[properties[0] + 'Description']) {
+}
+if (incomingItem[properties[0] + 'Description']) {
   incomingItemDescription = incomingItem[properties[0] + 'Description'].value;
-  console.log('D');
-  }
   if (existingDescription && existingDescription.length > 0) {
-  descriptionToUse = existingDescription;
-  console.log('E');
-  } else {
-  descriptionToUse = incomingItemDescription;
-  console.log('F');
-  }
+}
+descriptionToUse = existingDescription;
+descriptionToUse = incomingItemDescription;
+} else {
   const item: Item = {
+}
   categoryType: properties[0],
   label: incomingItem[properties[1]].value,
   type: incomingItem[properties[1]].type,
@@ -148,9 +217,9 @@ The existing items might have a user description.
   uri: incomingItem[properties[0]].value,
   binding: existingItems[incomingItemLabelKey],
   metaData: existingItems[incomingItem[properties[1]].value]
-  };
-  return { needToSave, item };
-  }
+};
+return { needToSave, item };
+```
 
 For "Converse accident", the incomingItemLabelKey = Q4892544, which will then get this incomingItem:
 
@@ -507,7 +576,6 @@ forkJoin(
       '1'
     );
     const newList = wikiDataList.concat(wikiListItems);
-    console.log('new list', newList);
     this.updateItemsState(newList, this.currentPage);
     this.realtimeDbService.writeItemsList(newList, category.name);
     // do we delete items that are not there?
@@ -541,7 +609,6 @@ this.getItemsFromWikidataEndpoint(category, currentPage).subscribe(
       '1'
     );
     const newList = wikiDataList.concat(wikiListItems);
-    console.log('new list', newList);
     this.updateItemsState(newList, this.currentPage);
     this.realtimeDbService.writeItemsList(newList, category.name);
     // do we delete items that are not there?
@@ -644,3 +711,13 @@ As you can see, we don't have the qr code. And in fact we don't need it. All we 
 During the refactoring process it was decided to move all the list creating functionality from items.store into the add-categories.store. Now, we can really tighten up items.store and give it the single responsibility of loading the firebase list.
 
 At least that's the idea. The new model then will break the existing state and view, so there is actually a bit more involved.
+
+Or, the result from the firebase call can be converted into objects. More object mapping. I thought one of the reasons the realtime db was chosen is because it operates on json?
+
+Really, the firebase data should be in the same format as it will be consumed in the front end to simplify the whole process. That's another thing to refactor.
+
+For now, just map it and plan for the refactor. The example code for the db all showed snake case for the property keys, so maybe they have a good explanation for that.
+
+Then, the details page is broken. For Wikipedia items, there is no q-code. We have a relative url that can be used to get a details page, but then it will need to be parsed. The detail page url also needs to get the label so that it can look up the details of the item.
+
+Then, it's time to actually refactor the item-details.store. It's a mess and broken now that it's not just getting Wikidata items, but also those created by parsing a Wikipedia "list of" page. That will be a section above this so one doesn't have to scroll so much to get writing.

@@ -12,15 +12,11 @@ export class ItemsComponent implements OnInit {
   @Input() categoryName: string;
   @Output() selectedItem = new EventEmitter<Item>();
 
-  constructor(private router: Router) {}
+  constructor() {}
 
   ngOnInit() {}
 
   gotoItemDetails(item: Item) {
-    const itemUri = item.uri;
-    const lastSlash = itemUri.lastIndexOf('/');
-    const qCode = itemUri.substring(lastSlash + 1, itemUri.length);
     this.selectedItem.emit(item);
-    this.router.navigate([`/categories/item-details/${this.categoryName}/${qCode}`]);
   }
 }

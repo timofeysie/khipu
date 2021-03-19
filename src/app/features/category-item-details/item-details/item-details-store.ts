@@ -25,6 +25,9 @@ export class ItemDetailsStore extends Store<ItemDetailsState> {
     this.fetchDetails();
     this.activatedRoute.paramMap.subscribe(params => {
       this.selectedCategory = params.get('selectedCategory');
+      if (this.selectedCategory !== 'undefined') {
+        this.fetchDescription(this.selectedCategory, 'en', 'itemListLabelKey');
+      }
     });
   }
 
@@ -34,7 +37,13 @@ export class ItemDetailsStore extends Store<ItemDetailsState> {
     const sparqlLanguageObject = sparqlLanguages.find(i => i.appLanguage === currentLanguage);
     this.activatedRoute.paramMap.subscribe(params => {
       const qcode = params.get('qcode');
-      this.fetchDetailsFromEndpoint(qcode, sparqlLanguageObject.sparqlLanguage);
+      if (qcode !== 'undefined') {
+        this.fetchDetailsFromEndpoint(qcode, sparqlLanguageObject.sparqlLanguage);
+      }
+      const label = params.get('label');
+      if (label) {
+        this.fetchWikimediaDescriptionFromEndpoint(label, 'en', 'what');
+      }
     });
   }
 
@@ -92,13 +101,13 @@ export class ItemDetailsStore extends Store<ItemDetailsState> {
           // TODO: set in db also
           // check if a user description exists,
           // if not, set a portion of the description.
-          const newDefaultUserDescription = this.createDefaultDescription(this.state.wikimediaDescription, _language);
+          //const newDefaultUserDescription = this.createDefaultDescription(this.state.wikimediaDescription, _language);
           this.activatedRoute.paramMap.subscribe(params => {
             this.selectedCategory = params.get('selectedCategory');
             this.fetchFirebaseItemAndUpdate(
               this.state.wikimediaDescription,
               itemListLabelKey,
-              newDefaultUserDescription,
+              // newDefaultUserDescription,
               _language
             );
           });
@@ -155,10 +164,10 @@ export class ItemDetailsStore extends Store<ItemDetailsState> {
             // backup to wikimedia description
             // this will most likely result in markup being put into the description,
             // so if this is really something we want, then it should be stripped.
-            this.state.itemDetails.userDescription = this.createDefaultDescription(
-              this.state.wikimediaDescription,
-              language
-            );
+            // this.state.itemDetails.userDescription = this.createDefaultDescription(
+            //   this.state.wikimediaDescription,
+            //   language
+            // );
           }
         }
       })

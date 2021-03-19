@@ -16,6 +16,11 @@ const routes: Routes = [
     path: 'item-details/:selectedCategory/:qcode',
     component: ItemDetailsContainerComponent,
     data: { title: extract('items') }
+  },
+  {
+    path: 'item-details/:selectedCategory/:qcode/:label',
+    component: ItemDetailsContainerComponent,
+    data: { title: extract('items') }
   }
 ];
 
