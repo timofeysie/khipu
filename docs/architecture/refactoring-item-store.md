@@ -71,6 +71,55 @@ Issues involved:
 
 - Refactor the item.store service calls enhancement #38 opened on Jan 23 by timofeysie Refactor items.store
 
+OK, what's next?
+
+1. Issue #35: Remove label text from default user descriptions and add tooltip with explanation
+2. Fix all console errors.
+3. The items list does not work on refresh.
+
+We're going to go without the tooltip function for now. The simplest approach for the mvp can work without that. All nice to have features are on hold for now. Anyhow, that's enough work before the next commit.
+
+Let's start with #2.
+
+```txt
+GET https://www.wikidata.org/wiki/Special:EntityData/q.json 400
+```
+
+This happens on the details page.
+
+The title for Accident\_(fallacy) is only "accident" which results in getting the wrong details page.
+
+Here is what we are getting from firebase:
+
+```json
+item-details-viewed-count: 0
+item-details-viewed-date: 1615885028509
+uri: "/wiki/Accident_(fallacy)"
+user-description: " an exception to a generalization is ignored.↵"
+user-description-viewed-count: 0
+wikidataUri: ""
+```
+
+My guess is that the label is changed when adding the category.
+
+But no, it's not. The label is simply "Accident".
+
+That uri actually works.
+
+categoryForm = new FormGroup({
+categoryName: new FormControl('fallacies'),
+label: new FormControl('Fallacies'),
+language: new FormControl('en'),
+wdt: new FormControl('P31'),
+wd: new FormControl('Q186150')
+});
+
+label: "Fallacies"
+language: "en"
+name: "fallacies"
+wd: "Q186150"
+wdt: "P31"
+
 ## Planning the refactor
 
 The ItemDetailsStore class is a brittle string of functions passing each other too many arguments.

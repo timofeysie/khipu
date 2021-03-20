@@ -4,6 +4,13 @@
       <ion-menu-button></ion-menu-button>
     </ion-buttons>
     <ion-title><span translate>Add new Category</span></ion-title>
+    <ion-item slot="end" color="primary">
+      <ion-select value="{{ default }}" (ionChange)="updateDefault($event)">
+        <ion-select-option *ngFor="let category of localCategories | keyvalue" value="{{ category.value.label }}">
+          {{ category.value.label }}
+        </ion-select-option>
+      </ion-select>
+    </ion-item>
   </ion-toolbar>
 </ion-header>
 <ion-content>

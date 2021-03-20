@@ -1,5 +1,40 @@
 # Parsing Wikipedia Content
 
+## list of cognitive biases parsing
+
+This is the old favorite. But now that the Wikipedia parsing is geared for fallacies, the lost art of parsing the list of cognitive biases page is needed once more.
+
+The first error after adding a select to load the category in the add-category page is:
+
+```txt
+core.js:4002 ERROR Error: Uncaught (in promise): TypeError: Cannot read property 'innerText' of undefined
+TypeError: Cannot read property 'innerText' of undefined
+    at CategoriesStore.webpackHotUpdate../src/app/features/category-item-details/categories/categories-store.ts.CategoriesStore.getItemsFromCognitiveBiasesList (categories-store.ts:174)
+```
+
+Comment out that and the next line and we get out Wikidata list of 91, but the doc fetched is: div.redirectMsg
+
+```html
+<div class="redirectMsg">
+  <p>Redirect to:</p>
+  <ul class="redirectText">
+    <li>
+      <a href="/wiki/List_of_cognitive_biases" title="List of cognitive biases"
+        >List of cognitive biases</a
+      >
+    </li>
+  </ul>
+</div>
+```
+
+Maybe it's just a matter of adding underscores? This is the url:
+
+Request URL: https://radiant-springs-38893.herokuapp.com/api/wiki-list/%20%20%20%20cognitive_bias/all/en
+
+This is what it should be:
+
+https://radiant-springs-38893.herokuapp.com/api/wiki-list/cognitive%20biases/all/en
+
 ## list of fallacies parsing
 
 After doing a lot of work to parse the first section of the fallacies list, it turns out that we will have to start over in order to parse the whole list, and not worry about the sections. Before the decision was made to use the sections because we were not getting the descriptions we wanted from the full list. Now, after realizing how difficult it was going to be to get an arbitrary amount of sections to parse, and seeing that the full list does appear to have the descriptions we want, it's time to get the full list and do the work it takes to parse that.

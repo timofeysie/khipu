@@ -171,8 +171,8 @@ export class CategoriesStore extends Store<CategoriesState> {
     const wikiList: Item[] = [];
     const one = this.createElementFromHTML(content);
     const desc: any = one.getElementsByClassName('mw-parser-output')[0].children;
-    const category = desc[0].getElementsByClassName('mw-headline')[0].innerText;
-    const allDesc = desc[2];
+    // const category = desc[0].getElementsByClassName('mw-headline')[0].innerText;
+    // const allDesc = desc[2];
     return wikiList;
   }
 

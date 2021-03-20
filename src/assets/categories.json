@@ -7,8 +7,8 @@
     "wdt": "P31"
   },
   {
-    "name": "cognitive_bias",
-    "label": "Cognitive Bias",
+    "name": "cognitive_biases",
+    "label": "Cognitive Biases",
     "language": "en",
     "wd": "Q1127759",
     "wdt": "P31"

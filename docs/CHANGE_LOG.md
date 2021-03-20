@@ -1,5 +1,12 @@
 # CHANGE LOG
 
+Change log for the Khipu app. This helps keep a running list of changes made for each version to aid commit messages and sprint retrospectives.
+
+## Version 1.1.1
+
+- Removed remaining unused functions from items.store.ts (theses were moved to categories-store.ts to support creating a list for add-category).
+- Added category selector with pre-fill (Issue #51).
+
 ## Version 1.1.0 20/03/2021
 
 - added uri and wikidataUri to item-meta-data
@@ -8,4 +15,9 @@
   fixed the product titles
 - removed some business logic from the items.component to make it dumb again
 - re-instated the app-items component to display the list
-- put the business logic where it belongs in the items-container.
+- put the business logic where it belongs in the items-container
+- removed pagination on the items list page until it's re-implemented
+
+## Versions 1.0.x 2020/02/2021
+
+All previous work before the change log was created. It included a more complex view based at first on just Wikidata items. Wikipedia-parsed items were added and while refactoring this file was considered necessary to keep up with the work being done.
