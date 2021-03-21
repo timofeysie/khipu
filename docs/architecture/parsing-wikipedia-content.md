@@ -35,6 +35,255 @@ This is what it should be:
 
 https://radiant-springs-38893.herokuapp.com/api/wiki-list/cognitive%20biases/all/en
 
+%20 is a space replaced by a + character which is encoded: _URL encoding converts characters into a format that can be transmitted over the Internet._
+
+Time for a commit. Message: closes #51 #38 removed remaining unused functions from items.store and added category selector with pre-fill
+
+Next, the parse.
+
+Like getItemsFromFallaciesList(markup) in the categories.store, we need to try the same thing with getItemsFromCognitiveBiasesList().
+
+It's still a redirect page right now.
+
+[HttpCacheService] Cache set for key: "https://radiant-springs-38893.herokuapp.com/api/wiki-list/
+cognitive_bias/all/en"
+categories-store.ts:175 content <div class="mw-parser-output"><div class="redirectMsg"><p>Redirect to:</p><ul class="redirectText">
+
+Why is there a CR in there? That's a CR in the code which causes that!
+
+Next, do I have to say this again? A list of title is plural!
+
+cognitive_biases/all/en
+
+That should be in the category. It was, but the firebase version was still the singular. Edit that, and now we have our list! 141 beautiful cognitive biases to play with. Now we have a range of whole new items. The good news is that the fallacies parsing methods are working to get a lot of the descriptions there. Brilliant. Now we have more edge cases to log!
+
+### Portal title with no description
+
+There is just a portal name and no description.
+
+```json
+description: ""
+label: "Psychology portal"
+uri: "/wiki/Portal:Psychology"
+wikidataUri: undefined
+```
+
+This one has an image tag as the title:
+
+```json
+description: "Society portal"
+label: "<img alt="icon" src="//upload.wikimedia.org/wikipedia/commons/thumb/4/42/Social_sciences.svg/32px-Social_sciences.svg.png" decoding="async" width="32" height="28" class="noviewer" srcset="//upload.wikimedia.org/wikipedia/commons/thumb/4/42/Social_sciences.svg/48px-Social_sciences.svg.png 1.5x, //upload.wikimedia.org/wikipedia/commons/thumb/4/42/Social_sciences.svg/64px-Social_sciences.svg.png 2x" data-file-width="139" data-file-height="122">"
+uri: "/wiki/File:Social_sciences.svg"
+```
+
+All the wikidata uri's will be undefined, so if you don't mind, I will leave that off for all the rest.
+
+The markup for this section looks like this:
+
+```html
+<div
+  role="navigation"
+  aria-label="Portals"
+  class="noprint portal plainlist tright"
+>
+  <ul>
+    <li>
+      <span
+        ><img
+          alt=""
+          src="Psi2.svg/56px-Psi2.svg.png 2x"
+          data-file-width="100"
+          data-file-height="100"
+      /></span>
+      <span>
+        <a href="/wiki/Portal:Psychology" title="Portal:Psychology">
+          Psychology portal
+        </a>
+      </span>
+    </li>
+    <li>
+      <span
+        ><a href="/wiki/File:Social_sciences.svg" class="image">
+          <img
+            alt="icon"
+            src="//upload.wikimedia.org/wikipedia/commons/thumb/4/42/Social_sciences.svg/32px-Social_sciences.svg.png"
+            decoding="async"
+            width="32"
+            height="28"
+            class="noviewer"
+            srcset="
+              //upload.wikimedia.org/wikipedia/commons/thumb/4/42/Social_sciences.svg/48px-Social_sciences.svg.png 1.5x,
+              //upload.wikimedia.org/wikipedia/commons/thumb/4/42/Social_sciences.svg/64px-Social_sciences.svg.png 2x
+            "
+            data-file-width="139"
+            data-file-height="122"/></a
+      ></span>
+      <span>
+        <a href="/wiki/Portal:Society" title="Portal:Society">
+          Society portal
+        </a>
+      </span>
+    </li>
+    <li>
+      <span
+        ><img
+          alt=""
+          src="//upload.wikimedia.org/wikipedia/commons/thumb/c/cd/Socrates.png/18px-Socrates.png"
+          decoding="async"
+          width="18"
+          height="28"
+          class="noviewer"
+          srcset="
+            //upload.wikimedia.org/wikipedia/commons/thumb/c/cd/Socrates.png/27px-Socrates.png 1.5x,
+            //upload.wikimedia.org/wikipedia/commons/thumb/c/cd/Socrates.png/36px-Socrates.png 2x
+          "
+          data-file-width="326"
+          data-file-height="500"
+      /></span>
+      <span>
+        <a href="/wiki/Portal:Philosophy" title="Portal:Philosophy">
+          Philosophy portal
+        </a>
+      </span>
+    </li>
+  </ul>
+</div>
+```
+
+Seems like we can just check if the parent div has a role of navigation, and then exclude that <ul>. Sounds like a plan.
+
+Created the checkParent() function to do this and this one is done.
+
+### Sub-list of as item
+
+This one looks like a sub-list:
+
+```json
+description: ""
+label: "List of maladaptive schemas"
+uri: "/wiki/List_of_maladaptive_schemas"
+```
+
+There are a bunch of these:
+
+```html
+<li>
+  <a
+    href="/wiki/List_of_common_misconceptions"
+    title="List of common misconceptions"
+    >List of common misconceptions</a
+  >&#160;&#8211; Wikipedia list article
+</li>
+<li>
+  <a href="/wiki/List_of_fallacies" title="List of fallacies"
+    >List of fallacies</a
+  >&#160;&#8211; Types of reasoning that are logically incorrect
+</li>
+<li>
+  <a
+    href="/wiki/List_of_maladaptive_schemas"
+    title="List of maladaptive schemas"
+    >List of maladaptive schemas</a
+  >
+</li>
+<li>
+  <a href="/wiki/List_of_memory_biases" title="List of memory biases"
+    >List of memory biases</a
+  >&#160;&#8211; Wikipedia list article
+</li>
+<li>
+  <a
+    href="/wiki/List_of_psychological_effects"
+    title="List of psychological effects"
+    >List of psychological effects</a
+  >&#160;&#8211; Wikipedia list article
+</li>
+```
+
+We can skip all these. Is it OK to look for "list of"? No, that's not scalable.
+
+"Wikipedia list article" however might work. For now it's enough. Created a function called checkContent(). Here is what the parsing function does now:
+
+```ts
+if (this.checkParent(item) && this.checkContent(item)) { ... continue ... }
+```
+
+If might be worth combining those. See how the other issues below turn out and condense them all later.
+
+However, there are still two more that are not caught by this:
+
+List of fallacies & List of maladaptive schemas.
+
+So I guess it is OK to check for "List of" strings. We might think about keeping track of excluded items. Where does one keep track of nice to have features? An issue on GitHub? A todo list? It's really part of a larger feature which would allow a user to view the structure of a Wikipedia page in various list/notes brief and let them adjust the rules used to exclude and include content in their list/note.
+
+That would be part of a grander user controlled parsing experience with content and/or markup on one side and the parsed content on the other side. So a micro-task for something that's brewing as a major feature is not really needed.
+
+Time for a commit.
+
+Commit message: #53 fixed the wikilist url and added parent and content checks for cognitive bias specific cases wip
+
+### ISBN as title
+
+```json
+description: " J (1994). Thinking and deciding (2nd ed.). Cambridge University Press. ISBN 978-0-521-43732-5."
+label: "ISBN"
+uri: "/wiki/ISBN_(identifier)"
+```
+
+### Press as title
+
+```json
+description: "04). Epistemology and the Psychology of Human Judgment. New York: Oxford University Press. ISBN 978-0-19-516229-5."
+label: "Oxford University Press"
+uri: "/wiki/Oxford_University_Press"
+```
+
+### Persons name as title
+
+At least it seems like someones name:
+
+```json
+description: "–618. doi:10.1037/0003-066x.35.7.603. ISSN 0003-066X."
+label: "Greenwald AG"
+uri: "/wiki/Anthony_Greenwald"
+```
+
+And the description is a number? Same as the next one?
+
+```json
+description: "–31. doi:10.1126/science.185.4157.1124. ISBN 978-0-521-28414-1. PMID 17835457. S2CID 143452957."
+label: "doi"
+uri: "/wiki/Doi_(identifier)"
+```
+
+### Quote as title
+
+This all seems like a continuation of parsing the wrong kind of sublist.
+
+```json
+description: "–206. doi:10.1257/jep.5.1.193. Archived from the original (PDF) on November 24, 2012."
+label: ""Anomalies: The Endowment Effect, Loss Aversion, and Status Quo Bias""
+uri: "https://web.archive.org/web/20121124190314/http://users.tricity.wsu.edu/~achaudh/kahnemanetal.pdf"
+```
+
+### Abbreviation tag as title
+
+```json
+description: "v"
+label: "<abbr title="View this template" style=";;background:none transparent;border:none;box-shadow:none;padding:0;">v</abbr>"
+uri: "/wiki/Template:Biases"
+```
+
+### Missing descriptions
+
+There are a lot of these. All the way from number 40 to the end of the list in-fact.
+
+```json
+description: ""
+label: "Actor–observer"
+uri: "/wiki/Actor%E2%80%93observer_asymmetry"
+```
+
 ## list of fallacies parsing
 
 After doing a lot of work to parse the first section of the fallacies list, it turns out that we will have to start over in order to parse the whole list, and not worry about the sections. Before the decision was made to use the sections because we were not getting the descriptions we wanted from the full list. Now, after realizing how difficult it was going to be to get an arbitrary amount of sections to parse, and seeing that the full list does appear to have the descriptions we want, it's time to get the full list and do the work it takes to parse that.

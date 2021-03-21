@@ -11,8 +11,7 @@ const routes = {
   wikimedia: (c: WikipediaContext) =>
     `https://radiant-springs-38893.herokuapp.com/api/details/${c.language}/${c.title}`,
   wikilist: (c: WikilistContext) =>
-    `https://radiant-springs-38893.herokuapp.com/api/wiki-list/
-    ${c.title}/${c.section}/${c.language}`
+    `https://radiant-springs-38893.herokuapp.com/api/wiki-list/${c.title}/${c.section}/${c.language}`
 };
 
 export interface WikidataContext {

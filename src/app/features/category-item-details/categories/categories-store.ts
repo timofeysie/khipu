@@ -125,7 +125,7 @@ export class CategoriesStore extends Store<CategoriesState> {
   }
 
   loadNewCategory(newCategory: Category) {
-    newCategory.name = newCategory['categoryName'];
+    newCategory.name = newCategory['categoryName'].replace(/\n/g, '').trim();
     const currentPage = 0;
     forkJoin(
       this.getAllItemsFromWikidataEndpoint(newCategory, currentPage),
@@ -155,7 +155,7 @@ export class CategoriesStore extends Store<CategoriesState> {
       if (_title === 'fallacies') {
         const fallyList = this.getItemsFromFallaciesList(markup);
         return fallyList;
-      } else if (_title === 'cognitive_bias') {
+      } else if (_title === 'cognitive_biases') {
         const cogbyList = this.getItemsFromCognitiveBiasesList(markup);
         return cogbyList;
       }
@@ -164,15 +164,16 @@ export class CategoriesStore extends Store<CategoriesState> {
   }
 
   /**
-   * To be re-implemented from a previous version.
+   * TODO: re-implemented from a previous version.
    * @param content
    */
   getItemsFromCognitiveBiasesList(content: any) {
-    const wikiList: Item[] = [];
     const one = this.createElementFromHTML(content);
-    const desc: any = one.getElementsByClassName('mw-parser-output')[0].children;
+    // const desc: any = one.getElementsByClassName('mw-parser-output')[0].children;
     // const category = desc[0].getElementsByClassName('mw-headline')[0].innerText;
     // const allDesc = desc[2];
+    const wikiList: Item[] = this.parseAllWikipediaPageItems(one);
+    console.log('wikiList', wikiList);
     return wikiList;
   }
 
@@ -207,42 +208,84 @@ export class CategoriesStore extends Store<CategoriesState> {
       const li = ul.getElementsByTagName('li');
       for (let j = 0; j < li.length; j++) {
         const item = li[j];
-        const liAnchor: HTMLCollection = item.getElementsByTagName('a');
-        const tr: HTMLCollectionOf<any> = item.getElementsByTagName('tr');
-        if (tr.length) {
-          // what was this to catch?
-        }
-        const label = this.parseLabel(item);
-        const content = item.textContent || item.innerText || '';
-        const descriptionWithoutLabel = this.removeLabelFromDescription(content, label);
-        let descWithoutCitations = this.removePotentialCitations(descriptionWithoutLabel);
-        // Only capture items that have a label, which excludes table of contents, etc.
-        if (label !== null) {
-          const uri = liAnchor[0].getAttribute('href');
-          // check for end of list and break out of loops if it is
-          if (this.checkForEndOfList(label, item)) {
-            endOfList = true;
-            break;
+        if (this.checkParent(item) && this.checkContent(item)) {
+          const liAnchor: HTMLCollection = item.getElementsByTagName('a');
+          const tr: HTMLCollectionOf<any> = item.getElementsByTagName('tr');
+          if (tr.length) {
+            // what was this to catch?
           }
-          // If the item has a sub-list, capture those items also and remove them from the description.
-          const subList: Item[] = this.checkForSubListAndParseIfExists(item, label, wikiList);
-          if (subList) {
-            wikiList.push(...subList);
-            descWithoutCitations = this.removeSubListMaterial(descriptionWithoutLabel, subList);
-            // This call again seems redundant, which is a bit of a smell and should be sorted out.
-            descWithoutCitations = this.removePotentialCitations(descWithoutCitations);
-          }
-          // create item and add it to the list
-          const newWikiItem = this.createNewItem(label, descWithoutCitations, uri);
-          if (wikiList.some(thisItem => thisItem.label === newWikiItem.label)) {
-            // skip adding duplicates
-          } else {
-            wikiList.push(newWikiItem);
+          const label = this.parseLabel(item);
+          this.logParsing('main', label, item);
+          const content = item.textContent || item.innerText || '';
+          const descriptionWithoutLabel = this.removeLabelFromDescription(content, label);
+          let descWithoutCitations = this.removePotentialCitations(descriptionWithoutLabel);
+          // Only capture items that have a label, which excludes table of contents, etc.
+          if (label !== null) {
+            const uri = liAnchor[0].getAttribute('href');
+            // check for end of list and break out of loops if it is
+            if (this.checkForEndOfList(label, item)) {
+              endOfList = true;
+              break;
+            }
+            // If the item has a sub-list, capture those items also and remove them from the description.
+            const subList: Item[] = this.checkForSubListAndParseIfExists(item, label, wikiList);
+            if (subList) {
+              wikiList.push(...subList);
+              descWithoutCitations = this.removeSubListMaterial(descriptionWithoutLabel, subList);
+              // This call again seems redundant, which is a bit of a smell and should be sorted out.
+              descWithoutCitations = this.removePotentialCitations(descWithoutCitations);
+            }
+            // create item and add it to the list
+            const newWikiItem = this.createNewItem(label, descWithoutCitations, uri);
+            if (wikiList.some(thisItem => thisItem.label === newWikiItem.label)) {
+              // skip adding duplicates
+            } else {
+              wikiList.push(newWikiItem);
+            }
           }
         }
       }
     }
     return wikiList;
+  }
+
+  /**
+   * Check the role of the parent element.  If it's role is navigation,
+   * return false so the list can be skipped.
+   * @param item
+   * @returns Returns true if parent role is not 'navigation'.
+   */
+  checkParent(item: HTMLLIElement) {
+    const parent = item.parentElement;
+    const granp = parent.parentElement;
+    const rolep = parent.getAttribute('role');
+    const rolegp = granp.getAttribute('role');
+    if (rolep === 'navigation' || rolegp === 'navigation') {
+      return false;
+    }
+    return true;
+  }
+
+  /**
+   * Check the content for a string such as:
+   * 'Wikipedia list article'
+   * @param item
+   * @returns true if string does not exist in content, or false if it does.
+   */
+  checkContent(item: HTMLElement) {
+    const content = item.textContent || item.innerText || '';
+    if (content.indexOf('Wikipedia list article') !== -1 || content.indexOf('List of') !== -1) {
+      return false;
+    }
+    return true;
+  }
+
+  logParsing(title: string, label: string, item: HTMLLIElement) {
+    if (label.includes('List of')) {
+      console.log(title + ' ' + label + ' item ', item);
+      const content = item.textContent || item.innerText || '';
+      console.log(title, 'parent', content);
+    }
   }
 
   /**
@@ -283,6 +326,7 @@ export class CategoriesStore extends Store<CategoriesState> {
           const subItem = subli[l];
           const liAnchor: HTMLCollection = subItem.getElementsByTagName('a');
           const subLabel = this.parseLabel(subItem);
+          this.logParsing('sub', subLabel, subItem);
           const content = subItem.textContent || subItem.innerText || '';
           const descriptionWithoutLabel = this.removeLabelFromDescription(content, subLabel);
           const descWithoutCitations = this.removePotentialCitations(descriptionWithoutLabel);
@@ -353,7 +397,7 @@ export class CategoriesStore extends Store<CategoriesState> {
    * @param item
    * Check for a dash and remove all the text after that.
    */
-  removemDescriptionFromLabel(item: string) {
+  removeDescriptionFromLabel(item: string) {
     const dash = item.indexOf('–');
     let start = 0;
     if (dash > 0) {
@@ -378,7 +422,7 @@ export class CategoriesStore extends Store<CategoriesState> {
     let newLabel = null;
     if (label.indexOf('[') !== -1) {
       const content = item.textContent || item.innerText || '';
-      newLabel = this.removemDescriptionFromLabel(content);
+      newLabel = this.removeDescriptionFromLabel(content);
       newLabel = label = this.removeBrackets(newLabel);
       return newLabel;
     } else {

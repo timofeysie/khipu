@@ -6,6 +6,13 @@ Change log for the Khipu app. This helps keep a running list of changes made for
 
 - Removed remaining unused functions from items.store.ts (theses were moved to categories-store.ts to support creating a list for add-category).
 - Added category selector with pre-fill (Issue #51).
+- Fixed the wikilist url created for the server call.
+- Using the fallacy functions to parse the cognitive bias Wikipedia page.
+- Testing content with checkParent(item) && this.checkContent(item).
+
+### Issues Closed
+
+Parse edge cases for the cognitive biases Wikipedia #53
 
 ## Version 1.1.0 20/03/2021
 
