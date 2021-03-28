@@ -448,9 +448,38 @@ We can see where the [7] comes from now. It's a similar problem in the case of t
 
 It's not actually difficult to fix, as we can just use our removed HTML and remove potential citations, and that gives just the title as string needed.
 
-But "Non-adaptive choice switching" is still an issue for the uri. It looks like this;
+### Remaining work
 
+1. Non-adaptive choice switching uri
+2. Cannot read property 'includes' of null
+3. detail pages lead to general description, not a detail
+4. what to do with the rejected items info
+5. fallacies end of list function not working regression
+
+The item "Non-adaptive choice switching" is still an issue for the uri. It looks like this;
 uri: "#cite_note-75"
+
+```txt
+core.js:4002 ERROR Error: Uncaught (in promise): TypeError: Cannot read property 'includes' of null
+TypeError: Cannot read property 'includes' of null
+    at CategoriesStore.push../src/app/features/category-item-details/categories/categories-store.ts.CategoriesStore.logParsing (categories-store.ts:350)
+```
+
+### #4 what to do with the rejected items info
+
+The current run on the fallacies category shows this:
+
+rejectedForNavigation 8
+rejectedForReference 1
+rejectedForCitation 23
+rejectedForNoLabel 21
+rejectedDuplicate 6
+rejectedAsList 5
+
+The Wikidata list has 18 items.
+The Wikipedia list has 387 items.
+
+So the end of list part is broken again for the fallacies.
 
 ### Saving the merged lists
 

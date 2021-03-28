@@ -241,14 +241,12 @@ export class CategoriesStore extends Store<CategoriesState> {
       for (let j = 0; j < li.length; j++) {
         const item = li[j];
         const label = this.parseLabel(item);
-        console.log(i + ' ' + j + ' item', label, item);
         if (this.checkParent(item) && this.checkContent(label, item)) {
           const liAnchor: HTMLCollection = item.getElementsByTagName('a');
           const tr: HTMLCollectionOf<any> = item.getElementsByTagName('tr');
           if (tr.length) {
             // what was this to catch?
           }
-          this.logParsing('main', label, item, i, j);
           const content = item.textContent || item.innerText || '';
           const descriptionWithoutLabel = this.removeLabelFromDescription(content, label);
           let descWithoutCitations = this.removePotentialCitations(descriptionWithoutLabel);
@@ -277,7 +275,6 @@ export class CategoriesStore extends Store<CategoriesState> {
             }
           } else {
             this.rejectedForNoLabel++;
-            console.log(this.rejectedForNoLabel + 'this.rejectedForNoLabel', label);
           }
         }
       }
@@ -322,7 +319,6 @@ export class CategoriesStore extends Store<CategoriesState> {
     const content = item.textContent || item.innerText || '';
     if (content.indexOf('Wikipedia list article') !== -1 || content.indexOf('List of') !== -1) {
       this.rejectedAsList++;
-      console.log(this.rejectedAsList + 'this.rejectedAsList', label);
       return false;
     }
 
@@ -330,17 +326,11 @@ export class CategoriesStore extends Store<CategoriesState> {
     const ol = item.getElementsByTagName('cite');
     if (ol.length > 0) {
       this.rejectedForCitation++;
-      console.log(this.rejectedForCitation + 'this.rejectedForCitation', label);
-
       return false;
     }
     if (label === 'ISBN') {
-      console.log(label, 'ISBN ol', ol, 'item', item);
       this.rejectedForReference++;
-      console.log(this.rejectedForReference + 'this.rejectedForReference', label);
       return false;
-    } else {
-      // console.log(label, 'ol', ol, 'item', item);
     }
 
     return true;
@@ -349,12 +339,8 @@ export class CategoriesStore extends Store<CategoriesState> {
   logParsing(title: string, label: string, item: HTMLLIElement, i: number, j: number) {
     if (label.includes('ISBN')) {
       const greatGandParent = item.parentElement.parentElement.parentElement;
-
       const orderedListGGP = greatGandParent.getElementsByTagName('ol');
-      console.log(i + '.' + j + ': orderedListGG', orderedListGGP);
-      console.log(title + ' ' + label + ' item ', item);
       const content = item.textContent || item.innerText || '';
-      console.log(title, 'parent', content);
     }
   }
 
@@ -396,7 +382,6 @@ export class CategoriesStore extends Store<CategoriesState> {
           const subItem = subli[l];
           const liAnchor: HTMLCollection = subItem.getElementsByTagName('a');
           const subLabel = this.parseLabel(subItem);
-          this.logParsing('sub', subLabel, subItem, k, l);
           const content = subItem.textContent || subItem.innerText || '';
           const descriptionWithoutLabel = this.removeLabelFromDescription(content, subLabel);
           const descWithoutCitations = this.removePotentialCitations(descriptionWithoutLabel);
@@ -404,8 +389,6 @@ export class CategoriesStore extends Store<CategoriesState> {
           const newWikiItem = this.createNewItem(subLabel, descWithoutCitations, uri);
           if (wikiList.some(thisItem => thisItem.label === newWikiItem.label)) {
             this.rejectedDuplicate++;
-            console.log(this.rejectedDuplicate + 'this.rejectedDuplicate', label);
-
             // don't add duplicates
           } else {
             subWikiList.push(newWikiItem);
@@ -426,7 +409,7 @@ export class CategoriesStore extends Store<CategoriesState> {
       const span = item.getElementsByTagName('span');
       const img = span[0].innerHTML;
       if (img.indexOf('//upload.wikimedia.org/wikipedia/commons/thumb/2/20/Text-x-generic.svg/') !== -1) {
-        console.log('end of list found ---------');
+        console.log('end of list found');
         return true;
       }
     }
@@ -632,7 +615,6 @@ export class CategoriesStore extends Store<CategoriesState> {
         }
       }
     }
-    console.log('wikipedia list', wikipediaList);
     return wikipediaList;
   }
 
@@ -652,32 +634,21 @@ export class CategoriesStore extends Store<CategoriesState> {
    * These will be used as the key for the object in firebase.
    * Keys must be non-empty strings and can't contain ".", "#", "$", "/", "[", or "]".
    * @param tableDiv The <td> tag.
-   * @returns string The name field will be used as the item label.
+   * @returns string The name field will be used as the item label and should not contain markup or citations.
    */
   getWikipediatableNameContent(tableDiv: HTMLCollectionOf<HTMLTableDataCellElement>) {
     let label;
-    let type;
-    let nameAnchor = tableDiv[0].getElementsByTagName('a');
-
+    const nameAnchor = tableDiv[0].getElementsByTagName('a');
     if (nameAnchor.length > 0) {
-      type = '1';
       label = tableDiv[0].innerHTML;
     } else {
-      type = '2';
       label = tableDiv[0].innerHTML;
     }
-
     label = this.removeHtml(label);
     label = this.removePotentialCitations(label);
-
     if (label.indexOf('/') !== -1) {
       label = label.replace(' /', ',');
     }
-
-    if (label === '[75]' || label === '[75]') {
-      console.log('found type ' + type, tableDiv[0].innerHTML);
-    }
-
     return label;
   }
 

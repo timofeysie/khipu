@@ -9,6 +9,7 @@ Change log for the Khipu app. This helps keep a running list of changes made for
 - Fixed the wikilist url created for the server call.
 - Using the table functions to parse the cognitive bias Wikipedia page.
 - Testing content with checkParent(item) && this.checkContent(item).
+- Finished parsing Wikipedia table format for the list of cognitive biases list(Issue #53).
 
 ### Issues Closed
 
