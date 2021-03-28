@@ -17,6 +17,13 @@ const log = new Logger('CategoriesStore');
 
 @Injectable()
 export class CategoriesStore extends Store<CategoriesState> {
+  // Item rejection counters
+  rejectedForNavigation: number;
+  rejectedForReference: number;
+  rejectedForCitation: number;
+  rejectedForNoLabel: number;
+  rejectedDuplicate: number;
+  rejectedAsList: number;
   constructor(
     private categoryItemDetailsService: CategoryItemDetailsService,
     private realtimeDbService: RealtimeDbService,
@@ -124,6 +131,11 @@ export class CategoriesStore extends Store<CategoriesState> {
     return newList;
   }
 
+  /**
+   * For join the wikipedia and wikidata server calls and set the state
+   * with their results.
+   * @param newCategory
+   */
   loadNewCategory(newCategory: Category) {
     newCategory.name = newCategory['categoryName'].replace(/\n/g, '').trim();
     const currentPage = 0;
@@ -147,20 +159,40 @@ export class CategoriesStore extends Store<CategoriesState> {
    * We will hopefully remove these hard-coded decisions based on subject types
    * when we can parse an arbitrary list of items and get the label/description
    * pairs without specific format handling.
-   * @param response
+   * TODO: The hardwired choices are just a starting point for now.  This function
+   * will ideally be replaced with a choice of sections instead of list of, or
+   * it can be removed if all sources should receive the same parsing treatment.
+   * @param response An array of Item objects.
    */
   async parseParticularCategoryTypes(response: any, _title: string, _language: string): Promise<Item[]> {
+    this.rejectedForNavigation = 0;
+    this.rejectedForReference = 0;
+    this.rejectedForCitation = 0;
+    this.rejectedForNoLabel = 0;
+    this.rejectedDuplicate = 0;
+    this.rejectedAsList = 0;
     if (response) {
       const markup = response.parse.text['*'];
       if (_title === 'fallacies') {
         const fallyList = this.getItemsFromFallaciesList(markup);
+        this.logResults();
         return fallyList;
       } else if (_title === 'cognitive_biases') {
-        const cogbyList = this.getItemsFromCognitiveBiasesList(markup);
+        const cogbyList = this.parseList(markup);
+        this.logResults();
         return cogbyList;
       }
     }
     return [];
+  }
+
+  logResults() {
+    console.log('rejectedForNavigation', this.rejectedForNavigation);
+    console.log('rejectedForReference', this.rejectedForReference);
+    console.log('rejectedForCitation', this.rejectedForCitation);
+    console.log('rejectedForNoLabel', this.rejectedForNoLabel);
+    console.log('rejectedDuplicate', this.rejectedDuplicate);
+    console.log('rejectedAsList', this.rejectedAsList);
   }
 
   /**
@@ -208,14 +240,15 @@ export class CategoriesStore extends Store<CategoriesState> {
       const li = ul.getElementsByTagName('li');
       for (let j = 0; j < li.length; j++) {
         const item = li[j];
-        if (this.checkParent(item) && this.checkContent(item)) {
+        const label = this.parseLabel(item);
+        console.log(i + ' ' + j + ' item', label, item);
+        if (this.checkParent(item) && this.checkContent(label, item)) {
           const liAnchor: HTMLCollection = item.getElementsByTagName('a');
           const tr: HTMLCollectionOf<any> = item.getElementsByTagName('tr');
           if (tr.length) {
             // what was this to catch?
           }
-          const label = this.parseLabel(item);
-          this.logParsing('main', label, item);
+          this.logParsing('main', label, item, i, j);
           const content = item.textContent || item.innerText || '';
           const descriptionWithoutLabel = this.removeLabelFromDescription(content, label);
           let descWithoutCitations = this.removePotentialCitations(descriptionWithoutLabel);
@@ -242,6 +275,9 @@ export class CategoriesStore extends Store<CategoriesState> {
             } else {
               wikiList.push(newWikiItem);
             }
+          } else {
+            this.rejectedForNoLabel++;
+            console.log(this.rejectedForNoLabel + 'this.rejectedForNoLabel', label);
           }
         }
       }
@@ -256,12 +292,22 @@ export class CategoriesStore extends Store<CategoriesState> {
    * @returns Returns true if parent role is not 'navigation'.
    */
   checkParent(item: HTMLLIElement) {
+    // check for navigation items
     const parent = item.parentElement;
-    const granp = parent.parentElement;
-    const rolep = parent.getAttribute('role');
-    const rolegp = granp.getAttribute('role');
-    if (rolep === 'navigation' || rolegp === 'navigation') {
+    const grandParent = parent.parentElement;
+    const roleParent = parent.getAttribute('role');
+    const roleGrandParent = grandParent.getAttribute('role');
+    if (roleParent === 'navigation' || roleGrandParent === 'navigation') {
+      this.rejectedForNavigation++;
       return false;
+    }
+    // check for references in ordered lists
+    const greatGrandParent = grandParent.parentElement;
+    const orderedListGGP = greatGrandParent.getElementsByTagName('ol');
+    if (orderedListGGP.length > 0) {
+      // This doesn't work for some reason.
+      // this.rejectedForReference++;
+      // return false;
     }
     return true;
   }
@@ -272,16 +318,40 @@ export class CategoriesStore extends Store<CategoriesState> {
    * @param item
    * @returns true if string does not exist in content, or false if it does.
    */
-  checkContent(item: HTMLElement) {
+  checkContent(label: string, item: HTMLElement) {
     const content = item.textContent || item.innerText || '';
     if (content.indexOf('Wikipedia list article') !== -1 || content.indexOf('List of') !== -1) {
+      this.rejectedAsList++;
+      console.log(this.rejectedAsList + 'this.rejectedAsList', label);
       return false;
     }
+
+    // check for references
+    const ol = item.getElementsByTagName('cite');
+    if (ol.length > 0) {
+      this.rejectedForCitation++;
+      console.log(this.rejectedForCitation + 'this.rejectedForCitation', label);
+
+      return false;
+    }
+    if (label === 'ISBN') {
+      console.log(label, 'ISBN ol', ol, 'item', item);
+      this.rejectedForReference++;
+      console.log(this.rejectedForReference + 'this.rejectedForReference', label);
+      return false;
+    } else {
+      // console.log(label, 'ol', ol, 'item', item);
+    }
+
     return true;
   }
 
-  logParsing(title: string, label: string, item: HTMLLIElement) {
-    if (label.includes('List of')) {
+  logParsing(title: string, label: string, item: HTMLLIElement, i: number, j: number) {
+    if (label.includes('ISBN')) {
+      const greatGandParent = item.parentElement.parentElement.parentElement;
+
+      const orderedListGGP = greatGandParent.getElementsByTagName('ol');
+      console.log(i + '.' + j + ': orderedListGG', orderedListGGP);
       console.log(title + ' ' + label + ' item ', item);
       const content = item.textContent || item.innerText || '';
       console.log(title, 'parent', content);
@@ -326,13 +396,16 @@ export class CategoriesStore extends Store<CategoriesState> {
           const subItem = subli[l];
           const liAnchor: HTMLCollection = subItem.getElementsByTagName('a');
           const subLabel = this.parseLabel(subItem);
-          this.logParsing('sub', subLabel, subItem);
+          this.logParsing('sub', subLabel, subItem, k, l);
           const content = subItem.textContent || subItem.innerText || '';
           const descriptionWithoutLabel = this.removeLabelFromDescription(content, subLabel);
           const descWithoutCitations = this.removePotentialCitations(descriptionWithoutLabel);
           const uri = liAnchor[0].getAttribute('href');
           const newWikiItem = this.createNewItem(subLabel, descWithoutCitations, uri);
           if (wikiList.some(thisItem => thisItem.label === newWikiItem.label)) {
+            this.rejectedDuplicate++;
+            console.log(this.rejectedDuplicate + 'this.rejectedDuplicate', label);
+
             // don't add duplicates
           } else {
             subWikiList.push(newWikiItem);
@@ -353,6 +426,7 @@ export class CategoriesStore extends Store<CategoriesState> {
       const span = item.getElementsByTagName('span');
       const img = span[0].innerHTML;
       if (img.indexOf('//upload.wikimedia.org/wikipedia/commons/thumb/2/20/Text-x-generic.svg/') !== -1) {
+        console.log('end of list found ---------');
         return true;
       }
     }
@@ -523,7 +597,217 @@ export class CategoriesStore extends Store<CategoriesState> {
   }
 
   /**
-   * @deprecated moved
+   * Usually the name of item can be gotten from the inner text of an <a> tag inside the table cell.
+   * A few however, like 'frequency illusion' are not links, so are just the contents of the <td> tag.
+   * Some, such as 'regression bias' have a <span> inside the tag.
+   * @param data result of a WikiMedia section API call
+   * @returns Array of name/desc objects
+   */
+  parseList(content: any) {
+    const wikipediaList: Item[] = [];
+    const one = this.createElementFromHTML(content);
+    const tables = one.getElementsByTagName('table');
+    loop1: for (let t = 0; t < tables.length; t++) {
+      const tableRow = tables[t].getElementsByTagName('tr');
+      for (let i = 0; i < tableRow.length; i++) {
+        const table = this.getTableDivs(tableRow[i]);
+        const tableDiv = tableRow[i].getElementsByTagName('td');
+        if (tableDiv.length > 1) {
+          const uri = this.getWikipediaUri(tableDiv);
+          const desc = this.getWikipediatableDescriptionContent(tableDiv);
+          const descriptionWithoutMarkup = this.removeHtml(desc);
+          const descriptionWithoutCitations = this.removePotentialCitations(descriptionWithoutMarkup);
+          if (desc) {
+            const newItem: Item = {
+              label: this.getWikipediatableNameContent(tableDiv),
+              type: this.getWikipediatableTypeContent(tableDiv),
+              description: descriptionWithoutCitations,
+              uri
+            };
+            wikipediaList.push(newItem);
+          } else {
+            // TODO: Use a better way to find end of list
+            break loop1;
+          }
+        }
+      }
+    }
+    console.log('wikipedia list', wikipediaList);
+    return wikipediaList;
+  }
+
+  getWikipediaUri(tableDiv: HTMLCollectionOf<HTMLTableDataCellElement>) {
+    const nameAnchor = tableDiv[0].getElementsByTagName('a');
+    if (nameAnchor[0]) {
+      const uri = nameAnchor[0].getAttribute('href');
+      return uri;
+    }
+  }
+
+  /**
+   * Get the string for a name table cell from a Wikipedia page.
+   * Usually an anchor with a reference.
+   * Sometimes there is no reference meaning there is no single Wikipedia page for this item.
+   *
+   * These will be used as the key for the object in firebase.
+   * Keys must be non-empty strings and can't contain ".", "#", "$", "/", "[", or "]".
+   * @param tableDiv The <td> tag.
+   * @returns string The name field will be used as the item label.
+   */
+  getWikipediatableNameContent(tableDiv: HTMLCollectionOf<HTMLTableDataCellElement>) {
+    let label;
+    let type;
+    let nameAnchor = tableDiv[0].getElementsByTagName('a');
+
+    if (nameAnchor.length > 0) {
+      type = '1';
+      label = tableDiv[0].innerHTML;
+    } else {
+      type = '2';
+      label = tableDiv[0].innerHTML;
+    }
+
+    label = this.removeHtml(label);
+    label = this.removePotentialCitations(label);
+
+    if (label.indexOf('/') !== -1) {
+      label = label.replace(' /', ',');
+    }
+
+    if (label === '[75]' || label === '[75]') {
+      console.log('found type ' + type, tableDiv[0].innerHTML);
+    }
+
+    return label;
+  }
+
+  /**
+   * The type field of a Wikipedia table name/type/description field could be either:
+   * an inner html string,
+   * or an anchor tag like this: <a href="/wiki/Prospect_theory" title="Prospect theory">Prospect theory</a>
+   * @param tableDiv The <td> tag element.
+   * @returns a string with the type.
+   */
+  getWikipediatableTypeContent(tableDiv: HTMLCollectionOf<HTMLTableDataCellElement>) {
+    const stringType = tableDiv[1].innerHTML;
+    if (stringType.indexOf('<a') !== -1) {
+      const anchorType = tableDiv[1].getElementsByTagName('a');
+      const tagInnerText = anchorType[0].innerText;
+      return tagInnerText;
+    } else {
+      return stringType;
+    }
+  }
+
+  /**
+   * Get the description of an item from a <td> element.
+   * It could be the second element if the table has only two columns,
+   * of the third element if it has three, such as name, type, description.
+   * @param tableDiv
+   * @param numberOfTableDivs
+   * @returns
+   */
+  getWikipediatableDescriptionContent(tableDiv: HTMLCollectionOf<HTMLTableDataCellElement>) {
+    const numberOfTableDivs = 2;
+    if (tableDiv[numberOfTableDivs] && typeof tableDiv[numberOfTableDivs].innerHTML !== 'undefined') {
+      return tableDiv[numberOfTableDivs].innerHTML;
+    } else if (tableDiv[numberOfTableDivs]) {
+      return tableDiv[numberOfTableDivs].getElementsByTagName('a')[0].innerHTML;
+    } else {
+      return tableDiv[1].innerHTML;
+    }
+  }
+
+  /**
+   * @deprecated Unused example wikipedia parsing from the Lorantifolia app.
+   * @param tableDiv
+   * @returns
+   */
+  getTableDivs(tableDiv: any) {
+    const newItems = [];
+    if (typeof tableDiv[0] !== 'undefined') {
+      let itemDesc;
+      if (typeof tableDiv[1] !== 'undefined') {
+        itemDesc = tableDiv[1].innerText;
+      }
+      let itemName;
+      if (typeof tableDiv[0].getElementsByTagName('a')[0] !== 'undefined') {
+        itemName = tableDiv[0].getElementsByTagName('a')[0].innerText;
+      } else if (typeof tableDiv[0].getElementsByTagName('span')[0] !== 'undefined') {
+        itemName = tableDiv[0].getElementsByTagName('span')[0].innerText;
+      } else if (typeof tableDiv[0].innerText !== 'undefined') {
+        itemName = tableDiv[0].innerText;
+      } else {
+        console.log('failed to get', tableDiv[0]);
+      }
+      const backupTitle = this.getAnchorTitleForBackupTitle(tableDiv[0], itemName);
+      // itemName = label
+      // itemDesc = description
+      // backupTitle = wikidataUri?
+      const newItem = this.createNewItem(itemName, itemDesc, null, backupTitle);
+      newItems.push(newItem);
+    }
+    return newItems;
+  }
+
+  /**
+   * Parse the anchor tag for the title of the item used in the tag,
+   * which can be different from the name of the item.
+   * @param tableDiv the DOM element
+   * @param itemName the item name
+   */
+  getAnchorTitleForBackupTitle(tableDiv: any, itemName: string) {
+    if (typeof tableDiv.getElementsByTagName('a')[0] !== 'undefined') {
+      const titleProp = tableDiv.getElementsByTagName('a')[0].title;
+      let backupLink;
+      let backupTitle;
+      const href: string = tableDiv.getElementsByTagName('a')[0].href;
+      if (href) {
+        const slash = href.lastIndexOf('/');
+        backupLink = href.substr(slash + 1, href.length);
+      }
+      if (href.indexOf('index.php') !== -1) {
+        backupTitle = -1; // we have a missing detail page
+      }
+      if (itemName !== titleProp && backupTitle !== -1) {
+        backupTitle = titleProp;
+      }
+      if (
+        backupTitle !== null &&
+        typeof backupTitle !== 'undefined' &&
+        backupTitle !== -1 &&
+        backupTitle.indexOf('(psychology)') !== -1
+      ) {
+        backupTitle = backupTitle.substr(0, backupTitle.indexOf('('));
+        // compare the names again without the
+        if (backupTitle !== itemName) {
+          backupTitle = null;
+        }
+      }
+      if (typeof backupTitle !== 'undefined') {
+      }
+      return backupTitle;
+    } else {
+      if (typeof tableDiv.getElementsByTagName('td')[0] !== 'undefined') {
+        return tableDiv.getElementsByTagName('td')[0].innerText();
+      }
+    }
+  }
+
+  /**
+   * Remove the [edit] portion of the title.
+   * @param HTMLDivElement
+   */
+  parseTitle(html: HTMLDivElement) {
+    let title = html.getElementsByTagName('h2')[0].innerText;
+    const bracket = title.indexOf('[');
+    if (bracket > 0) {
+      title = title.substr(0, bracket);
+    }
+    return title;
+  }
+
+  /**
    * Removes html and special characters from an html string.
    * @param {html string} content
    */

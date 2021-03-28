@@ -15,11 +15,11 @@ export class AddCategoryContainerComponent implements OnInit {
   // TODO Use a selector to offer popular category settings pre-filling the form.
   // See Issue #51.
   categoryForm = new FormGroup({
-    categoryName: new FormControl('fallacies'),
-    label: new FormControl('Fallacies'),
+    categoryName: new FormControl('cognitive_biases'),
+    label: new FormControl('Cognitive Biases'),
     language: new FormControl('en'),
     wdt: new FormControl('P31'),
-    wd: new FormControl('Q186150')
+    wd: new FormControl('Q1127759')
   });
   wikidataItemList: Category[];
   wikiListItems: Item[];
@@ -38,7 +38,7 @@ export class AddCategoryContainerComponent implements OnInit {
     });
     setTimeout(() => {
       this.default = 'Fallacies';
-      this.selectedPrefill = this.localCategories[0];
+      this.selectedPrefill = this.localCategories[1];
     }, 1600);
   }
 

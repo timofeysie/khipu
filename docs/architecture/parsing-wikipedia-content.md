@@ -224,65 +224,245 @@ Commit message: #53 fixed the wikilist url and added parent and content checks f
 
 ### ISBN as title
 
+It seems like references are a big problem and will solve a lot of issues.
+
 ```json
 description: " J (1994). Thinking and deciding (2nd ed.). Cambridge University Press. ISBN 978-0-521-43732-5."
 label: "ISBN"
 uri: "/wiki/ISBN_(identifier)"
 ```
 
-### Press as title
+Somewhere around line 2400 in the sample markup:
 
-```json
-description: "04). Epistemology and the Psychology of Human Judgment. New York: Oxford University Press. ISBN 978-0-19-516229-5."
-label: "Oxford University Press"
-uri: "/wiki/Oxford_University_Press"
+```html
+<div
+  class="reflist reflist-columns references-column-width"
+  style="column-width: 30em;"
+>
+  <ol class="references">
+    <li id="cite_note-1">
+      <span class="mw-cite-backlink">
+        <b><a href="#cite_ref-1">^</a></b>
+      </span>
+      <span class="reference-text"> ...</span>
+    </li>
+  </ol>
+</div>
 ```
 
-### Persons name as title
+So I think if it's an ordered list <ol> then we don't want it on the list.
 
-At least it seems like someones name:
+It could go into the item model, but for now were no going to show them so we don't need to deal with references.
 
-```json
-description: "–618. doi:10.1037/0003-066x.35.7.603. ISSN 0003-066X."
-label: "Greenwald AG"
-uri: "/wiki/Anthony_Greenwald"
+This check could be added to the parent check. Or the grand-parent.
+
+It seems to work, but actually what should work seems to exclude all the content we want an just add abbreviations and unwanted item labels with no descriptions. I can't figure it out.
+
+Then I realize it's actually a different end-of-list condition for this category.
+
+So we have this thing called a checkForEndOfList() function. Check it out.
+
+It wasn't as easy as that.
+
+In checkContent, getting the ordered list great-grand parent length > 0 for example, we will have 46 items rejected for being a reference.
+
+But they are the wrong items, as all we end up with is a list a few <ABBR> tags as titles, then the rest are titles with no descriptions. So that's not right.
+
+Without this little detail, our stats during the parse look like this:
+
+rejectedForNavigation 9
+rejectedForReference 0
+rejectedForCitation 15
+rejectedForNoLabel 0
+rejectedDuplicate 0
+rejectedAsList 5
+
+But looking at the actual list, it's not even starting off the way we expect it to, so it seems we have already excluded some content we need.
+
+The first three items on the list in the sample file khipu/docs/examples/list-of-cognitive-biases.html when shown in a browser are:
+
+```txt
+Name: Agent detection
+Type: False priors
+Description: The inclination to presume the purposeful intervention of a sentient or intelligent agent.
+
+Name: Ambiguity effect
+Type: Prospect theory
+Description: The tendency to avoid options for which the probability of a favorable outcome is unknown.[11]
+
+Name: Anchoring or focalism
+Type: Anchoring bias
+Description: The tendency to rely too heavily, or "anchor", on one trait or piece of information when making decisions (usually the first piece of information acquired on that subject).[12][13]
 ```
 
-And the description is a number? Same as the next one?
+None of these are on our list, which currently starts with "Affective forecasting"
 
-```json
-description: "–31. doi:10.1126/science.185.4157.1124. ISBN 978-0-521-28414-1. PMID 17835457. S2CID 143452957."
-label: "doi"
-uri: "/wiki/Doi_(identifier)"
+This is actually in the "See Also" section which we are not interested in. Remember. anything after the "See also[edit]" section should be ignored, and the parsing halted.
+
+And then the big moment when it is realized that the list of cognitive biases is in a set of tables, not unordered lists. That's why there was a deciding function.
+
+Really however, instead of having a strategy pattern, we can just use the same loop to look for list items from each type.
+
+That means excluding references, citations and abbreviations, etc, from both <ul> and <table> formats.
+
+After creating the html element, this is what we are looking for:
+
+```html
+<tr>
+  <td>
+    <a href="/wiki/Agent_detection" title="Agent detection"> Agent detection</a>
+  </td>
+  <td>
+    False priors
+  </td>
+  <td>
+    The inclination to presume the purposeful intervention of a sentient or
+    intelligent
+    <a href="/wiki/Agency_(philosophy)" title="Agency (philosophy)"> agent</a>.
+  </td>
+</tr>
 ```
 
-### Quote as title
+This table pattern goes name, type, description. The label we used in the name field can be found like this:
 
-This all seems like a continuation of parsing the wrong kind of sublist.
-
-```json
-description: "–206. doi:10.1257/jep.5.1.193. Archived from the original (PDF) on November 24, 2012."
-label: ""Anomalies: The Endowment Effect, Loss Aversion, and Status Quo Bias""
-uri: "https://web.archive.org/web/20121124190314/http://users.tricity.wsu.edu/~achaudh/kahnemanetal.pdf"
+```ts
+const name = tableDiv[0].getElementsByTagName('a')[0].innerText;
 ```
 
-### Abbreviation tag as title
+The type however has exceptions to the kind of data they hold.
+
+The first type is a string:
 
 ```json
-description: "v"
-label: "<abbr title="View this template" style=";;background:none transparent;border:none;box-shadow:none;padding:0;">v</abbr>"
-uri: "/wiki/Template:Biases"
+description: "The inclination to presume the purposeful intervention of a sentient or intelligent <a href="/wiki/Agency_(philosophy)" title="Agency (philosophy)">agent</a>.↵"
+label: "Agent detection"
+type: "False priors↵"
 ```
 
-### Missing descriptions
+The second item type looks like this:
 
-There are a lot of these. All the way from number 40 to the end of the list in-fact.
-
-```json
-description: ""
-label: "Actor–observer"
-uri: "/wiki/Actor%E2%80%93observer_asymmetry"
+```html
+<a href="/wiki/Prospect_theory" title="Prospect theory">Prospect theory</a>
 ```
+
+We don't care about the reference for the type yet, so really we only want the contents of the anchor. Similar to the way we could get the name I suppose.
+
+The same exception could happen for the name actually, when the item doesn't have it's own Wikipedia page to link to, it's just a string.
+
+Then, the whole structure changes for the List of memory biases section, which has no type cell.
+
+Currently, the descriptions for this section are not working. That's next.
+
+Finding the end of the list is currently done by checking the length of table divs. If length returns 1, then we break to the outer loop. It works for now but makes some among us nervous.
+
+Next, there are two more jobs to do.
+
+One, remove markup from the descriptions. We already have these functions from previous work.
+
+Next, get the uri from the label anchor href.
+
+Then, the exceptions.
+
+1. <SPAN> as title
+2. [75] citation as title
+
+And possibly more. First the references.
+
+### Getting the uri
+
+A sample label tag looks like this:
+
+```html
+<td>
+  <a href="/wiki/Telescoping_effect" title="Telescoping effect"
+    >Telescoping effect</a
+  >
+</td>
+```
+
+It's a simple as getting the href property.
+
+Next, if we're happy with our list, it's time to save it. This is the error we will see:
+
+```txt
+AddCategoryContainerComponent.html:17 ERROR Error: Reference.set failed: First argument  contains an invalid key (Dread aversion
+) in property 'items.X0YFaM8hXHdm89FWEQsj0Aqhcln1.cognitive_biases'.  Keys must be non-empty strings and can't contain ".", "#", "$", "/", "[", or "]"
+    at index.esm.js:1514
+```
+
+That's because of the exception we forgot to deal with (#2):
+
+1. <SPAN> as title
+2. [75] citation as title
+
+Let's look at the markup for these.
+
+### <SPAN> as title
+
+"<span id="Verbatim_effect">Verbatim effect</span>↵"
+
+```html
+<tr>
+  <td><span id="Verbatim_effect">Verbatim effect</span></td>
+  <td>
+    That the "gist" of what someone has said is better remembered than the
+    verbatim wording.
+    <sup id="cite_ref-149" class="reference">
+      <a href="#cite_note-149">&#91;149&#93;</a>
+    </sup>
+    This is because memories are representations, not exact copies.
+  </td>
+</tr>
+```
+
+### [75] citation as title
+
+```txt
+description: "After experiencing a bad outcome with a decision problem, the tendency to avoid the choice previously made when faced with the same decision problem again, even though the choice was optimal. Also known as "once bitten, twice shy" or "hot stove effect"."
+label: "[75]"
+type: "↵"
+uri: "#cite_note-75"
+```
+
+From this markup:
+
+```html
+<tr>
+  <td>
+    Non-adaptive choice switching
+    <sup id="cite_ref-75" class="reference">
+      <a href="#cite_note-75">&#91;75&#93;</a></sup
+    >
+  </td>
+  <td></td>
+  <td>
+    After experiencing a bad outcome with a decision problem, the tendency to
+    avoid the choice previously made when faced with the same decision problem
+    again, even though the choice was optimal. Also known as "once bitten, twice
+    shy" or "hot stove effect".
+  </td>
+</tr>
+```
+
+We can see where the [7] comes from now. It's a similar problem in the case of the span.
+
+It's not actually difficult to fix, as we can just use our removed HTML and remove potential citations, and that gives just the title as string needed.
+
+But "Non-adaptive choice switching" is still an issue for the uri. It looks like this;
+
+uri: "#cite_note-75"
+
+### Saving the merged lists
+
+We get this error;
+
+First argument contains an invalid key (Risk compensation / Peltzman effect) in property.
+
+Now we have 109 Wikidata items and 197 Wikipedia items.
+
+109 + 197 = 306
+
+After the merge, we have 280.
 
 ## list of fallacies parsing
 
