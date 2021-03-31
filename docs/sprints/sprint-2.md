@@ -30,6 +30,8 @@ A full workflow would be:
 
 Before all this, probably the next sprint should be finishing off everything not working from the last sprint. Those tasks look like this:
 
+### Todo
+
 - Non-adaptive choice switching uri
 - Cannot read property 'includes' of null
 - detail pages lead to general description, not a detail
@@ -37,5 +39,15 @@ Before all this, probably the next sprint should be finishing off everything not
 - fallacies end of list function not working regression
 - Cannot convert undefined or null to object
 - fix the icons
+- Redirect to data uri value
 
 If this can all get sorted, then, yes, exporting might need to be next. It's actually a toss up between creating an order for the list export. Ordering just according to the number of detail views might be doable pretty quickly. But so would search.
+
+error: "Redirect to data uri value"
+headers: HttpHeaders {normalizedNames: Map(0), lazyUpdate: null, lazyInit: ƒ}
+message: "Http failure response for https://radiant-springs-38893.herokuapp.com/api/detail/Anthropomorphism%20orpersonification/en/false: 300 Multiple Choices"
+name: "HttpErrorResponse"
+ok: false
+status: 300
+statusText: "Multiple Choices"
+url: "https://radiant-springs-38893.herokuapp.com/api/detail/Anthropomorphism%

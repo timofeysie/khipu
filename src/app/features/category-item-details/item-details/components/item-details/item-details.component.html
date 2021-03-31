@@ -1,15 +1,12 @@
 <ion-item color="light">
   <ion-card class="card ion-text-center" *ngIf="itemDetails">
-    hi{{ itemDetails | json }}
     <ion-card-content>
       <ion-card-header>
         <h2 *ngIf="itemDetails.sitelinks[language + 'wiki']; else noLinkTitle">
-          there
           {{ itemDetails | json }}
         </h2>
         <ng-template #noLinkTitle>
           <p class="title_no_link" *ngIf="itemDetails.title">
-            tim
             {{ itemDetails | json }}
           </p>
         </ng-template>
