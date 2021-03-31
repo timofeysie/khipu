@@ -17,6 +17,7 @@ interface Label {
 export class ItemDetailsContainerComponent implements OnInit, AfterViewInit {
   isLoading = false;
   label: Label;
+  labelStr: string;
   siteLink: string;
   aliases: string | undefined;
   language: string;
@@ -28,7 +29,8 @@ export class ItemDetailsContainerComponent implements OnInit, AfterViewInit {
     private activatedRoute: ActivatedRoute
   ) {
     this.activatedRoute.paramMap.subscribe(params => {
-      this.selectedCategory = params.get('selectedCategory');
+      this.selectedCategory = params.get('selectedCategory').replace('_', ' ');
+      this.labelStr = params.get('label');
     });
   }
 

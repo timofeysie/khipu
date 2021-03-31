@@ -147,7 +147,10 @@ export class RealtimeDbService {
   }
 
   readUserData(name: string) {
-    const userId = this.setupFirebase();
+    let userId = this.setupFirebase();
+    if (!userId) {
+      userId = firebase.auth().currentUser.uid;
+    }
     return firebase
       .database()
       .ref(name + '/' + userId)

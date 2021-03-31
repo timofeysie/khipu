@@ -23,12 +23,6 @@ export class ItemDetailsStore extends Store<ItemDetailsState> {
   ) {
     super(new ItemDetailsState());
     this.fetchDetails();
-    this.activatedRoute.paramMap.subscribe(params => {
-      this.selectedCategory = params.get('selectedCategory');
-      if (this.selectedCategory !== 'undefined') {
-        this.fetchDescription(this.selectedCategory, 'en', 'itemListLabelKey');
-      }
-    });
   }
 
   fetchDetails() {
@@ -37,7 +31,8 @@ export class ItemDetailsStore extends Store<ItemDetailsState> {
     const sparqlLanguageObject = sparqlLanguages.find(i => i.appLanguage === currentLanguage);
     this.activatedRoute.paramMap.subscribe(params => {
       const qcode = params.get('qcode');
-      if (qcode !== 'undefined') {
+      if (qcode !== 'q') {
+        console.log('qcode', qcode);
         this.fetchDetailsFromEndpoint(qcode, sparqlLanguageObject.sparqlLanguage);
       }
       const label = params.get('label');

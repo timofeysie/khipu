@@ -39,11 +39,13 @@ export class CategoriesStore extends Store<CategoriesState> {
       .readUserData('categories')
       .then(result => {
         const cats: any = [];
-        Object.keys(result).forEach(key => {
-          const value = result[key];
-          cats.push(value);
-        });
-        this.state.categories = cats;
+        if (result) {
+          Object.keys(result).forEach(key => {
+            const value = result[key];
+            cats.push(value);
+          });
+          this.state.categories = cats;
+        }
       })
       .catch(error => {
         log.debug('error fetching list', error);
