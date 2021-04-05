@@ -480,7 +480,7 @@ Object.keys(result).forEach(key => {
 
 The result is actually null. Not sure why now the categories are not working.
 
-### #1 The item "Non-adaptive choice switching" is still an issue for the uri.
+### #1 The item "Non-adaptive choice switching" is still an issue for the uri
 
 It looks like this;
 uri: "#cite_note-75"

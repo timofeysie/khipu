@@ -1,7 +1,7 @@
 <ion-item color="light">
   <ion-card class="card ion-text-center" *ngIf="itemDetails">
     <ion-card-content>
-      <ion-card-header>
+      <!-- <ion-card-header>
         <h2 *ngIf="itemDetails.sitelinks[language + 'wiki']; else noLinkTitle">
           {{ itemDetails | json }}
         </h2>
@@ -10,7 +10,7 @@
             {{ itemDetails | json }}
           </p>
         </ng-template>
-      </ion-card-header>
+      </ion-card-header> -->
       <div *ngIf="itemDetails.aliases && itemDetails.aliases[language] && itemDetails.aliases[language].length > 0">
         Aliases:
         <span *ngFor="let alias of itemDetails.aliases[language]; let i = index">
@@ -23,7 +23,6 @@
         [language]="language"
         [userDescription]="itemDetails.userDescription"
       ></app-description-form>
-      <p>Modified: {{ itemDetails.modified | date: 'medium' }}</p>
     </ion-card-content>
   </ion-card>
 </ion-item>
