@@ -815,6 +815,8 @@ export class CategoriesStore extends Store<CategoriesState> {
   }
 
   /**
+   * TODO:  Why isn't this being used?  I think the getAllItemsFromWikidataEndpoint()
+   * took it's place, in which case delete this if it's not useful.
    * Replacement for getItemsFromEndpoint()
    * @param category
    * @param currentPage

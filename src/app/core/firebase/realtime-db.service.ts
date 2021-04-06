@@ -169,10 +169,11 @@ export class RealtimeDbService {
     if (!this.userId) {
       id = this.setupFirebase();
     }
-
+    const path = name + '/' + id + '/' + sub;
+    log.debug('path', path);
     return firebase
       .database()
-      .ref(name + '/' + id + '/' + sub)
+      .ref(path)
       .once('value')
       .then(snapshot => {
         return snapshot.val();
@@ -182,6 +183,13 @@ export class RealtimeDbService {
       });
   }
 
+  /**
+   *
+   * @param tableName items
+   * @param category category
+   * @param itemName label
+   * @returns
+   */
   readUserSubDataItem(tableName: string, category: string, itemName: string) {
     return new Promise((resolve, reject) => {
       firebase.auth().onAuthStateChanged(user => {
@@ -190,6 +198,7 @@ export class RealtimeDbService {
         }
         const userId = firebase.auth().currentUser.uid;
         const routeToData = tableName + '/' + userId + '/' + category + '/' + itemName;
+        log.debug('routeToData', routeToData);
         firebase
           .database()
           .ref(routeToData)

@@ -26,7 +26,9 @@ export class DescriptionFormComponent implements AfterViewInit, AfterContentChec
   constructor(private cdref: ChangeDetectorRef) {}
 
   ngAfterViewInit() {
-    this.descriptionForm.setValue(this.userDescription);
+    setTimeout(() => {
+      this.descriptionForm.setValue(this.userDescription);
+    }, 1600);
   }
 
   ngAfterContentChecked() {

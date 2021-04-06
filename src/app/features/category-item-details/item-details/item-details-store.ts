@@ -37,7 +37,8 @@ export class ItemDetailsStore extends Store<ItemDetailsState> {
       }
       const label = params.get('label');
       if (label) {
-        this.fetchWikimediaDescriptionFromEndpoint(label, 'en', 'what');
+        // TODO: refactor this!
+        this.fetchWikimediaDescriptionFromEndpoint(label, 'en', label);
       }
     });
   }

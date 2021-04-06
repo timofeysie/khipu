@@ -33,8 +33,6 @@ Request URL: https://radiant-springs-38893.herokuapp.com/api/wiki-list/%20%20%20
 
 This is what it should be:
 
-https://radiant-springs-38893.herokuapp.com/api/wiki-list/cognitive%20biases/all/en
-
 %20 is a space replaced by a + character which is encoded: _URL encoding converts characters into a format that can be transmitted over the Internet._
 
 Time for a commit. Message: closes #51 #38 removed remaining unused functions from items.store and added category selector with pre-fill
@@ -448,121 +446,7 @@ We can see where the [7] comes from now. It's a similar problem in the case of t
 
 It's not actually difficult to fix, as we can just use our removed HTML and remove potential citations, and that gives just the title as string needed.
 
-### Remaining work
-
-1. Non-adaptive choice switching uri
-2. Cannot read property 'includes' of null
-3. detail pages lead to general description, not a detail (done?)
-4. what to do with the rejected items info
-5. fallacies end of list function not working regression
-6. Cannot convert undefined or null to object
-7. Cannot read property 'q' of undefined (done)
-8. fix the icons
-
-This is looking like next sprints to-do list.
-
-### #6 Cannot convert undefined or null to object
-
-```txt
-[CategoriesStore] error fetching list TypeError: Cannot convert undefined or null to object
-    at Function.keys (<anonymous>)
-    at categories-store.ts:42
-```
-
-That's coming from this code:
-
-```ts
-Object.keys(result).forEach(key => {
-  const value = result[key];
-  cats.push(value);
-});
-```
-
-The result is actually null. Not sure why now the categories are not working.
-
-### #1 The item "Non-adaptive choice switching" is still an issue for the uri
-
-It looks like this;
-uri: "#cite_note-75"
-
-```txt
-core.js:4002 ERROR Error: Uncaught (in promise): TypeError: Cannot read property 'includes' of null
-TypeError: Cannot read property 'includes' of null
-    at CategoriesStore.push../src/app/features/category-item-details/categories/categories-store.ts.CategoriesStore.logParsing (categories-store.ts:350)
-```
-
-### #3 detail pages lead to general description, not a detail
-
-For example: Actor-observer bias
-The detail page shows the definition of a cognitive bias.
-
-redirects: [{from: "Actor-observer bias", to: "Actor–observer asymmetry"}]
-0: {from: "Actor-observer bias", to: "Actor–observer asymmetry"}
-from: "Actor-observer bias"
-to: "Actor–observer asymmetry"
-
-It looks like the same call is being made twice. The second time with the category instead of the label.
-
-```txt
-item-details-store.ts:117 _title, sparqlLanguageObject.sparqlLanguage, setDefaultDescription Actor-observer bias en true
-...
-item-details-store.ts:117 _title, sparqlLanguageObject.sparqlLanguage, setDefaultDescription cognitive_biases en true
-```
-
-Looking at the ugly class, I can see this in the constructor:
-
-```ts
-this.fetchDetails();
-this.activatedRoute.paramMap.subscribe(params => {
-  this.selectedCategory = params.get('selectedCategory');
-  if (this.selectedCategory !== 'undefined') {
-    this.fetchDescription(this.selectedCategory, 'en', 'itemListLabelKey');
-  }
-});
-```
-
-The fetchDetails() function will also call fetchDescription(), so Jim, why is it also called with the category when this is the item details page?
-
-Good question Phil. If you keep on asking good questions like that, you're going to get smarter than me, oh yeah!
-
-Uh, Mr Carrey, um, what's with the beard?
-
-### #4 what to do with the rejected items info
-
-The current run on the fallacies category shows this:
-
-rejectedForNavigation 8
-rejectedForReference 1
-rejectedForCitation 23
-rejectedForNoLabel 21
-rejectedDuplicate 6
-rejectedAsList 5
-
-The Wikidata list has 18 items.
-The Wikipedia list has 387 items.
-
-So the end of list part is broken again for the fallacies.
-
-For now, just leave these as comments in the the app since they will not be used for anything for a while.
-
-### Cannot read property 'q' of undefined
-
-```txt
-zone.js:3372 GET https://www.wikidata.org/wiki/Special:EntityData/q.json 400
-scheduleTask @ zone.js:3372
-push../node_modules/zone.js/dist/zone.js.ZoneDelegate.scheduleTask @ zone.js:410
-...
-Show 188 more frames
-core.js:4002 ERROR TypeError: Cannot read property 'q' of undefined
-    at SafeSubscriber._next (item-details-store.ts:52)
-```
-
-Oh, the url param is 'q' when we have no q-code. Not idea.
-Probably need a better route definition to distinguish between wikidata, wikipedia or items with both types of data.
-
-This might have been the same as the problem reported in issue #36: property 'value' of undefined at SafeSubscriber.\_next (item-details-store.ts:46)
-
-Closing that optimistically.
+This is looking like next sprints to-do list. Moving all these non-related discussions into the sprint 2 notes.
 
 ### Saving the merged lists
 
