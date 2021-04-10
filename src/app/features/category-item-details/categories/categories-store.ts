@@ -198,6 +198,7 @@ export class CategoriesStore extends Store<CategoriesState> {
   }
 
   /**
+   * @deprecated this is not used?
    * TODO: re-implemented from a previous version.
    * @param content
    */

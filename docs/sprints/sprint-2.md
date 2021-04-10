@@ -16,8 +16,11 @@ Here is the list of to do items for this sprint.
 6. Cannot convert undefined or null to object
 7. DONE - Cannot read property 'q' of undefined
 8. DONE - #47 fix the icons
-9. #55 Create ink to Wikipedia on the details page
+9. #55 Create link to Wikipedia on the details page
 10. Redirect to data uri value
+11. Refactor the item-details-store and friends
+12. Use an observer instead of a complete callback for the router params
+13. Cannot read property 'en' of undefined on user description update
 
 ## Work notes
 
@@ -261,6 +264,105 @@ One answer I see [on StackOverflow](https://stackoverflow.com/questions/65228384
 
 But that doesn't work for us. There is no option for TSLint: Manage blah blah.
 
+### #9 Issue #55 Create link to Wikipedia on the details page
+
+When debating about how to get the links into the detail page, it was decided that storing them in firebase and then loading those on the detail page was the best way to go.
+
+Now, it appears like we don't have those links being added yet.
+
+This is an example:
+
+```js
+description: "The tendency for explanations of other individuals' behaviors to overemphasize the influence of their personality and underemphasize the influence of their situation (see also Fundamental attribution error), and for explanations of one's own behaviors to do the opposite (that is, to overemphasize the influence of our situation and underemphasize the influence of our own personality).";
+label: 'Actor-observer bias';
+type: 'Attribution bias';
+uri: '/wiki/Actor-observer_bias';
+```
+
+So why isn't the uri being added? Get it done!
+
+The object when it is stored in the realtime db does this:
+
+#### src\app\core\firebase\realtime-db.service.ts
+
+```ts
+const newItem = {
+  'user-description': item.description ? item.description : '',
+  'user-description-viewed-count': 0,
+  'item-details-viewed-count': 0,
+  'item-details-viewed-date': new Date().getTime(),
+  uri: item.uri ? item.uri : '',
+  wikidataUri: item.wikidataUri ? item.wikidataUri : ''
+};
+```
+
+And I see that value in the [firebase console](https://console.firebase.google.com/project/khipu1/database/khipu1/data)
+
+But the itemDetails object in the presentation layer doesn't have that property.
+
+#### src\app\features\category-item-details\item-details\components\item-details\item-details.component.html
+
+The object used in the template looks like this:
+
+```json
+{
+  "aliases": {},
+  "claims": {},
+  "descriptions": {},
+  "id": "",
+  "labels": {},
+  "lastrevid": 0,
+  "modified": "",
+  "ns": 0,
+  "pageid": 0,
+  "sitelinks": {},
+  "title": "",
+  "type": "",
+  "userDescription": "The tendency for explanations of other individuals' behaviors to overemphasize the influence of their personality and underemphasize the influence of their situation (see also Fundamental attribution error), and for explanations of one's own behaviors to do the opposite (that is, to overemphasize the influence of our situation and underemphasize the influence of our own personality)."
+}
+```
+
+A failed mapping of the firebase item, with only the description working. We don't even have the title except from the router url.
+
+I mean, this object is also supposed to hold a Wikidata item:
+
+```json
+description: "The tendency to depend excessively on automated systems which can lead to erroneous automated information overriding correct decisions."
+label: "Automation bias"
+type: "False priors↵"
+uri: "/wiki/Automation_bias"
+```
+
+Tracking the data back to it's source:
+
+```js
+@Input() itemDetails: ItemDetails;
+```
+
+Passed into that component by the smart container:
+
+#### src\app\features\category-item-details\item-details\container\item-details\item-details-container.component.html
+
+```html
+<item-details [language]="language" [itemDetails]="(store.state$ |
+async).itemDetails" ...
+```
+
+OK. Found the bug. In the fetchFirebaseItemAndUpdate() function:
+
+```js
+this.realtimeDbService
+  .readUserSubDataItem('items', this.selectedCategory, itemListLabelKey)
+  .then((existingItem: any) => {
+    if (existingItem && existingItem['user-description'] && existingItem['user-description'] !== '') {
+      // if the firebase meta info user description exists, use thatthis.state.itemDetails.
++     this.state.itemDetails = existingItem;
+      this.state.itemDetails.userDescription = existingItem['user-description'];
+    } else if (existingItem && existingItem['user-description'] === '') {
+```
+
+The only thing being added was the user description, which is mapped from snake-case to camelCase. We had to also set the rest of the items. We should just use camelCase for the firebase schema. Sometimes it doesn't pay to follow the docs who's examples all include snake-case.
+
 ### #10 Redirect to data uri value
 
 Steps to reproduce?
@@ -273,3 +375,48 @@ ok: false
 status: 300
 statusText: "Multiple Choices"
 url: "https://radiant-springs-38893.herokuapp.com/api/detail/Anthropomorphism%
+
+I saw this again when going to cognitive_biases/anchoring or focalism. It looks lie the description from the previous item is being shown:
+
+"The tendency to avoid options for which the probability of a favorable outcome is unknown."
+
+To test this theory, I go back and choose the ambiguity effect and see the user-description with this in the edit field:
+
+"The tendency to rely too heavily, or "anchor", on one trait or piece of information when making decisions (usually the first piece of information acquired on that subject)."
+
+Which looks like the former anchoring or focalism description.
+
+### #11 Refactor the item-details.store and friends
+
+The store is a mess, and the whole feature has a mix of the history of the mess along with an almost working implementation.
+
+The container template shows how things have just been added without refactoring so far:
+
+```html
+[itemDetails]="(store.state$ | async).itemDetails" [description]="(store.state$
+| async).itemDetails.descriptions" [userDescription]="(store.state$ |
+async).itemDetails.userDescription"
+```
+
+There is no need to pass the object and properties from the object. They used to be different things, but time to clean it up now.
+
+The file refactoring-item-details-store.md has the notes on this process. It's a good time to take care of this in this bug fixing sprint.
+
+## #12
+
+## #13 Cannot read property 'en' of undefined on user description update
+
+I addition to all the other regressions from refactoring the store classes and including Wikipedia descriptions for both fallacies and cognitive biases, the update feature is broken.
+
+When trying to update an items user description, we get this error:
+
+ItemDetailsComponent.html:21 ERROR TypeError: Cannot read property 'en' of undefined
+at ItemDetailsComponent.push../src/app/features/category-item-details/item-details/components/item-details/item-details.component.ts.ItemDetailsComponent.onDescriptionUpdated (item-details.component.ts:26)
+
+```js
+onDescriptionUpdated(event: any) {
+  this.descriptionUpdated.emit({ event: event, label: this.itemDetails.labels[this.language] });
+}
+```
+
+Even switching the label to the title passed into the route param, there is no updated happening.

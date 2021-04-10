@@ -8,6 +8,41 @@ this.fetchWikimediaDescriptionFromEndpoint(label, 'en', label);
 
 Since it is so difficult to figure out which one is which (quickly), they are doubled up for now to get the feature working before the big refactor. Don't judge!
 
+The ItemDetailsStore class is a brittle string of functions passing each other too many arguments.
+
+```ts
+fetchDetails()
+fetchDetailsFromEndpoint()
+fetchDescription()
+fetchWikimediaDescriptionFromEndpoint()
+fetchFirebaseItemAndUpdate() or fetchDescriptionFromEndpoint()
+```
+
+fetchDetails() gets the route parameters and then, depending on if it's a Wikidata item or a Wikipedia item, it calls their respective functions to retrieve them from their endpoints.
+
+These could be separate components, since they should be able to operated independatly. Before, we chained them together because we wanted to set the default user description based on whatever was the best choice after all the calls had been completed. This caused a pause for both components, so it's time to completely separate that functionality.
+
+The refactoring of the item list store saw great benefits by separating the loading and parsing from the listing and editing phases.
+
+Here, we can load the lists separately and the first idea to handle setting the default user description is to have a button when says something like "set Wikipedia description" or "set Wikipedia description". Or a button on each respective section that says "Set description as user description".
+
+There are also some TypeScript suggestions on this:
+
+```ts
+this.activatedRoute.paramMap.subscribe(() => { ... }
+```
+
+The details:
+
+```txt
+@deprecated — Use an observer instead of a complete callback
+@deprecated — Use an observer instead of an error callback
+@deprecated — Use an observer instead of a complete callback
+subscribe is deprecated: Use an observer instead of a complete callback (deprecation)tslint(1)
+```
+
+So that could also be taken care of now. Add it to the list.
+
 ## Planning the refactor
 
 The ItemDetailsStore class is a brittle string of functions passing each other too many arguments.

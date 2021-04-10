@@ -1,16 +1,20 @@
 <ion-item color="light">
   <ion-card class="card ion-text-center" *ngIf="itemDetails">
     <ion-card-content>
-      <!-- <ion-card-header>
-        <h2 *ngIf="itemDetails.sitelinks[language + 'wiki']; else noLinkTitle">
+      <ion-card-header>
+        <h2 *ngIf="itemDetails.sitelinks && itemDetails.sitelinks[language + 'wiki']; else noLinkTitle">
+          1
           {{ itemDetails | json }}
         </h2>
         <ng-template #noLinkTitle>
-          <p class="title_no_link" *ngIf="itemDetails.title">
-            {{ itemDetails | json }}
-          </p>
+          <a
+            *ngIf="language && itemDetails['uri']"
+            href="{{ 'https://' + language + '.wikipedia.org' + itemDetails['uri'] }}"
+          >
+            {{ language + '.wikipedia.org' + itemDetails['uri'] }}</a
+          >
         </ng-template>
-      </ion-card-header> -->
+      </ion-card-header>
       <div *ngIf="itemDetails.aliases && itemDetails.aliases[language] && itemDetails.aliases[language].length > 0">
         Aliases:
         <span *ngFor="let alias of itemDetails.aliases[language]; let i = index">

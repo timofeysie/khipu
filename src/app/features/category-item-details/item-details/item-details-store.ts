@@ -22,7 +22,7 @@ export class ItemDetailsStore extends Store<ItemDetailsState> {
     private categoryItemDetailsService: CategoryItemDetailsService
   ) {
     super(new ItemDetailsState());
-    this.fetchDetails();
+    const details = this.fetchDetails();
   }
 
   fetchDetails() {
@@ -32,12 +32,13 @@ export class ItemDetailsStore extends Store<ItemDetailsState> {
     this.activatedRoute.paramMap.subscribe(params => {
       const qcode = params.get('qcode');
       if (qcode !== 'q') {
-        console.log('qcode', qcode);
+        // 1. Wikidata qcode
         this.fetchDetailsFromEndpoint(qcode, sparqlLanguageObject.sparqlLanguage);
       }
       const label = params.get('label');
       if (label) {
         // TODO: refactor this!
+        // 2 Wikipedia item
         this.fetchWikimediaDescriptionFromEndpoint(label, 'en', label);
       }
     });
@@ -135,7 +136,8 @@ export class ItemDetailsStore extends Store<ItemDetailsState> {
       .readUserSubDataItem('items', this.selectedCategory, itemListLabelKey)
       .then((existingItem: any) => {
         if (existingItem && existingItem['user-description'] && existingItem['user-description'] !== '') {
-          // if the firebase meta info user description exists, use that
+          // if the firebase meta info user description exists, use thatthis.state.itemDetails.
+          this.state.itemDetails = existingItem;
           this.state.itemDetails.userDescription = existingItem['user-description'];
         } else if (existingItem && existingItem['user-description'] === '') {
           // pre-fill a blank descriptions and save them back to the db

@@ -8,6 +8,7 @@ import { ItemDetails } from '@app/core/interfaces/item-details';
   encapsulation: ViewEncapsulation.None
 })
 export class ItemDetailsComponent implements OnInit, AfterViewInit {
+  @Input() labelStr: string;
   @Input() itemDetails: ItemDetails;
   @Input() wikimediaDescription: any;
   @Input() wikipediaDescription: any;
@@ -23,7 +24,9 @@ export class ItemDetailsComponent implements OnInit, AfterViewInit {
   ngAfterViewInit() {}
 
   onDescriptionUpdated(event: any) {
-    this.descriptionUpdated.emit({ event: event, label: this.itemDetails.labels[this.language] });
+    // for wikidata: this.itemDetails.labels[this.language]);
+    // from the router param: labelStr
+    this.descriptionUpdated.emit({ event: event, label: this.labelStr });
   }
 
   toggleDescription() {

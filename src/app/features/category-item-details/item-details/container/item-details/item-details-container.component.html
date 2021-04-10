@@ -24,6 +24,7 @@
 <ion-content class="specific-content">
   <item-details
     [language]="language"
+    [labelStr]="labelStr"
     [itemDetails]="(store.state$ | async).itemDetails"
     [description]="(store.state$ | async).itemDetails.descriptions"
     [userDescription]="(store.state$ | async).itemDetails.userDescription"
