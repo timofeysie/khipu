@@ -19,6 +19,7 @@ const log = new Logger('CategoriesStore');
 export class CategoriesStore extends Store<CategoriesState> {
   // Item rejection counters
   rejectedForNavigation: number;
+  rejectedAfterSeeAlso: number;
   rejectedForReference: number;
   rejectedForCitation: number;
   rejectedForNoLabel: number;
@@ -168,6 +169,7 @@ export class CategoriesStore extends Store<CategoriesState> {
    */
   async parseParticularCategoryTypes(response: any, _title: string, _language: string): Promise<Item[]> {
     this.rejectedForNavigation = 0;
+    this.rejectedAfterSeeAlso = 0;
     this.rejectedForReference = 0;
     this.rejectedForCitation = 0;
     this.rejectedForNoLabel = 0;
@@ -190,6 +192,7 @@ export class CategoriesStore extends Store<CategoriesState> {
 
   logResults() {
     console.log('rejectedForNavigation', this.rejectedForNavigation);
+    console.log('rejectedAfterSeeAlso', this.rejectedAfterSeeAlso);
     console.log('rejectedForReference', this.rejectedForReference);
     console.log('rejectedForCitation', this.rejectedForCitation);
     console.log('rejectedForNoLabel', this.rejectedForNoLabel);
@@ -208,7 +211,6 @@ export class CategoriesStore extends Store<CategoriesState> {
     // const category = desc[0].getElementsByClassName('mw-headline')[0].innerText;
     // const allDesc = desc[2];
     const wikiList: Item[] = this.parseAllWikipediaPageItems(one);
-    console.log('wikiList', wikiList);
     return wikiList;
   }
 
@@ -261,6 +263,7 @@ export class CategoriesStore extends Store<CategoriesState> {
               endOfList = true;
               break;
             }
+            const excludeItem = this.checkForEndOfListItem(label, item);
             // If the item has a sub-list, capture those items also and remove them from the description.
             const subList: Item[] = this.checkForSubListAndParseIfExists(item, label, wikiList);
             if (subList) {
@@ -273,7 +276,7 @@ export class CategoriesStore extends Store<CategoriesState> {
             const newWikiItem = this.createNewItem(label, descWithoutCitations, uri);
             if (wikiList.some(thisItem => thisItem.label === newWikiItem.label)) {
               // skip adding duplicates
-            } else {
+            } else if (!excludeItem) {
               wikiList.push(newWikiItem);
             }
           } else {
@@ -412,9 +415,27 @@ export class CategoriesStore extends Store<CategoriesState> {
       const span = item.getElementsByTagName('span');
       const img = span[0].innerHTML;
       if (img.indexOf('//upload.wikimedia.org/wikipedia/commons/thumb/2/20/Text-x-generic.svg/') !== -1) {
-        console.log('end of list found');
+        // end of list found
         return true;
       }
+    }
+    return false;
+  }
+
+  /**
+   * If an item is after the "See Also" section,
+   * it may have '&#160;&#8211;' in the content.
+   * If so, exclude it.
+   * @param label
+   * @param item
+   * @returns true if '&#160;&#8211;' is in the item contents.
+   */
+  checkForEndOfListItem(label: string, item: HTMLLIElement): boolean {
+    const innerItem = item.innerHTML;
+    if (innerItem.indexOf('&#160;&#8211;') === -1) {
+      this.rejectedAfterSeeAlso++;
+      console.log('rejected ' + label, item);
+      return true;
     }
     return false;
   }

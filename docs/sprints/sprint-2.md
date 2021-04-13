@@ -1,6 +1,7 @@
 # Sprint 2
 
 Start date: April 3rd, 2021.
+End date: April 30th, 2021.
 
 Sprint planning: scope of sprint, all issues story-pointed, set a sprint target name.
 
@@ -12,15 +13,17 @@ Here is the list of to do items for this sprint.
 2. Cannot read property 'includes' of null
 3. DOME - detail pages lead to general description, not a detail
 4. DONE - what to do with the rejected items info
-5. fallacies end of list function not working regression
+5. #58 fallacies end of list function not working regression
 6. Cannot convert undefined or null to object
 7. DONE - Cannot read property 'q' of undefined
 8. DONE - #47 fix the icons
-9. #55 Create link to Wikipedia on the details page
-10. Redirect to data uri value
+9. DONE - #55 Create link to Wikipedia on the details page
+10. Redirect to data uri value response error (Issue #57)
 11. Refactor the item-details-store and friends
 12. Use an observer instead of a complete callback for the router params
 13. Cannot read property 'en' of undefined on user description update
+14. #54 Allow links on detail pages to work
+15. Start using GitHub projects
 
 ## Work notes
 
@@ -98,6 +101,89 @@ The Wikipedia list has 387 items.
 So the end of list part is broken again for the fallacies.
 
 For now, just leave these as comments in the the app since they will not be used for anything for a while.
+
+Depending on how we capture them, it could be any of these:
+
+- Lists portal
+- Philosophy portal
+- Cognitive distortion
+
+The first to are already being excluded by other criterea.
+
+```html
+<li>
+  <a href="/wiki/Cognitive_distortion" title="Cognitive distortion"
+    >Cognitive distortion</a
+  >
+  &nbsp;– Exaggerated or irrational thought pattern
+</li>
+```
+
+How can we distinguish this from the ones we want then?
+
+```html
+<li>
+  <a href="/wiki/Vacuous_truth" title="Vacuous truth">Vacuous truth</a>
+  u2013 a claim that is technically true but meaningless, in the form no
+  <i>A</i> in <i>B</i> has <i>C</i>, when there is no <i>A</i> in <i>B</i>. For
+  example, claiming that no mobile phones in the room are on when there are no
+  mobile phones in the room.
+</li>
+x`x
+```
+
+- don't want:
+
+```html
+<li>
+  <a href="/wiki/..." title="...">...</a>
+  &nbsp;– ...
+</li>
+```
+
+- want:
+
+```html
+<li>
+  <a href="/wiki/..." title="...">...</a>
+  u2013 ...
+</li>
+```
+
+Is it really as simple as that?
+
+But then see there are more:
+
+```html
+Cognitive distortion</a>&#160;&#8211;
+```
+
+However, if we just check for this string, then we reject about 500 items. That's a little too many methinks!
+
+### #5 Issue #58 fallacies end of list function not working regression
+
+The last item on our sample list of fallacies is Vacuous truth.
+
+Looking at the items that come after this however gives a little surprise. The next item appears actually above the entry for vacuous truth, which means if we stop the loops then, we would miss out on that item and all items that need to be parsed after that.
+
+```html
+<li>
+  <i>
+    <a href="/wiki/Ad_hominem#Circumstantial" title="Ad hominem"
+      >Circumstantial ad hominem</a
+    >
+  </i>
+  – stating that the arguer's personal situation or perceived benefit from
+  advancing a conclusion means that their conclusion is wrong.
+  <sup id="cite_ref-68" class="reference">
+    <a href="#cite_note-68">[68]</a>
+  </sup>
+</li>
+```
+
+To avoid this flaw in the end of list check, we probably shouldn't be doing it. The item should be checked for inclusion, or exclusion, no matter where in the list it is. This might be an issue for other lists, as we don't know the full breadth of the kind of lists layout Wikipedia has. So far we have just seen unordered lists and tables with various columns.
+
+The above is OK to include. What does the html for
 
 ### #6 Cannot convert undefined or null to object
 
@@ -363,9 +449,9 @@ this.realtimeDbService
 
 The only thing being added was the user description, which is mapped from snake-case to camelCase. We had to also set the rest of the items. We should just use camelCase for the firebase schema. Sometimes it doesn't pay to follow the docs who's examples all include snake-case.
 
-### #10 Redirect to data uri value
+### #10 Redirect to data uri value (Issue #57)
 
-Steps to reproduce?
+Raised an [issue #57 for this](https://github.com/timofeysie/khipu/issues/57).
 
 error: "Redirect to data uri value"
 headers: HttpHeaders {normalizedNames: Map(0), lazyUpdate: null, lazyInit: ƒ}
@@ -402,9 +488,9 @@ There is no need to pass the object and properties from the object. They used to
 
 The file refactoring-item-details-store.md has the notes on this process. It's a good time to take care of this in this bug fixing sprint.
 
-## #12
+### #12 Use an observer instead of a complete callback for the router params
 
-## #13 Cannot read property 'en' of undefined on user description update
+### #13 Cannot read property 'en' of undefined on user description update
 
 I addition to all the other regressions from refactoring the store classes and including Wikipedia descriptions for both fallacies and cognitive biases, the update feature is broken.
 
@@ -420,3 +506,37 @@ onDescriptionUpdated(event: any) {
 ```
 
 Even switching the label to the title passed into the route param, there is no updated happening.
+
+### #14 Allow links on detail pages to work #54
+
+### #15 Start using GitHub projects
+
+Moving towards organizing the work for this project into sprints has been a great way to see progress and predict velocity.
+
+So far, it has just been some basic note taking structure connected with GitHub issues and milestones.
+
+Looking at an [example of GitHub projects](https://github.com/ParabolInc/parabol/projects/2) shows the extent to which this should happen.
+
+There are as number of project templates available:
+
+1. None: Start from scratch with a completely blank project board. You can add columns and configure automation settings yourself.
+2. Basic kanban: Basic kanban-style board with columns for To do, In progress and Done.
+   Automated kanban: Kanban-style board with built-in triggers to automatically move issues and pull requests across To do, In progress and Done columns.
+3. Automated kanban with reviews: Everything included in the Automated kanban template with additional triggers for pull request reviews.
+4. Bug triage: Triage and prioritize bugs with columns for To do, High priority, Low priority, and Closed.
+
+At this point, we don't have reviews, but having a pull review structure setup adds an extra safety net before things get deployed.
+
+These days, as the only developer on the project, PRs have not been done. But in planning out how to work with future devs, this is part of that. So going with option three for now: Automated kanban.
+
+The card concept is a little strange: _Cards can be added to your board to track the progress of issues and pull requests. You can also add note cards, like this one!_
+
+Turns out you can just link the issue and that shows up. Cool.
+
+https://github.com/timofeysie/khipu/projects/1
+
+## Random work
+
+ERROR Error: Uncaught (in promise): TypeError: Cannot read property 'uid' of null
+TypeError: Cannot read property 'uid' of null
+at RealtimeDbService.push../src/app/core/firebase/realtime-db.service.ts.RealtimeDbService

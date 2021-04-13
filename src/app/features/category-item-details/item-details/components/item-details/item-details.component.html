@@ -11,7 +11,7 @@
             *ngIf="language && itemDetails['uri']"
             href="{{ 'https://' + language + '.wikipedia.org' + itemDetails['uri'] }}"
           >
-            {{ language + '.wikipedia.org' + itemDetails['uri'] }}</a
+            <h1>{{ labelStr }}</h1></a
           >
         </ng-template>
       </ion-card-header>
