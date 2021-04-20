@@ -15,6 +15,11 @@ import { environment } from '@env/environment.prod';
 
 const log = new Logger('CategoriesStore');
 
+export enum Types {
+  UnorderedList, // Fallacies: Types.UnorderedList
+  TableList // Cognitive biases
+}
+
 @Injectable()
 export class CategoriesStore extends Store<CategoriesState> {
   // Item rejection counters
@@ -210,7 +215,7 @@ export class CategoriesStore extends Store<CategoriesState> {
     // const desc: any = one.getElementsByClassName('mw-parser-output')[0].children;
     // const category = desc[0].getElementsByClassName('mw-headline')[0].innerText;
     // const allDesc = desc[2];
-    const wikiList: Item[] = this.parseAllWikipediaPageItems(one);
+    const wikiList: Item[] = this.parseAllWikipediaPageItems(one, Types.TableList);
     return wikiList;
   }
 
@@ -221,7 +226,7 @@ export class CategoriesStore extends Store<CategoriesState> {
    */
   getItemsFromFallaciesList(markup: any) {
     const main = this.createElementFromHTML(markup);
-    const wikiItem: Item[] = this.parseAllWikipediaPageItems(main);
+    const wikiItem: Item[] = this.parseAllWikipediaPageItems(main, Types.UnorderedList);
     return wikiItem;
   }
 
@@ -232,10 +237,11 @@ export class CategoriesStore extends Store<CategoriesState> {
    * Since they are not part of the simple list, we wont need them yet.
    * @param main
    */
-  parseAllWikipediaPageItems(main: HTMLDivElement) {
+  parseAllWikipediaPageItems(main: HTMLDivElement, type: Types) {
     const wikiList: Item[] = [];
     const unorderedLists = main.getElementsByTagName('ul');
     const numberOfUnorderedLists = unorderedLists.length;
+    console.log('numberOfUnorderedLists', numberOfUnorderedLists);
     let endOfList = false;
     for (let i = 0; i < numberOfUnorderedLists; i++) {
       if (endOfList) {
@@ -246,24 +252,22 @@ export class CategoriesStore extends Store<CategoriesState> {
       for (let j = 0; j < li.length; j++) {
         const item = li[j];
         const label = this.parseLabel(item);
-        if (this.checkParent(item) && this.checkContent(label, item)) {
-          const liAnchor: HTMLCollection = item.getElementsByTagName('a');
-          const tr: HTMLCollectionOf<any> = item.getElementsByTagName('tr');
-          if (tr.length) {
-            // what was this to catch?
+        // check for end of unordered list and stop parsing if it is
+        if (type === Types.UnorderedList) {
+          if (this.checkForEndOfUnorderedList(label, item)) {
+            endOfList = true;
+            break;
           }
+        }
+        if (this.checkParent(item, type) && this.checkContent(label, item)) {
+          const liAnchor: HTMLCollection = item.getElementsByTagName('a');
           const content = item.textContent || item.innerText || '';
           const descriptionWithoutLabel = this.removeLabelFromDescription(content, label);
           let descWithoutCitations = this.removePotentialCitations(descriptionWithoutLabel);
           // Only capture items that have a label, which excludes table of contents, etc.
           if (label !== null) {
             const uri = liAnchor[0].getAttribute('href');
-            // check for end of list and break out of loops if it is
-            if (this.checkForEndOfList(label, item)) {
-              endOfList = true;
-              break;
-            }
-            const excludeItem = this.checkForEndOfListItem(label, item);
+            const excludeItem = this.checkForEndOfListItem(label, item, type);
             // If the item has a sub-list, capture those items also and remove them from the description.
             const subList: Item[] = this.checkForSubListAndParseIfExists(item, label, wikiList);
             if (subList) {
@@ -280,6 +284,7 @@ export class CategoriesStore extends Store<CategoriesState> {
               wikiList.push(newWikiItem);
             }
           } else {
+            console.log('rejectedForNoLabel');
             this.rejectedForNoLabel++;
           }
         }
@@ -294,23 +299,25 @@ export class CategoriesStore extends Store<CategoriesState> {
    * @param item
    * @returns Returns true if parent role is not 'navigation'.
    */
-  checkParent(item: HTMLLIElement) {
+  checkParent(item: HTMLLIElement, type: Types) {
     // check for navigation items
     const parent = item.parentElement;
     const grandParent = parent.parentElement;
     const roleParent = parent.getAttribute('role');
     const roleGrandParent = grandParent.getAttribute('role');
     if (roleParent === 'navigation' || roleGrandParent === 'navigation') {
+      console.log('rejectedForNavigation');
       this.rejectedForNavigation++;
       return false;
     }
     // check for references in ordered lists
     const greatGrandParent = grandParent.parentElement;
     const orderedListGGP = greatGrandParent.getElementsByTagName('ol');
-    if (orderedListGGP.length > 0) {
+    if (orderedListGGP.length > 0 && type === Types.TableList) {
       // This doesn't work for some reason.
       // this.rejectedForReference++;
-      // return false;
+      console.log('rejectedForReference not used');
+      return false;
     }
     return true;
   }
@@ -324,6 +331,7 @@ export class CategoriesStore extends Store<CategoriesState> {
   checkContent(label: string, item: HTMLElement) {
     const content = item.textContent || item.innerText || '';
     if (content.indexOf('Wikipedia list article') !== -1 || content.indexOf('List of') !== -1) {
+      console.log('rejectedAsList');
       this.rejectedAsList++;
       return false;
     }
@@ -331,10 +339,12 @@ export class CategoriesStore extends Store<CategoriesState> {
     // check for references
     const ol = item.getElementsByTagName('cite');
     if (ol.length > 0) {
+      console.log('rejectedForCitation');
       this.rejectedForCitation++;
       return false;
     }
     if (label === 'ISBN') {
+      console.log('rejectedForReference');
       this.rejectedForReference++;
       return false;
     }
@@ -394,6 +404,7 @@ export class CategoriesStore extends Store<CategoriesState> {
           const uri = liAnchor[0].getAttribute('href');
           const newWikiItem = this.createNewItem(subLabel, descWithoutCitations, uri);
           if (wikiList.some(thisItem => thisItem.label === newWikiItem.label)) {
+            console.log('rejectedDuplicate');
             this.rejectedDuplicate++;
             // don't add duplicates
           } else {
@@ -406,16 +417,18 @@ export class CategoriesStore extends Store<CategoriesState> {
   }
 
   /**
-   * Needs work.
+   * This was the old function used the first time that the list of fallacies/<ul> type
+   * was done successfully.
+   * Because if relies on this specific tag, it's probably not going to work well for other types.
    * @param label
    * @param item
+   * @returns true if the 'Lists portal' element has the lists portal icon.
    */
-  checkForEndOfList(label: string, item: HTMLLIElement): boolean {
+  checkForEndOfUnorderedList(label: string, item: HTMLLIElement): boolean {
     if (label === 'Lists portal') {
       const span = item.getElementsByTagName('span');
       const img = span[0].innerHTML;
       if (img.indexOf('//upload.wikimedia.org/wikipedia/commons/thumb/2/20/Text-x-generic.svg/') !== -1) {
-        // end of list found
         return true;
       }
     }
@@ -430,11 +443,11 @@ export class CategoriesStore extends Store<CategoriesState> {
    * @param item
    * @returns true if '&#160;&#8211;' is in the item contents.
    */
-  checkForEndOfListItem(label: string, item: HTMLLIElement): boolean {
+  checkForEndOfListItem(label: string, item: HTMLLIElement, type: Types): boolean {
     const innerItem = item.innerHTML;
-    if (innerItem.indexOf('&#160;&#8211;') === -1) {
+    if (innerItem.indexOf('&#160;&#8211;') === -1 && type === Types.TableList) {
       this.rejectedAfterSeeAlso++;
-      console.log('rejected ' + label, item);
+      console.log('type ' + type + ' rejected ' + label, item);
       return true;
     }
     return false;

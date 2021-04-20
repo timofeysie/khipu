@@ -9,7 +9,14 @@ Change log for the Khipu app. This helps keep a running list of changes made for
 - Fixed the wikilist url created for the server call.
 - Using the table functions to parse the cognitive bias Wikipedia page.
 - Testing content with checkParent(item) && this.checkContent(item).
-- Finished parsing Wikipedia table format for the list of cognitive biases list(Issue #53).
+- #53 Finished parsing Wikipedia table format for the list of cognitive biases list.
+- Detail pages lead to general description, not a detail fixed.
+- #58 fallacies end of list function not working regression
+- Cannot convert undefined or null to object fixed.
+- Cannot read property 'q' of undefined fixed.
+- #47 fix the icons. Still might have issues due to caching.
+- #55 Create link to Wikipedia on the details page.
+- Start using GitHub projects.
 
 ### Issues Closed
 

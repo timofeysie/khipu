@@ -11,9 +11,9 @@ Here is the list of to do items for this sprint.
 
 1. Non-adaptive choice switching uri
 2. Cannot read property 'includes' of null
-3. DOME - detail pages lead to general description, not a detail
+3. DONE - detail pages lead to general description, not a detail
 4. DONE - what to do with the rejected items info
-5. #58 fallacies end of list function not working regression
+5. DONE - #58 fallacies end of list function not working regression
 6. Cannot convert undefined or null to object
 7. DONE - Cannot read property 'q' of undefined
 8. DONE - #47 fix the icons
@@ -23,7 +23,7 @@ Here is the list of to do items for this sprint.
 12. Use an observer instead of a complete callback for the router params
 13. Cannot read property 'en' of undefined on user description update
 14. #54 Allow links on detail pages to work
-15. Start using GitHub projects
+15. DONE - Start using GitHub projects
 
 ## Work notes
 
@@ -108,7 +108,7 @@ Depending on how we capture them, it could be any of these:
 - Philosophy portal
 - Cognitive distortion
 
-The first to are already being excluded by other criterea.
+The first to are already being excluded by other criteria.
 
 ```html
 <li>
@@ -184,6 +184,204 @@ Looking at the items that come after this however gives a little surprise. The n
 To avoid this flaw in the end of list check, we probably shouldn't be doing it. The item should be checked for inclusion, or exclusion, no matter where in the list it is. This might be an issue for other lists, as we don't know the full breadth of the kind of lists layout Wikipedia has. So far we have just seen unordered lists and tables with various columns.
 
 The above is OK to include. What does the html for
+
+After a bit of time, there is a total 74 items combined from both lists.
+
+The problem is, there are 156 on the combined list from the last time the category was generated. That was before adding the Wikipedia parsing functionality.
+
+Might be worth getting the entire class before that work and re-implement it as a separate function as it was done back then. Then someone would have to figure out what is different and what is the same. At least let's know what was the commit that started the refactor so we can have a look at the previous working state.
+
+It's somewhere in between here:
+Commits on Feb 22, 2021 #38 first round of refactoring complete
+
+and here:
+Commits on Mar 6, 2021 #44 added notes on the fallacies sections
+
+Originally, we had two separate functions to scrape the two different types:
+
+```ts
+const fallyList = this.getItemsFromFallaciesList(markup);
+const cogbyList = this.getItemsFromCognitiveBiasesList(markup);
+```
+
+The list of fallacies is called the fallyList, a series of unordered lists that hold the items.
+The list of cognitive biases is the other one which is a table based layout.
+
+Then, it was decided to just use the same function for each. So now these function both call parseAllWikipediaPageItems().
+
+Items to check:
+
+Appeal to probability
+Affirming a disjunct
+Should reject anything from Cognitive distortion on.
+
+Right off the bat we can see that the checkForEndOfListItem() function has rejected Appeal to probability.
+
+We should use an enum of types instead of category names.
+
+```ts
+export enum Types {
+  UnorderedList, // Fallacies: Types.UnorderedList
+  TableList // Cognitive biases
+}
+```
+
+Then, checking for the type table list, we see type 0 rejected Appeal to probability. Then we are back to the long list that adds all the items after the See Also section.
+
+The first item after the end of the list is:
+
+```html
+<li>
+  <a href="/wiki/Cognitive_distortion" title="Cognitive distortion">
+    Cognitive distortion</a
+  >
+  &nbsp;– Exaggerated or irrational thought pattern
+</li>
+```
+
+Since we've been here before, looking at the notes for "#4 what to do with the rejected items info", it
+s clear that we didn't have a solution there. So then what was done the first time around when we created a working fallacies list which is still seen on the currently deployed app?
+
+"Closes #60 and #58 wip" is the commit GitLens is showing me.
+
+Also, introducing list type without much architectural thought here could be a problem. It should probably be decided in what we we want to capture the difference in business logic.
+
+As much code should be shared between the different types as is logical.
+Variations based on type should be layered so that a kind of domain-specific language can be created in the code which makes it obvious. I could also think back to my Java development days and think of some patterns that address this type of use case. The strategy pattern comes off the top of the head, so to speak, quack quack.
+
+Look, somehow it was working some time ago, last sprint or more. So if someone could just produce the commit of that working state, that would be really great.
+
+Someone could look at the firebase console and see what date that list was generated. Couldn't hurt.
+
+It has the viewed data of 1615885028509.
+
+[This site says](): Tue 16 March 2021 19:57:08. But GitHub shows issues by number of days ago. How many days ago was that? It's Feb. 18th right now, that's over a month.
+
+GitHub says the commit was: closes #44 closes #45 closes #50 overwrite and save merged list of items working, items list broken for refactor.
+
+So we could look at those issues and the commits associated with them.
+
+Apart from the writeNewItemList() function in categories-store.ts and the removeBrackets() function, the work was already done previously. Still that state should contain what we want. It will just take more work to figure out what parts are different.
+
+#### The original categories.store.ts file when fallacies were working
+
+```js
+if (_title === 'fallacies') {
+  const fallyList = this.getItemsFromFallaciesList(markup);
+} else if (_title === 'cognitive_bias') {
+  const cogbyList = this.getItemsFromCognitiveBiasesList(markup);
+}
+...
+  /**
+   * Create an element from the document passed in
+   * and parse it for an array of items and descriptions.
+   * @param markup
+   */
+  getItemsFromFallaciesList(markup: any) {
+    const main = this.createElementFromHTML(markup);
+    const wikiItem: Item[] = this.parseAllWikipediaPageItems(main);
+    return wikiItem;
+  }
+```
+
+The function in question:
+
+```js
+  parseAllWikipediaPageItems(main: HTMLDivElement) {
+    const unorderedLists = main.getElementsByTagName('ul');
+    for (let i = 0; i < numberOfUnorderedLists; i++) {
+      const li = unorderedLists[i].getElementsByTagName('li');
+      for (let j = 0; j < li.length; j++) {
+        const liAnchor: HTMLCollection = li[j].getElementsByTagName('a');
+        const tr: HTMLCollectionOf<any> = li[j].getElementsByTagName('tr');
+        const label = this.parseLabel(item);
+        // Only capture items that have a label, which excludes table of contents, etc.
+        if (label !== null) {
+          const uri = liAnchor[0].getAttribute('href');
+          // check for end of list and break out of loops if it is
+          if (this.checkForEndOfList(label, item)) {
+            endOfList = true;
+            break;
+          }
+          // If the item has a sub-list, capture those items also and remove them from the description.
+          const subList: Item[] = this.checkForSubListAndParseIfExists(item, label, wikiList);
+          if (subList) {
+            wikiList.push(...subList);
+            descWithoutCitations = this.removeSubListMaterial(descriptionWithoutLabel, subList);
+            // This call again seems redundant, which is a bit of a smell and should be sorted out.
+            descWithoutCitations = this.removePotentialCitations(descWithoutCitations);
+          }
+          // create item and add it to the list
+          const newWikiItem = this.createNewItem(label, descWithoutCitations, uri);
+          if (wikiList.some(thisItem => thisItem.label === newWikiItem.label)) {
+            // skip adding duplicates
+          } else {
+            wikiList.push(newWikiItem);
+          }
+        }
+      }
+    }
+    return wikiList;
+  }
+```
+
+That's all nice, but the check for the end of list is what supposedly used to work:
+
+```ts
+  checkForEndOfList(label: string, item: HTMLLIElement): boolean {
+    if (label === 'Lists portal') {
+      const span = item.getElementsByTagName('span');
+      const img = span[0].innerHTML;
+      if (img.indexOf('//upload.wikimedia.org/wikipedia/commons/thumb/2/20/Text-x-generic.svg/') !== -1) {
+        return true;
+      }
+    }
+    return false;
+  }
+```
+
+How as Cognitive distortion triggering the end of list? That label is not even being found anymore. So that might be the problem. Maybe we have somehow excluded that label, and therefore broken the function?
+
+There is a mention of that in the parsing-wikipedia-content.md document.
+
+```html
+<div
+  role="navigation"
+  aria-label="Portals"
+  class="noprint portal plainlist tright"
+>
+  <ul>
+    <li>
+      <span><img .../></span>
+      <span>
+        <a href="/wiki/Portal:Lists" class="mw-redirect" title="Portal:Lists"
+          >Lists portal</a
+        >
+      </span>
+    </li>
+    ...
+  </ul>
+</div>
+```
+
+Lets try and get that label again.
+
+It looks like just moving the old check for end of list up in the function to before this line works:
+
+```js
+if (this.checkParent(item, type) && this.checkContent(label, item)) {
+```
+
+Then we get 18 + 141 items, which matches what we got for the current list on firebase.
+
+Trying the list of cognitive biases shows these numbers: 109 + 197 = 306. Our list currently on firebase is 280. Uh-oh. There appear to be big differences.
+
+The current state has "Agent detection" as it's first item.
+On firebase, it's the poorly titled "Accident".
+
+This sprint is two thirds finished now, so it's time for a commit/release at this point.
+
+We will move to version 1.1.2, and raise a new issue for cognitive biases discrepancies.
 
 ### #6 Cannot convert undefined or null to object
 
@@ -540,3 +738,5 @@ https://github.com/timofeysie/khipu/projects/1
 ERROR Error: Uncaught (in promise): TypeError: Cannot read property 'uid' of null
 TypeError: Cannot read property 'uid' of null
 at RealtimeDbService.push../src/app/core/firebase/realtime-db.service.ts.RealtimeDbService
+
+Firebase setup problems again. Didn't account for all the errors on every function and just fixed them one by one.
