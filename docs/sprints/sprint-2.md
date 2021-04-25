@@ -24,6 +24,10 @@ Here is the list of to do items for this sprint.
 13. Cannot read property 'en' of undefined on user description update
 14. #54 Allow links on detail pages to work
 15. DONE - Start using GitHub projects
+16. Cognitive biases parsing has regressed (maybe)
+17. User description update not working
+18. Set default user description not working
+19. Title not showing for items with no descriptions?
 
 ## Work notes
 
@@ -688,6 +692,8 @@ The file refactoring-item-details-store.md has the notes on this process. It's a
 
 ### #12 Use an observer instead of a complete callback for the router params
 
+TODO: Add description at least for this.
+
 ### #13 Cannot read property 'en' of undefined on user description update
 
 I addition to all the other regressions from refactoring the store classes and including Wikipedia descriptions for both fallacies and cognitive biases, the update feature is broken.
@@ -706,6 +712,246 @@ onDescriptionUpdated(event: any) {
 Even switching the label to the title passed into the route param, there is no updated happening.
 
 ### #14 Allow links on detail pages to work #54
+
+The first item on the cognitive biases list looks like this:
+
+```txt
+description: ""
+label: "Accentuation effect"
+uri: ""
+wikidataUri: undefined
+```
+
+It's possible neither Wikipedia nor Wikidata have a uri, but not very likely. Lets look at the markup from the source: funny, there is none. That's more than weird. It's bordering on impossible.
+
+It's possible it's been deleted from Wikipedia. There is a page for it: https://en.wikipedia.org/wiki/Accentuation_effect
+
+The description: _Accentuation effect occurs when something (be it a person, place or thing) is placed into a category. The differences between the categories are then exaggerated, and differences within the categories themselves are minimised. Memory of anything that can be categorized is subject to an accentuation effect in which the memory is distorted toward typical examples._
+
+At the bottom of the page it says "Categories: Cognitive biases". So why isn't it on our list?
+
+Accentuation effect does not appear on our sample html, which should have been the same thing that was parsed to create the list that is on firebase right now. So maybe the parsing is working as it should?
+
+Mysteries aside for the moment, if we want to go to a detail page regardless of any description or uri's, we need a third option here:
+
+```js
+if (item.uri) {
+  // wikipedia item
+  this.router.navigate([
+    `/categories/item-details/${this.category.name}/q/${item.label}`
+  ]);
+}
+if (item.wikidataUri) {
+  // wikidata item
+  const lastSlash = item.wikidataUri.lastIndexOf('/');
+  const qCode = item.wikidataUri.substring(
+    lastSlash + 1,
+    item.wikidataUri.length
+  );
+  this.router.navigate([`/categories/item-details/${this.category}/${qCode}`]);
+}
+```
+
+The first block doesn't actually rely on the the item.uri. So the solution might be to just reverse the blocks and instead of the second if, just use an else.
+
+That works, but then we get an error on the detail page:
+
+```err
+error TypeError: Cannot read property 'title' of undefined
+    at ItemDetailsStore.push../src/app/features/category-item-details/item-details/item-details-store.ts.ItemDetailsStore.createDefaultDescription (item-details-store.ts:189)
+```
+
+Line 189:
+
+```js
+const label = this.state.itemDetails.sitelinks[language + 'wiki'][
+  'title'
+].toLowerCase();
+```
+
+http://localhost:4200/categories/item-details/cognitive_biases/q/Accentuation%20effect
+
+Catch that error and then we have some old behavior that needs to be updated:
+
+```txt
+item-details-viewed-count: 0
+item-details-viewed-date: 1616904372956
+uri: ""
+user-description: ""
+user-description-viewed-count: 0
+userDescription: "accentuation effect occurs when something (be it a person, place or thing) is placed into a categor..."
+wikidataUri: "http://www.wikidata.org/entity/Q97221754"
+```
+
+Also, it's writing the item directly under the user id in firebase (glad I checked).
+
+That has to stop. What is should be doing is writing the 'user-description', and in the proper place.
+
+One thing I don't like about our logger service is
+
+```txt
+_sanitizeHtml @ core.js:4689
+push../node_modules/@angular/platform-browser/fesm5/platform-browser.js.DomSanitizerImpl.sanitize @ platform-browser.js:1871
+setElementProperty @ core.js:28554
+... seriously like 200 lines in the stack trace ...
+... and then at the end you find out there is ...
+... almost another three hundred lines that were hidden ...
+Show 291 more frames
+logger.service.ts:107 [RealtimeDbService] write successful3
+```
+
+Instead of getting the line number in the code, we get the line number of the logger printing out the message. Not great. It means you have to make sure each error message is unique. Not bad really, as this is a good practice anyhow, it's just a little annoying I suppose.
+
+The function being called is on line 219:
+
+```js
+writeDescription(detail: any, itemLabel: string, category: string) { }
+```
+
+Which function should it be? Whatever it is, it has the following path:
+
+```txt
+items/X0YFaM8hXHdm89FWEQsj0Aqhcln1/Accentuation effect/cognitive_biases/user-description
+```
+
+Called in:
+
+this.realtimeDbService.writeDescription(existingItem, this.selectedCategory, itemListLabelKey);
+
+this.realtimeDbService.writeDescription(existingItem, this.selectedCategory, itemListLabelKey);
+
+It should be writeDescription(detail, itemLabel, category)
+
+#### Differences in the lists
+
+In search of other differences. The current firebase list starts off with this:
+
+```txt
+Accentuation effect
+Actor-observer Bias
+Agent Detection
+Ambiguity Effect
+Anchoring Or Focalism (no uppercasing 'or'!)
+Anthropocentric Thinking
+Anthropomorphism Orpersonification (where did the space go?)
+Attention Bias
+...
+```
+
+When parsing locally, the list looks like this:
+
+```txt
+Agent Detection
+Ambiguity Effect
+Anchoring Or Focalism (no uppercasing 'or'!)
+Anthropocentric Thinking
+Anthropomorphism Orpersonification (where did the space go?)
+Attention Bias
+... same as above
+```
+
+So where has the Agent Detection and Ambiguity Effect come from? Neither of them appear in our sample source document. Maybe we need a new sample source?
+
+Someone here also needs to figure out how to get the latest diff from Wikipedia to see what additions/deletions have happened in a document since it was last used.
+
+This feature is nice, but it seems this is more of a global thing. How often will a user be regenerating the list? If a lot of users are learning the same list, then we don't want each user to have to determine each time they look at a list what has changed individually.
+
+Some kind a admin feature that would keep track of all the lists that all the users are studying, then get a diff say everyday if a user looks at one of those lists, and share the results with all the other users who then want to look at the list.
+
+Since we want the system to be scalable, this feature could be tricky to support on a large scale. For now I would like to know what the Wikipedia api is to get this info. I bet it's contained in the response already, I mean, the last date of edit.
+
+There is this in a comment at the end of the file: timestamp 20210320205105
+
+Some other details of that section:
+
+```html
+<!-- 
+      NewPP limit report
+      Parsed by mw1366
+      Cached time: 20210320205108
+      Cache expiry: 2592000
+      Dynamic content: false
+      Complications: [vary‐revision‐sha1]
+      CPU time usage: 2.300 seconds
+      Real time usage: 2.789 seconds
+      Preprocessor visited node count: 9564/1000000
+      Post‐expand include size: 319993/2097152 bytes
+      Template argument size: 5000/2097152 bytes
+      Highest expansion depth: 15/40
+      Expensive parser function count: 4/500
+      Unstrip recursion depth: 1/20
+      Unstrip post‐expand size: 465223/5000000 bytes
+      Lua time usage: 1.478/10.000 seconds
+      Lua memory usage: 9792548/52428800 bytes
+      Lua Profile:
+          ?                                                                400 ms       26.0%
+          Scribunto_LuaSandboxCallback::gsub                               180 ms       11.7%
+          dataWrapper <mw.lua:661>                                         140 ms        9.1%
+          Scribunto_LuaSandboxCallback::find                               120 ms        7.8%
+          Scribunto_LuaSandboxCallback::callParserFunction                 100 ms        6.5%
+          Scribunto_LuaSandboxCallback::getContent                          80 ms        5.2%
+          recursiveClone <mwInit.lua:41>                                    80 ms        5.2%
+          Scribunto_LuaSandboxCallback::plain                               60 ms        3.9%
+          Scribunto_LuaSandboxCallback::getExpandedArgument                 40 ms        2.6%
+          <mw.lua:683>                                                      40 ms        2.6%
+          [others]                                                         300 ms       19.5%
+      Number of Wikibase entities loaded: 0/400
+      -->
+<!--
+      Transclusion expansion time report (%,ms,calls,template)
+      100.00% 2516.413      1 -total
+       49.95% 1256.861      1 Template:Reflist
+       25.95%  652.983     31 Template:Annotated_link
+       24.59%  618.766     91 Template:Template_parameter_value
+       21.06%  529.944     78 Template:Cite_journal
+       14.46%  363.980     36 Template:Cite_book
+        4.81%  121.020     16 Template:Harvnb
+        3.46%   87.019      1 Template:Short_description
+        3.21%   80.806     16 Template:Cite_web
+        2.72%   68.337      1 Template:Biases
+      -->
+<!-- Saved in parser cache with key enwiki:pcache:idhash:510791-0!canonical and timestamp 20210320205105 and revision id 1009156013. Serialized with JSON.
+      -->
+```
+
+That looks more like a cache time, not a date last edited. Or maybe that is the same thing?
+
+Does the revision id match what we would get now?
+
+The last part from today:
+
+```html
+<!-- Saved in parser cache with key enwiki:pcache:idhash:510791-0!canonical and timestamp 20210422191312 and revision id 1017957950. Serialized with JSON.
+ -->
+```
+
+Do those revision ids go up incrementally?
+
+Even with this info, know what has changed is important also. Just a giant diff like a pull request with two sides is not really the kind of thing people would want to see. To determine items that have been added or removed, we need to have a consistent parsing function.
+
+Here is what we were looking for:
+
+```html
+<tr>
+  <td>
+    <a href="/wiki/Agent_detection" title="Agent detection">Agent detection</a>
+  </td>
+  <td>False priors</td>
+  <td>
+    The inclination to presume the purposeful intervention of a sentient or
+    intelligent
+    <a href="/wiki/Agency_(philosophy)" title="Agency (philosophy)">agent</a>.
+  </td>
+</tr>
+```
+
+Unfortunately, since we are uppercasing words, looking for "Agent Detection" will not find "Agent detection". The item _does_ appear on the first list.
+
+So wait, there are 280 from the current firebase list. If we re-parse the list it's 109 + 197 = 306.
+
+Then where are the 260 items that are different?
+
+We could do the diff in the client, as it has the parsing functionality, then send the results back to the server for caching.
 
 ### #15 Start using GitHub projects
 
@@ -733,6 +979,13 @@ Turns out you can just link the issue and that shows up. Cool.
 
 https://github.com/timofeysie/khipu/projects/1
 
+## #16 Cognitive biases parsing has regressed
+
+Trying the list of cognitive biases shows these numbers: 109 + 197 = 306. Our list currently on firebase is 280. Uh-oh. There appear to be big differences.
+
+The current state has "Agent detection" as it's first item.
+On firebase, it's the poorly titled "Accident".
+
 ## Random work
 
 ERROR Error: Uncaught (in promise): TypeError: Cannot read property 'uid' of null
@@ -740,3 +993,123 @@ TypeError: Cannot read property 'uid' of null
 at RealtimeDbService.push../src/app/core/firebase/realtime-db.service.ts.RealtimeDbService
 
 Firebase setup problems again. Didn't account for all the errors on every function and just fixed them one by one.
+
+### #17. User description update not working
+
+After #54, "Allow links to work for items with no description", when we do get to the user page, we want to be able to set a default description automatically.
+This means actually refactoring the item-details.store.
+
+That should be a separate issue. Anyhow, start with the update.
+
+In Item details store has a function called: fetchFirebaseItemAndUpdate()
+
+It has the following workflow:
+
+```js
+this.realtimeDbService
+  .readUserSubDataItem('items', this.selectedCategory, itemListLabelKey)
+  .then((existingItem: any) => {
+    if (
+      existingItem &&
+      existingItem['user-description'] &&
+      existingItem['user-description'] !== ''
+    ) {
+      // #1 if the firebase meta info user description exists, use that.  ie: this.state.itemDetails.
+      // Should be the case if there is a description to show on the item list.
+    } else if (existingItem && existingItem['user-description'] === '') {
+      // #2  item has only label
+      // pre-fill a blank descriptions and save them back to the db
+      // this.realtimeDbService.writeDescription(existingItem, itemListLabelKey, this.selectedCategory);
+    } else if (
+      newDefaultUserDescription &&
+      existingItem &&
+      existingItem.userDescription !== ''
+    ) {
+      // #3 if the result of the fetchWikimediaDescriptionFromEndpoint has a new default description, use that
+      // p.s. we don't need to write what has just come from the db!
+    } else {
+      // #4 is split into various conditions
+      if (this.state.itemDetails && existingItem) {
+        // #4a this appears to be overwriting the description.
+      } else {
+        // #4b backup to wikimedia description
+        // this will most likely result in markup being put into the description,
+        // so if this is really something we want, then it should be stripped.
+      }
+    }
+  })
+  .catch(error => {
+    log.error('error', error);
+  });
+```
+
+If here is a description already in the items list, then block #1 is executed.
+
+When the item has only label, block #2 is executed.
+
+Despite "Attitude polarization" having no description on the list of cognitive biases, the default description is showing up on the details page.
+
+"in social psychology, group polarization refers to the tendency for a group to make decisions that ..." shows up as the default user description. It's coming from the Wikimedia description.
+
+There are two stores being imported into the item-details component:
+
+```js
+import { ItemDetailsStore } from '../../item-details-store';
+import { ItemsStore } from '../../../items/items.store';
+```
+
+When the user taps "Update description" the event emits to the item store.
+
+```js
+this.itemsStore.updateUserDescription({
+  ...event,
+  category: this.selectedCategory
+});
+```
+
+Now I'm no genius, but it seems like that should be a function of the item-details.store.
+
+### #18. Set default user description not working
+
+Attitude polarization shows the description from Wikimedia in the user description edit box.
+
+This is the default as the initial item has no description.
+
+The next time going to that page, there is no pre-filled description. What happened to that feature?
+
+Adding this "the tendency for a group to make decisions that are more extreme than the initial inclination of its members." and tapping update shows the event:
+
+item-details-container.component.ts:49
+event: "the tendency for a group to make decisions that are more extreme than the initial inclination of its members."
+label: "Attitude polarization"
+
+The event is checked like this:
+
+```js
+if (event.label['value']) { ... }
+```
+
+No wonder it's not working. Also, the category was being written as the label without the underscore. Use the raw category with the underscore "cognitive_biases" and then our descriptions are updating again.
+
+Closes #64 cleaned up the event and used the raw category to description update.
+
+### Number 19. Title not showing for items with no descriptions?
+
+This might get fixed along with 17, 18, 19.
+
+Alright, so with the title, there are actually three conditions that show different titles.
+
+Here is some pseudo code to make them clear:
+
+```js
+if (itemDetails.sitelinks && itemDetails.sitelinks[language + 'wiki']) {
+  // link title to Wikidata page
+} else noSiteLinks {
+  if (language && itemDetails['uri']) {
+    // link title to Wikipedia page
+  } else {
+    // noLinkTitle
+}
+```
+
+Probably that can be cleaned up, or maybe not, since it relies on template micro-syntax notation.

@@ -26,7 +26,7 @@ export class ItemDetailsComponent implements OnInit, AfterViewInit {
   onDescriptionUpdated(event: any) {
     // for wikidata: this.itemDetails.labels[this.language]);
     // from the router param: labelStr
-    this.descriptionUpdated.emit({ event: event, label: this.labelStr });
+    this.descriptionUpdated.emit({ newDescription: event, label: this.labelStr });
   }
 
   toggleDescription() {

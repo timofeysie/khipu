@@ -36,15 +36,14 @@ export class ItemsContainerComponent implements OnInit {
 
   onSelectedItem(item: Item) {
     this.store.state.selectedItem = item;
-    if (item.uri) {
-      // wikipedia item
-      this.router.navigate([`/categories/item-details/${this.category.name}/q/${item.label}`]);
-    }
     if (item.wikidataUri) {
       // wikidata item
       const lastSlash = item.wikidataUri.lastIndexOf('/');
       const qCode = item.wikidataUri.substring(lastSlash + 1, item.wikidataUri.length);
       this.router.navigate([`/categories/item-details/${this.category}/${qCode}`]);
+    } else {
+      // wikipedia item
+      this.router.navigate([`/categories/item-details/${this.category.name}/q/${item.label}`]);
     }
   }
 

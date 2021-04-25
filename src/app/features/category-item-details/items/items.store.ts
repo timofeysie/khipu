@@ -26,14 +26,6 @@ export class ItemsStore extends Store<ItemsState> {
     super(new ItemsState());
   }
 
-  updateUserDescription(newDescriptionObject: any) {
-    this.realtimeDbService.writeDescription(
-      newDescriptionObject.event,
-      newDescriptionObject.label.value,
-      newDescriptionObject.category
-    );
-  }
-
   /**
    * Read a user items table from firebase.
    * The firebase data JSON looks like this:

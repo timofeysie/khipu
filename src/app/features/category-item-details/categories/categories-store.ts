@@ -241,7 +241,6 @@ export class CategoriesStore extends Store<CategoriesState> {
     const wikiList: Item[] = [];
     const unorderedLists = main.getElementsByTagName('ul');
     const numberOfUnorderedLists = unorderedLists.length;
-    console.log('numberOfUnorderedLists', numberOfUnorderedLists);
     let endOfList = false;
     for (let i = 0; i < numberOfUnorderedLists; i++) {
       if (endOfList) {
@@ -284,7 +283,7 @@ export class CategoriesStore extends Store<CategoriesState> {
               wikiList.push(newWikiItem);
             }
           } else {
-            console.log('rejectedForNoLabel');
+            // rejectedForNoLabel');
             this.rejectedForNoLabel++;
           }
         }
@@ -306,7 +305,7 @@ export class CategoriesStore extends Store<CategoriesState> {
     const roleParent = parent.getAttribute('role');
     const roleGrandParent = grandParent.getAttribute('role');
     if (roleParent === 'navigation' || roleGrandParent === 'navigation') {
-      console.log('rejectedForNavigation');
+      // rejectedForNavigation');
       this.rejectedForNavigation++;
       return false;
     }
@@ -316,7 +315,7 @@ export class CategoriesStore extends Store<CategoriesState> {
     if (orderedListGGP.length > 0 && type === Types.TableList) {
       // This doesn't work for some reason.
       // this.rejectedForReference++;
-      console.log('rejectedForReference not used');
+      // rejectedForReference not used');
       return false;
     }
     return true;
@@ -331,7 +330,7 @@ export class CategoriesStore extends Store<CategoriesState> {
   checkContent(label: string, item: HTMLElement) {
     const content = item.textContent || item.innerText || '';
     if (content.indexOf('Wikipedia list article') !== -1 || content.indexOf('List of') !== -1) {
-      console.log('rejectedAsList');
+      // rejectedAsList');
       this.rejectedAsList++;
       return false;
     }
@@ -339,12 +338,12 @@ export class CategoriesStore extends Store<CategoriesState> {
     // check for references
     const ol = item.getElementsByTagName('cite');
     if (ol.length > 0) {
-      console.log('rejectedForCitation');
+      // rejectedForCitation');
       this.rejectedForCitation++;
       return false;
     }
     if (label === 'ISBN') {
-      console.log('rejectedForReference');
+      // rejectedForReference');
       this.rejectedForReference++;
       return false;
     }
@@ -404,7 +403,7 @@ export class CategoriesStore extends Store<CategoriesState> {
           const uri = liAnchor[0].getAttribute('href');
           const newWikiItem = this.createNewItem(subLabel, descWithoutCitations, uri);
           if (wikiList.some(thisItem => thisItem.label === newWikiItem.label)) {
-            console.log('rejectedDuplicate');
+            // rejectedDuplicate
             this.rejectedDuplicate++;
             // don't add duplicates
           } else {
@@ -447,7 +446,6 @@ export class CategoriesStore extends Store<CategoriesState> {
     const innerItem = item.innerHTML;
     if (innerItem.indexOf('&#160;&#8211;') === -1 && type === Types.TableList) {
       this.rejectedAfterSeeAlso++;
-      console.log('type ' + type + ' rejected ' + label, item);
       return true;
     }
     return false;

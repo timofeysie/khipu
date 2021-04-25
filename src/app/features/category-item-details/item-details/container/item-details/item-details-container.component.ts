@@ -2,7 +2,6 @@ import { AfterViewInit, Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { I18nService } from '@app/core';
 import { ItemDetailsStore } from '../../item-details-store';
-import { ItemsStore } from '../../../items/items.store';
 
 interface Label {
   language: string;
@@ -22,14 +21,16 @@ export class ItemDetailsContainerComponent implements OnInit, AfterViewInit {
   aliases: string | undefined;
   language: string;
   selectedCategory: string;
+  rawSelectedCategory: string;
   constructor(
     public store: ItemDetailsStore,
-    public itemsStore: ItemsStore,
+    public itemsDetailsStore: ItemDetailsStore,
     private i18nService: I18nService,
     private activatedRoute: ActivatedRoute
   ) {
     this.activatedRoute.paramMap.subscribe(params => {
-      this.selectedCategory = params.get('selectedCategory').replace('_', ' ');
+      this.rawSelectedCategory = params.get('selectedCategory');
+      this.selectedCategory = this.rawSelectedCategory.replace('_', ' ');
       this.labelStr = params.get('label');
     });
   }
@@ -47,8 +48,8 @@ export class ItemDetailsContainerComponent implements OnInit, AfterViewInit {
   }
 
   onDescriptionUpdated(event: any) {
-    if (event.label['value']) {
-      this.itemsStore.updateUserDescription({ ...event, category: this.selectedCategory });
+    if (event.label) {
+      this.itemsDetailsStore.updateUserDescription(event.newDescription, event.label, this.rawSelectedCategory);
     }
   }
 }

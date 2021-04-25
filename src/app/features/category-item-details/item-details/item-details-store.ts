@@ -25,6 +25,16 @@ export class ItemDetailsStore extends Store<ItemDetailsState> {
     const details = this.fetchDetails();
   }
 
+  /**
+   *
+   * @param detail
+   * @param itemLabel
+   * @param category
+   */
+  updateUserDescription(description: any, itemLabel: string, category: string) {
+    this.realtimeDbService.writeDescription(description, itemLabel, category);
+  }
+
   fetchDetails() {
     const currentLanguage = this.i18nService.language;
     const sparqlLanguages = environment.sparqlLanguages;
@@ -136,28 +146,31 @@ export class ItemDetailsStore extends Store<ItemDetailsState> {
       .readUserSubDataItem('items', this.selectedCategory, itemListLabelKey)
       .then((existingItem: any) => {
         if (existingItem && existingItem['user-description'] && existingItem['user-description'] !== '') {
-          // if the firebase meta info user description exists, use thatthis.state.itemDetails.
+          // #1 if the firebase meta info user description exists, use that this.state.itemDetails.
           this.state.itemDetails = existingItem;
           this.state.itemDetails.userDescription = existingItem['user-description'];
         } else if (existingItem && existingItem['user-description'] === '') {
+          // #2: item has only label
           // pre-fill a blank descriptions and save them back to the db
           // not sure if this is a possible situation.  if we have stored a blank description,
           // something is wrong and that should be fixed, and we wont need this block.
           const defaultDescription = this.createDefaultDescription(description, language);
           existingItem.userDescription = defaultDescription;
           this.state.itemDetails.userDescription = defaultDescription;
-          this.realtimeDbService.writeDescription(existingItem, this.selectedCategory, itemListLabelKey);
+          // this.realtimeDbService.writeDescription(existingItem, itemListLabelKey, this.selectedCategory);
         } else if (newDefaultUserDescription && existingItem && existingItem.userDescription !== '') {
           // if the result of the fetchWikimediaDescriptionFromEndpoint has a new default description, use that
           this.state.itemDetails.userDescription = newDefaultUserDescription;
           // p.s. we don't need to write what has just come from the db!
+          // #3
           // this.realtimeDbService.writeDescription(existingItem, this.selectedCategory, itemListLabelKey);
         } else {
+          // #4
           if (this.state.itemDetails && existingItem) {
-            // this appears to be overwriting the description.
+            // #4a this appears to be overwriting the description.
             this.state.itemDetails.userDescription = newDefaultUserDescription;
             // existingItem.userDescription = newDefaultUserDescription;
-            this.realtimeDbService.writeDescription(existingItem, this.selectedCategory, itemListLabelKey);
+            // this.realtimeDbService.writeDescription(existingItem, itemListLabelKey, this.selectedCategory);
           } else {
             // backup to wikimedia description
             // this will most likely result in markup being put into the description,
@@ -166,6 +179,7 @@ export class ItemDetailsStore extends Store<ItemDetailsState> {
             //   this.state.wikimediaDescription,
             //   language
             // );
+            // #4b
           }
         }
       })
@@ -186,11 +200,13 @@ export class ItemDetailsStore extends Store<ItemDetailsState> {
     const n = 100; // TODO: move this value into user preferences.
     const replacementChar = '*';
     description = description.toLocaleLowerCase();
-    const label = this.state.itemDetails.sitelinks[language + 'wiki']['title'].toLowerCase();
-    // remove label from the description
-    if (label !== -1) {
-      const newDescription = description.replace(label, replacementChar);
-      description = newDescription;
+    if (this.state.itemDetails.sitelinks[language + 'wiki']) {
+      const label = this.state.itemDetails.sitelinks[language + 'wiki']['title'].toLowerCase();
+      // remove label from the description
+      if (label) {
+        const newDescription = description.replace(label, replacementChar);
+        description = newDescription;
+      }
     }
     // remove aliases from the description.
     if (this.state.itemDetails.aliases) {

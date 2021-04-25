@@ -216,7 +216,7 @@ export class RealtimeDbService {
     });
   }
 
-  writeDescription(detail: any, itemLabel: string, category: string) {
+  writeDescription(description: any, itemLabel: string, category: string) {
     let userId = this.setupFirebase();
     if (!userId) {
       userId = firebase.auth().currentUser.uid;
@@ -228,11 +228,11 @@ export class RealtimeDbService {
       firebase
         .database()
         .ref(pathToData)
-        .set(detail, error => {
+        .set(description, error => {
           if (error) {
             log.error('write failed', error);
           } else {
-            log.debug('write successful3', detail);
+            log.debug('write successful3', description);
           }
         });
     }
