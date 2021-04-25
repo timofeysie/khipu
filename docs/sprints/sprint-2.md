@@ -22,12 +22,12 @@ Here is the list of to do items for this sprint.
 11. Refactor the item-details-store and friends
 12. Use an observer instead of a complete callback for the router params
 13. Cannot read property 'en' of undefined on user description update
-14. #54 Allow links on detail pages to work
+14. DONE - Allow links on detail pages to work (Issue #54)
 15. DONE - Start using GitHub projects
 16. Cognitive biases parsing has regressed (maybe)
-17. User description update not working
-18. Set default user description not working
-19. Title not showing for items with no descriptions?
+17. DONE - User description update not working (Issue #64)
+18. DONE - Set default user description not working
+19. DONE - Title not showing for items with no descriptions?
 
 ## Work notes
 
@@ -953,6 +953,50 @@ Then where are the 260 items that are different?
 
 We could do the diff in the client, as it has the parsing functionality, then send the results back to the server for caching.
 
+#### The real links on details pages issue
+
+After all the above, and after fixing #18, it was realized by C3P0 that this issue is really about the relative links on the wikipediaDescription section to work to go to that page.
+
+This just means creating the full wikipedia link from the partial one.
+
+Since that is an @Input() wikipediaDescription in src\app\features\category-item-details\item-details\components\item-details\item-details.component.ts, that component should remain dumb and not try to do anything like this. So move up the chain to src\app\features\category-item-details\item-details\container\item-details\item-details-container.component.html.
+
+There it's coming from the state:
+
+```html
+[wikipediaDescription]="(store.state$ | async).wikipediaDescription"
+```
+
+So move up the chain again to the item-details.store.
+
+src\app\features\category-item-details\item-details\item-details-store.ts
+
+And by the way, it's time to rename item-details-store.ts to item-details.store.ts to match the other xxx.store.ts naming convention.
+
+But first, add the full link.
+
+As an example of what we want to do, we want to take this:
+
+```html
+<a href="/wiki/Social_psychology" title="Social psychology"
+  >social psychology</a
+>
+```
+
+And create this:
+
+```html
+<a
+  href="https://en.wikipedia.org/wiki/Social_psychology"
+  title="Social psychology"
+  >social psychology</a
+>
+```
+
+That's all it takes.
+
+Commit message: closes #54 converted links on detail pages to full urls
+
 ### #15 Start using GitHub projects
 
 Moving towards organizing the work for this project into sprints has been a great way to see progress and predict velocity.
@@ -1113,3 +1157,78 @@ if (itemDetails.sitelinks && itemDetails.sitelinks[language + 'wiki']) {
 ```
 
 Probably that can be cleaned up, or maybe not, since it relies on template micro-syntax notation.
+
+Actually, there could be a case where we have a Wikipedia page and a Wikidata page to link to. There is also the possibility to just allow the user to go a Google search on the label.
+
+So there should be a label with three links. Not sure what is the best UX to show this.
+
+Something like:
+
+label - Wikipedia Wikidata Google
+
+First fix what we have.
+
+"Attitude polarization" is a Wikidata item. So there should be a link that goes to this page:
+
+https://www.wikidata.org/wiki/Q536046
+
+However, I don't see the q-code getting passed in the uri as it should. Yet another regression to fix.
+
+I can see that on the firebase entry:
+
+wikidataUri: "http://www.wikidata.org/entity/Q536046"
+
+So why isn't it getting to the list?
+
+This is why: items-container.component:
+
+```txt
+description: result[label]['user-description'],
+uri: result[label]['uri'],
+wikidataUri: result[label]['wikidata-uri']
+```
+
+There is a mismatch there. If that is changed to wikidataUri, then it will be there, but the uri for the detail page then looks like this:
+
+http://localhost:4200/categories/item-details/%5Bobject%20Object%5D/Q536046
+
+So where is that route happening?
+
+It's not the greatest routing I have seen:
+
+#### **`src\app\features\category-item-details\items\container\items-container.component.ts` routing**
+
+```js
+if (item.wikidataUri) {
+  // wikidata item
+  const lastSlash = item.wikidataUri.lastIndexOf('/');
+  const qCode = item.wikidataUri.substring(
+    lastSlash + 1,
+    item.wikidataUri.length
+  );
+  this.router.navigate([
+    `/categories/item-details/${this.category.name}/${qCode}`
+  ]);
+} else {
+  // wikipedia item
+  this.router.navigate([
+    `/categories/item-details/${this.category.name}/q/${item.label}`
+  ]);
+}
+```
+
+So now we have this uri:
+
+http://localhost:4200/categories/item-details/cognitive_biases/Q536046
+
+Then, the title is broken again!
+
+The title was not available as it wasn't passed in the routing. Lets just have one route. The q-code/label can work for both Wikipedia and Wikidata items.
+
+Now we have the title and the link to the Wikidata file. On the Wikidata page, we see a list of links by language. Under the English section we see:
+
+https://en.wikipedia.org/wiki/Attitude_polarization then is redirected to this:
+
+https://en.wikipedia.org/wiki/Group_polarization#Attitude_polarization
+
+It's quite a bit of work then to automatically follow that. Since sometimes there is no link for the users current language, it's a minefield of exceptions and edge cases. For now, things are working somewhat and the user hopefully can find what they want.

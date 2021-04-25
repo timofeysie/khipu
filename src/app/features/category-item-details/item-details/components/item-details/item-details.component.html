@@ -13,6 +13,9 @@
             <h1>{{ labelStr }}</h1>
           </ng-template>
         </ng-template>
+        <div *ngIf="itemDetails['wikidataUri']">
+          <a href="{{ itemDetails['wikidataUri'] }}">Wikidata page</a>
+        </div>
       </ion-card-header>
       <div *ngIf="itemDetails.aliases && itemDetails.aliases[language] && itemDetails.aliases[language].length > 0">
         Aliases:

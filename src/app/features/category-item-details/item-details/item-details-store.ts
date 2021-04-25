@@ -87,14 +87,29 @@ export class ItemDetailsStore extends Store<ItemDetailsState> {
     });
   }
 
+  /**
+   * Get the description from the Wikipedia endpoint and replace relative links
+   * with full paths to the wikipedia content.
+   *
+   * Some old notes on the default description:
+   * If the first API call for the description text fails,
+   * and there is no existing user description, then we want to
+   * parse the HTML out of this response and set the description here
+   * @param _title
+   * @param _language
+   * @param setDefaultDescription (not used)
+   */
   fetchDescriptionFromEndpoint(_title: string, _language: string, setDefaultDescription: boolean) {
     this.categoryItemDetailsService
       .getWikipediaItemDescription({ title: _title, language: _language })
       .subscribe((response: string) => {
-        this.state.wikipediaDescription = response['description'];
-        // If the first API call for the description text fails,
-        // and there is no existing user description, then we want to
-        // parse the HTML out of this response and set the description here
+        // replace relative links with full links
+        const baseUrl = 'https://en.wikipedia.org';
+        const searchUrl = '/wiki/';
+        const replaceUrl = baseUrl + '/wiki/';
+        const responseDescription = response['description'];
+        const newDescription = responseDescription.split(searchUrl).join(replaceUrl);
+        this.state.wikipediaDescription = newDescription;
       });
   }
 
