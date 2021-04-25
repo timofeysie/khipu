@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { Store } from '@app/store';
-import { ItemDetailsState } from './item-details-store-state';
+import { ItemDetailsState } from './item-details.store.state';
 import { ItemDetails } from '@app/core/interfaces/item-details';
 import { I18nService } from '@app/core';
 import { RealtimeDbService } from '@app/core/firebase/realtime-db.service';

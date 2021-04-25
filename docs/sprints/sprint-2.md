@@ -978,8 +978,8 @@ But first, add the full link.
 As an example of what we want to do, we want to take this:
 
 ```html
-<a href="/wiki/Social_psychology" title="Social psychology"
-  >social psychology</a
+<a href="/wiki/Social_psychology" title="Social psychology">
+  social psychology</a
 >
 ```
 
@@ -989,7 +989,8 @@ And create this:
 <a
   href="https://en.wikipedia.org/wiki/Social_psychology"
   title="Social psychology"
-  >social psychology</a
+>
+  social psychology</a
 >
 ```
 

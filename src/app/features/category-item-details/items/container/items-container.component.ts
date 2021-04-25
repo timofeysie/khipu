@@ -35,7 +35,6 @@ export class ItemsContainerComponent implements OnInit {
   }
 
   onSelectedItem(item: Item) {
-    console.log('item', item);
     this.store.state.selectedItem = item;
     if (item.wikidataUri) {
       // wikidata item

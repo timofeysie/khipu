@@ -1,7 +1,7 @@
 import { AfterViewInit, Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { I18nService } from '@app/core';
-import { ItemDetailsStore } from '../../item-details-store';
+import { ItemDetailsStore } from '../../item-details.store';
 
 interface Label {
   language: string;
