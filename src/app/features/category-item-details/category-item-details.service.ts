@@ -38,7 +38,7 @@ export class CategoryItemDetailsService {
   getItemDetails(context: WikidataContext): Observable<string> {
     return this.httpClient
       .cache()
-      .get(routes.wikidata(context))
+      .get(encodeURI(routes.wikidata(context)))
       .pipe(
         map((body: any) => body),
         catchError(() => of('Error, could not load details.'))
@@ -48,7 +48,7 @@ export class CategoryItemDetailsService {
   getWikipediaItemDescription(context: WikipediaContext): Observable<string> {
     return this.httpClient
       .cache()
-      .get(routes.wikipedia(context))
+      .get(encodeURI(routes.wikipedia(context)))
       .pipe(
         map((body: any) => body),
         catchError(() => of('Error, could not load details.'))
@@ -58,7 +58,7 @@ export class CategoryItemDetailsService {
   getWikimediaDescription(context: WikipediaContext): Observable<string> {
     return this.httpClient
       .cache()
-      .get(routes.wikimedia(context))
+      .get(encodeURI(routes.wikimedia(context)))
       .pipe(
         map((body: any) => body),
         catchError(() => of('Error, could not load details.'))
@@ -68,7 +68,7 @@ export class CategoryItemDetailsService {
   getWikilist(context: WikilistContext): Observable<string> {
     return this.httpClient
       .cache()
-      .get(routes.wikilist(context))
+      .get(encodeURI(routes.wikilist(context)))
       .pipe(
         map((body: any) => body),
         catchError(() => of('Error, could not load wikilist.'))

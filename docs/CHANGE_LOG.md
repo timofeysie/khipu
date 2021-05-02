@@ -2,6 +2,15 @@
 
 Change log for the Khipu app. This helps keep a running list of changes made for each version to aid commit messages and sprint retrospectives.
 
+## Version 1.1.2
+
+- Removed the dash to rename item-details-store.ts to item-details.store.ts
+- Closes #54 converted links on detail pages to full urls
+- Closes #64 cleaned up the event and used the raw category to description update
+- Closes #58 fixed the end of list check for fallacies
+- Added log numbers for realtime-db.service.
+- Fixed the blank user description for first visit to "ad iram"
+
 ## Version 1.1.1
 
 - Removed remaining unused functions from items.store.ts (theses were moved to categories-store.ts to support creating a list for add-category).

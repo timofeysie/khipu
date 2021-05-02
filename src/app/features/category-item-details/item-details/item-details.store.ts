@@ -22,7 +22,7 @@ export class ItemDetailsStore extends Store<ItemDetailsState> {
     private categoryItemDetailsService: CategoryItemDetailsService
   ) {
     super(new ItemDetailsState());
-    const details = this.fetchDetails();
+    this.fetchDetails();
   }
 
   /**
@@ -41,29 +41,33 @@ export class ItemDetailsStore extends Store<ItemDetailsState> {
     const sparqlLanguageObject = sparqlLanguages.find(i => i.appLanguage === currentLanguage);
     this.activatedRoute.paramMap.subscribe(params => {
       const qcode = params.get('qcode');
-      if (qcode !== 'q') {
-        // 1. Wikidata qcode
-        this.fetchDetailsFromEndpoint(qcode, sparqlLanguageObject.sparqlLanguage);
-      }
       const label = params.get('label');
-      if (label) {
+      if (qcode !== 'q') {
+        console.log('1. Wikidata qcode');
+        this.fetchDetailsFromEndpoint(qcode, sparqlLanguageObject.sparqlLanguage);
+      } else if (label) {
         // TODO: refactor this!
-        // 2 Wikipedia item
+        console.log('2 Wikipedia item');
         this.fetchWikimediaDescriptionFromEndpoint(label, 'en', label);
       }
+      // if there is no qcode or label, then we can't do anything.
     });
   }
 
   fetchDetailsFromEndpoint(_qcode: string, language: string) {
     this.categoryItemDetailsService.getItemDetails({ qcode: _qcode }).subscribe((response: string) => {
+      console.log('a', response);
       const itemDetails: ItemDetails = response[this.ENTITIES_KEY][_qcode];
       // this is the key to save the user description back to the item in the list
       // the title of the detail might be different that the name used in the Wikidata list
       const itemListLabelKey = itemDetails.labels[language]['value'];
       this.state.itemDetails = itemDetails;
       const title = this.getTitle(itemDetails, language);
+      console.log('itemDetails', itemListLabelKey);
       if (title) {
         this.fetchDescription(title, language, itemListLabelKey);
+      } else {
+        this.fetchDescription(itemListLabelKey, language, itemListLabelKey);
       }
     });
   }
@@ -82,9 +86,8 @@ export class ItemDetailsStore extends Store<ItemDetailsState> {
   fetchDescription(_title: string, _language: string, itemListLabelKey: string) {
     const sparqlLanguageObject = this.getSPARQL();
     // TODO: check firebase first
-    this.activatedRoute.paramMap.subscribe(() => {
-      this.fetchWikimediaDescriptionFromEndpoint(_title, sparqlLanguageObject.sparqlLanguage, itemListLabelKey);
-    });
+    console.log('b');
+    this.fetchWikimediaDescriptionFromEndpoint(_title, sparqlLanguageObject.sparqlLanguage, itemListLabelKey);
   }
 
   /**
@@ -103,13 +106,16 @@ export class ItemDetailsStore extends Store<ItemDetailsState> {
     this.categoryItemDetailsService
       .getWikipediaItemDescription({ title: _title, language: _language })
       .subscribe((response: string) => {
+        console.log('e', response);
         // replace relative links with full links
         const baseUrl = 'https://en.wikipedia.org';
         const searchUrl = '/wiki/';
         const replaceUrl = baseUrl + '/wiki/';
         const responseDescription = response['description'];
-        const newDescription = responseDescription.split(searchUrl).join(replaceUrl);
-        this.state.wikipediaDescription = newDescription;
+        if (responseDescription) {
+          const newDescription = responseDescription.split(searchUrl).join(replaceUrl);
+          this.state.wikipediaDescription = newDescription;
+        }
       });
   }
 
@@ -117,6 +123,7 @@ export class ItemDetailsStore extends Store<ItemDetailsState> {
     this.categoryItemDetailsService
       .getWikimediaDescription({ title: _title, language: _language })
       .subscribe((response: any) => {
+        console.log('c', response);
         if (response['query']) {
           const firstItem = Object.keys(response['query']['pages'])[0];
           this.state.wikimediaDescription = response['query']['pages'][firstItem]['extract'];
@@ -135,6 +142,7 @@ export class ItemDetailsStore extends Store<ItemDetailsState> {
           });
           const sparqlLanguageObject = this.getSPARQL();
           const setDefaultDescription = true;
+          console.log('d');
           this.fetchDescriptionFromEndpoint(_title, sparqlLanguageObject.sparqlLanguage, setDefaultDescription);
         }
       });
@@ -160,11 +168,16 @@ export class ItemDetailsStore extends Store<ItemDetailsState> {
     this.realtimeDbService
       .readUserSubDataItem('items', this.selectedCategory, itemListLabelKey)
       .then((existingItem: any) => {
+        console.log('existing item', existingItem);
         if (existingItem && existingItem['user-description'] && existingItem['user-description'] !== '') {
+          console.log('1');
           // #1 if the firebase meta info user description exists, use that this.state.itemDetails.
           this.state.itemDetails = existingItem;
           this.state.itemDetails.userDescription = existingItem['user-description'];
+          console.log('this.state.itemDetails.userDescription', this.state.itemDetails.userDescription);
         } else if (existingItem && existingItem['user-description'] === '') {
+          console.log('2');
+
           // #2: item has only label
           // pre-fill a blank descriptions and save them back to the db
           // not sure if this is a possible situation.  if we have stored a blank description,
@@ -174,6 +187,8 @@ export class ItemDetailsStore extends Store<ItemDetailsState> {
           this.state.itemDetails.userDescription = defaultDescription;
           // this.realtimeDbService.writeDescription(existingItem, itemListLabelKey, this.selectedCategory);
         } else if (newDefaultUserDescription && existingItem && existingItem.userDescription !== '') {
+          console.log('3');
+
           // if the result of the fetchWikimediaDescriptionFromEndpoint has a new default description, use that
           this.state.itemDetails.userDescription = newDefaultUserDescription;
           // p.s. we don't need to write what has just come from the db!
@@ -182,11 +197,15 @@ export class ItemDetailsStore extends Store<ItemDetailsState> {
         } else {
           // #4
           if (this.state.itemDetails && existingItem) {
+            console.log('4a');
+
             // #4a this appears to be overwriting the description.
             this.state.itemDetails.userDescription = newDefaultUserDescription;
             // existingItem.userDescription = newDefaultUserDescription;
             // this.realtimeDbService.writeDescription(existingItem, itemListLabelKey, this.selectedCategory);
           } else {
+            console.log('4b');
+
             // backup to wikimedia description
             // this will most likely result in markup being put into the description,
             // so if this is really something we want, then it should be stripped.

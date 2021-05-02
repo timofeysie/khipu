@@ -1,5 +1,6 @@
 import {
   AfterViewInit,
+  ChangeDetectionStrategy,
   ChangeDetectorRef,
   AfterContentChecked,
   Component,
@@ -13,7 +14,8 @@ import { FormControl } from '@angular/forms';
 @Component({
   selector: 'app-description-form',
   templateUrl: './description-form.component.html',
-  styleUrls: ['./description-form.component.scss']
+  styleUrls: ['./description-form.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DescriptionFormComponent implements AfterViewInit, AfterContentChecked {
   @Input() itemDetails: any;
@@ -21,14 +23,14 @@ export class DescriptionFormComponent implements AfterViewInit, AfterContentChec
   @Input() userDescription: string;
   @Output() descriptionUpdated = new EventEmitter<string>();
 
-  descriptionForm = new FormControl('', [Validators.maxLength(150)]);
+  descriptionForm = new FormControl('', [Validators.maxLength(200)]);
 
   constructor(private cdref: ChangeDetectorRef) {}
 
   ngAfterViewInit() {
     setTimeout(() => {
       this.descriptionForm.setValue(this.userDescription);
-    }, 1600);
+    }, 2600);
   }
 
   ngAfterContentChecked() {

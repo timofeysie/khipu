@@ -5,40 +5,102 @@ End date: April 30th, 2021.
 
 Sprint planning: scope of sprint, all issues story-pointed, set a sprint target name.
 
-Target: fix all the bugs from the last two sprints,
+Target: UAT sprint - fix all the bugs from the last two sprints.
+
+## Retro
+
+### What went well?
+
+- good to have a better working more dependable app
+
+### What could be improved?
+
+- less regressions while refactor
+- scope creep needed to catch all the bugs
+- couldn't finish everything
+
+## TODO List
 
 Here is the list of to do items for this sprint.
 
-1. Non-adaptive choice switching uri
-2. Cannot read property 'includes' of null
+1. DONE Non-adaptive choice switching uri
+2. ???? Cannot read property 'includes' of null
 3. DONE - detail pages lead to general description, not a detail
 4. DONE - what to do with the rejected items info
 5. DONE - #58 fallacies end of list function not working regression
-6. Cannot convert undefined or null to object
+6. CAN't REPRODUCE - Cannot convert undefined or null to object
 7. DONE - Cannot read property 'q' of undefined
 8. DONE - #47 fix the icons
 9. DONE - #55 Create link to Wikipedia on the details page
 10. Redirect to data uri value response error (Issue #57)
 11. Refactor the item-details-store and friends
 12. Use an observer instead of a complete callback for the router params
-13. Cannot read property 'en' of undefined on user description update
+13. DONE Cannot read property 'en' of undefined on user description update
 14. DONE - Allow links on detail pages to work (Issue #54)
 15. DONE - Start using GitHub projects
-16. Cognitive biases parsing has regressed (maybe)
+16. ???? Cognitive biases parsing has regressed (maybe)
 17. DONE - User description update not working (Issue #64)
 18. DONE - Set default user description not working
 19. DONE - Title not showing for items with no descriptions?
+20. First time going to a detail page, the user description is not filled
 
-## Work notes
+## Backlog grooming
 
-It's time to raise issues for the items here that have not been fixed. It's no fun scrolling up and down this page trying to figure out the status of each.
+It's time to raise issues for the items here that have not been fixed if they haven't already. It's no fun scrolling up and down this page trying to figure out the status of each.
+
+After most of the issues above were ticked off one by one, there are only two issues remaining still on the GitHub issues board:
+
+- #57 Http failure response "Redirect to data uri value" for the cognitive biases "anchoring or focalism"
+- #58 Allow going to a detail for items that have no info
+
+Here are the rest:
+
+- DONE #1. Non-adaptive choice switching uri
+- ???? #2. Cannot read property 'includes' of null
+- DONE #6. Cannot convert undefined or null to object
+- #11. Refactor the item-details-store and friends
+- #12. Use an observer instead of a complete callback for the router params
+- DONE #13. Cannot read property 'en' of undefined on user description update
+- ??? #16. Cognitive biases parsing has regressed (maybe)
 
 ### #1 The item "Non-adaptive choice switching" is still an issue for the uri
 
-Steps to reproduce?
+Here are the notes from parsing-wikipedia-content.md.
 
-It looks like this;
+### [75] citation as title
+
+```txt
+description: "After experiencing a bad outcome with a decision problem, the tendency to avoid the choice previously made when faced with the same decision problem again, even though the choice was optimal. Also known as "once bitten, twice shy" or "hot stove effect"."
+label: "[75]"
+type: "↵"
 uri: "#cite_note-75"
+```
+
+From this markup:
+
+```html
+<tr>
+  <td>
+    Non-adaptive choice switching
+    <sup id="cite_ref-75" class="reference">
+      <a href="#cite_note-75">&#91;75&#93;</a></sup
+    >
+  </td>
+  <td></td>
+  <td>
+    After experiencing a bad outcome with a decision problem, the tendency to
+    avoid the choice previously made when faced with the same decision problem
+    again, even though the choice was optimal. Also known as "once bitten, twice
+    shy" or "hot stove effect".
+  </td>
+</tr>
+```
+
+We can see where the [7] comes from now. It's a similar problem in the case of the span.
+
+It's not actually difficult to fix, as we can just use our removed HTML and remove potential citations, and that gives just the title as string needed.
+
+Those were the notes, but since we don't see that citation as a label anymore, it's probably been fixed and not check off as done. So closing this for now.
 
 ### #2 cannot read property 'includes' of null
 
@@ -51,6 +113,8 @@ TypeError: Cannot read property 'includes' of null
 ```
 
 I think a check for null was added before line 350 to address this, so leave it for now. If this happens again the steps to reproduce should be captured and an issue raised.
+
+Not sure if I saw this again right now. Have to keep it open just in case.
 
 ### #3 detail pages lead to general description, not a detail
 
@@ -86,7 +150,58 @@ The fetchDetails() function will also call fetchDescription(), so Jim, why is it
 
 Good question Phil. If you keep on asking good questions like that, you're going to get smarter than me, oh yeah!
 
-Uh, Mr Carrey, um, what's with the beard?
+Uh, Mr Carey? Um, what's with the beard?
+
+We all thought this was not happening anymore, but saw it on the deployed app again today with the "inflation of conflict" fallacy.
+
+Fallacy "inflation of conflict" leads to detail about all fallacies.
+The user description is "the phrase "correlation does not imply causation" refers to the inability to legitimately deduce a ..."
+
+The Wikipedia description is: "Types of reasoning that are logically incorrect"
+
+After going to some other items that worked as expected and coming back to this detail pages then show the user description from the slide out panel in the list matches the user description in the detail page edit field: "arguing that, if experts in a field of knowledge disagree on a certain point within that field, no conclusion can be reached or that the legitimacy of that field of knowledge is questionable."
+
+Trying the item locally, and looking at the log for that item, firebase is hit three times, and the network once: as usual, we don't get the line number of the class, only that of the logger: logger.service.ts:107 [RealtimeDbService]:
+
+```txt
+path items/X0YFaM8hXHdm89FWEQsj0Aqhcln1/fallacies
+Cache set for key: "https://radiant-springs-38893.herokuapp.com/api/details/en/Inflation of conflict"
+routeToData items/X0YFaM8hXHdm89FWEQsj0Aqhcln1/fallacies/Inflation of conflict
+Cache set for key: "https://radiant-springs-38893.herokuapp.com/api/detail/Inflation of conflict/en/false"
+```
+
+Adding some numbers to the error messages and refreshing we see this:
+[RealtimeDbService] 13. routeToData items/X0YFaM8hXHdm89FWEQsj0Aqhcln1/fallacies/Inflation of conflict
+
+Looking at the content again, the start "Types of reasoning that are logically incorrect" also appears in the preamble for the list of fallacies page that is parsed in the add category function.
+
+Also, just noticing that the spaces in the db path are still there. That might be the issue, or it might not. If it were a problem, then maybe none of the items would work. But most of them do, so it doesn't actually seem to be an issue. We don't have to encode the url since the network calls are made internally by the firebase lib.
+
+It may not be an issue for the db items, but it looks like the same is being used without url encoding for the network calls also.
+
+encodeURI() is actually a regular Javascript function. It seemed like it might be a caching issue, but in an incognito tab, same deal.
+
+It turns our the Wikipedia result is actually returning the html for a the list of fallacies page.
+
+"Inflation of conflict" has no link even on the list of fallacies table. The link actually goes here:
+
+https://en.wikipedia.org/wiki/List_of_fallacies#Inflation_of_conflict
+
+There aren't many more on that list. "Naturalistic fallacy fallacy (anti-naturalistic fallacy)" should be the same. It's link looks like this:
+
+https://en.wikipedia.org/wiki/Main_Page#cite_note-100
+
+The user description has an issue also:
+
+```txt
+ inferring an impossibility to infer any instance of ought from is from the general invalidity of is-ought fallacy, mentioned above. For instance, is P ∨ ¬ P
+  {\displaystyle P\lor \neg P} does imply ought P ¬
+  {\displaystyle P\lor \neg P} for any proposition P
+  {\displaystyle P}
+, although the naturalistic fallacy fallacy would falsely declare such an inference invalid. Naturalistic fallacy fallacy is a type of argument from fallacy.
+```
+
+Those strange parts are logical vernaculars. The parts in the brackets need to be removed however.
 
 ### #4 what to do with the rejected items info
 
@@ -406,6 +521,8 @@ Object.keys(result).forEach(key => {
 
 The result is actually null. Not sure why now the categories are not working.
 
+CAN't REPRODUCE,
+
 ### #7 Cannot read property 'q' of undefined
 
 ```txt
@@ -674,6 +791,49 @@ To test this theory, I go back and choose the ambiguity effect and see the user-
 
 Which looks like the former anchoring or focalism description.
 
+Not sure about the above issues, but going to this item after closing most of the other issues, there are two Javascript errors:
+
+```txt
+logger.service.ts:107 [ErrorHandlerInterceptor] Request error
+HttpErrorResponse {headers: HttpHeaders, status: 300, statusText: "Multiple Choices", url: "https://radiant-springs-38893.herokuapp.com/api/detail/Anchoring%20or%20focalism/en/false", ok: false, …}
+error: "Redirect to data uri value"
+headers: HttpHeaders {normalizedNames: Map(0), lazyUpdate: null, lazyInit: ƒ}
+message: "Http failure response for https://radiant-springs-38893.herokuapp.com/api/detail/Anchoring%20or%20focalism/en/false: 300 Multiple Choices"
+name: "HttpErrorResponse"
+ok: false
+status: 300
+statusText: "Multiple Choices"
+url: "https://radiant-springs-38893.herokuapp.com/api/detail/Anchoring%20or%20focalism/en/false"
+__proto__: HttpResponseBase
+...
+core.js:4002 ERROR TypeError: Cannot read property 'split' of undefined
+    at SafeSubscriber._next (item-details.store.ts:111)
+```
+
+That second one should be a quick fix. But without that, the first error is still there.
+
+Since this is a backend issue now, maybe it should be raised as an issue on the [conchifolia project](https://github.com/timofeysie/conchifolia).
+
+The notes for conchifolia have a mention of this error:
+
+```txt
+https://ko.wikipedia.org/w/api.php?action=parse&section=0&prop=text&format=json&page=%ED%98%84%EC%83%81_%EC%9C%A0%EC%A7%80_%ED%8E%B8%ED%96%A5
+```
+
+_We weren't passing the lang and leave case alone args into the details.redirect function. Duh! But even after making that change and pushing the result to Heroku, now ALL the detail pages in the Loranthifolia client app are showing "300 multiple choices failed" errors._
+
+_Maybe there was some network issues or caching of old code? Anyhow, now all the Korean redirects seem to be working. Loranthifolia might finally be ready for it's first release._
+
+What does Khipu shows with regards to that query in the nextwork tab?
+
+Request URL: https://radiant-springs-38893.herokuapp.com/api/details/en/Anchoring%20or%20focalism
+
+Response:
+
+{"batchcomplete":"","query":{"pages":{"-1":{"ns":0,"title":"Anchoring or focalism","missing":""}}}}
+
+Missing.
+
 ### #11 Refactor the item-details.store and friends
 
 The store is a mess, and the whole feature has a mix of the history of the mess along with an almost working implementation.
@@ -689,6 +849,57 @@ async).itemDetails.userDescription"
 There is no need to pass the object and properties from the object. They used to be different things, but time to clean it up now.
 
 The file refactoring-item-details-store.md has the notes on this process. It's a good time to take care of this in this bug fixing sprint.
+
+The first step was to remove the dash so that the file name follows the .store naming convention used elsewhere.
+
+That done, another simple task is to clear up the API for this function:
+
+```js
+fetchWikimediaDescriptionFromEndpoint(
+  (_title: string),
+  (_language: string),
+  (itemListLabelKey: string)
+);
+```
+
+It is currently used in two places:
+
+Inside the item-details.store class constructor, fetchDetails() it is called for the Wikipedia items:
+
+```js
+this.fetchWikimediaDescriptionFromEndpoint(label, 'en', label);
+```
+
+The second time it is called in the fetchDescription() function:
+
+```js
+this.fetchWikimediaDescriptionFromEndpoint(
+  _title,
+  sparqlLanguageObject.sparqlLanguage,
+  itemListLabelKey
+);
+```
+
+A TODO in this second spot says "check firebase first". It's hard to determine if this second usage is valid or not needed, as well as the usage of the third argument which appears to the the same as the first.
+
+Going back to the fetchDetails() function, the first branch for Wikidata items will lead to fetchDescription() as shown in some pseudo code:
+
+```js
+fetchDetails() {
+  if (qcode !== 'q') { // 1. Wikidata qcode
+    this.fetchDetailsFromEndpoint(qcode, sparqlLanguageObject.sparqlLanguage);
+  const label = params.get('label');
+  if (label) { // 2 Wikipedia item
+    this.fetchWikimediaDescriptionFromEndpoint(label, 'en', label);
+```
+
+```js
+fetchDetailsFromEndpoint() -> this.fetchDescription()
+```
+
+So it's actually possible that fetchWikimediaDescriptionFromEndpoint() can be called twice now that we are using the same route for details for both types. It should be an either or affair.
+
+It also might mean that issue #20 might be caused by this.
 
 ### #12 Use an observer instead of a complete callback for the router params
 
@@ -710,6 +921,8 @@ onDescriptionUpdated(event: any) {
 ```
 
 Even switching the label to the title passed into the route param, there is no updated happening.
+
+This was opened as a duplicate on #17 and has been closed so closing this also.
 
 ### #14 Allow links on detail pages to work #54
 
@@ -1233,3 +1446,41 @@ https://en.wikipedia.org/wiki/Attitude_polarization then is redirected to this:
 https://en.wikipedia.org/wiki/Group_polarization#Attitude_polarization
 
 It's quite a bit of work then to automatically follow that. Since sometimes there is no link for the users current language, it's a minefield of exceptions and edge cases. For now, things are working somewhat and the user hopefully can find what they want.
+
+### #20 First time going to a detail page, the user description is not filled
+
+This was an issue before. Not sure when it stopped working or if it was ever fixed.
+
+Was there a ticket for this?
+
+Ad Iram will never show it's user description in the details field.
+
+Firebase is not being consulted for Wikidata items.
+
+Adding more time to the timeout in the description.form.component works to let the description show up after it arrives. Tried changing the change detection strategy to on push but that didn't help get rid of the timeout hack.
+
+The order of execution then for "ad iram" for which there is no Wikipedia page is:
+
+1. 1. Wikidata qcode
+      item-details.store.ts:58 a {entities: {…}}
+      item-details.store.ts:65 itemDetails Ad iram
+      item-details.store.ts:88 b
+      item-details.store.ts:125 c {batchcomplete: "", query: {…}}
+      item-details.store.ts:144 d
+      logger.service.ts:107 [ErrorHandlerInterceptor] Request error HttpErrorResponse {headers: HttpHeaders, status: 300, statusText: "Multiple Choices", url: "https://radiant-springs-38893.herokuapp.com/api/detail/Ad%20iram/en/false", ok: false, …}
+      Show 319 more frames
+      item-details.store.ts:108 e Error, could not load details.
+      logger.service.ts:107 [RealtimeDbService] 14. routeToData items/X0YFaM8hXHdm89FWEQsj0Aqhcln1/fallacies/Ad iram
+      item-details.store.ts:170 existing item {item-details-viewed-count: 0, item-details-viewed-date: 1615885028509, uri: "", user-description: "accusing one's opponent of being angry or holding …isproves their argument or diminishes its weight.", user-description-viewed-count: 0, …}
+
+The HttpErrorResponse for one of the items calls needs to be shown to the user.
+
+```txt
+url: "https://radiant-springs-38893.herokuapp.com/api/detail/Ad%20iram/en/false"
+error: "Redirect to data uri value"
+ok: false
+status: 300
+statusText: "Multiple Choices"
+```
+
+There is nothing descriptive enough there, so [raise an issue](https://github.com/timofeysie/conchifolia/issues/13) with that project to get that changed.

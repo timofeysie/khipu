@@ -12,3 +12,25 @@ a {
   margin-top: -7px;
   padding: 3px;
 }
+
+.item-label {
+  // transform: translate3d(-589px, 0px, 0px);
+}
+
+.item-sliding-active-slide .item {
+  // gap to next item
+  height: 60px;
+  .item-label {
+    height: 60px;
+  }
+  ion-item-options {
+    height: 60px;
+  }
+  .ion-item-options {
+    height: 150%;
+  }
+  .sliding_item_description {
+    // interrior text
+    margin-top: 7px;
+  }
+}

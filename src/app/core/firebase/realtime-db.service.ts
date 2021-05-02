@@ -31,16 +31,16 @@ export class RealtimeDbService {
       categoriesToWrite[category.name] = category;
     });
     if (!userId) {
-      log.error('caught trying to use an undefined user in categories');
+      log.error('1. caught trying to use an undefined user in categories');
     } else {
       firebase
         .database()
         .ref('categories/' + userId)
         .set(categoriesToWrite, error => {
           if (error) {
-            log.error('write failed', error);
+            log.error('2. write failed', error);
           } else {
-            log.debug('write successful1', categoriesToWrite);
+            log.debug('3. write successful1', categoriesToWrite);
           }
         });
     }
@@ -89,23 +89,23 @@ export class RealtimeDbService {
         });
         const pathToData = 'items/' + userId + '/' + category;
         if (pathToData.indexOf('undefined') !== -1) {
-          log.error('undefined in path to data', pathToData);
+          log.error('4. undefined in path to data', pathToData);
         } else {
           firebase
             .database()
             .ref(pathToData)
             .set(currentItems, error => {
               if (error) {
-                log.error('write failed', error);
+                log.error('5. write failed', error);
               } else {
-                log.debug('write successful2');
+                log.debug('6. write successful2');
               }
             });
         }
       })
       .catch(error => {
         // list doesn't exist yet?
-        log.error('error', error);
+        log.error('7. error', error);
       });
   }
 
@@ -131,16 +131,16 @@ export class RealtimeDbService {
     });
     const pathToData = 'items/' + userId + '/' + category;
     if (pathToData.indexOf('undefined') !== -1) {
-      log.error('undefined in path to data', pathToData);
+      log.error('8. undefined in path to data', pathToData);
     } else {
       firebase
         .database()
         .ref(pathToData)
         .set(currentItems, error => {
           if (error) {
-            log.error('write failed', error);
+            log.error('9. write failed', error);
           } else {
-            log.debug('write successful2');
+            log.debug('10. write successful2');
           }
         });
     }
@@ -161,18 +161,19 @@ export class RealtimeDbService {
         return snapshot.val();
       })
       .catch(error => {
-        log.error('error', error);
+        log.error('11. error', error);
       });
   }
 
   async readUserSubData(name: string, sub: string) {
-    await this.setupFirebaseAsync();
-    let id = this.userId;
-    if (!this.userId) {
-      id = this.setupFirebase();
+    let userId = this.setupFirebase();
+    if (!userId) {
+      if (firebase.auth().currentUser) {
+        userId = firebase.auth().currentUser.uid;
+      }
     }
-    const path = name + '/' + id + '/' + sub;
-    log.debug('path', path);
+    const path = name + '/' + userId + '/' + sub;
+    log.debug('12. path', path);
     return firebase
       .database()
       .ref(path)
@@ -181,7 +182,7 @@ export class RealtimeDbService {
         return snapshot.val();
       })
       .catch(error => {
-        log.error('error', error);
+        log.error('13. error', error);
       });
   }
 
@@ -200,7 +201,7 @@ export class RealtimeDbService {
         }
         const userId = firebase.auth().currentUser.uid;
         const routeToData = tableName + '/' + userId + '/' + category + '/' + itemName;
-        log.debug('routeToData', routeToData);
+        log.debug('14. routeToData', routeToData);
         firebase
           .database()
           .ref(routeToData)
@@ -209,7 +210,7 @@ export class RealtimeDbService {
             resolve(snapshot.val());
           })
           .catch(error => {
-            log.error('error', error);
+            log.error('15. error', error);
             reject(error);
           });
       });
@@ -223,16 +224,16 @@ export class RealtimeDbService {
     }
     const pathToData = 'items/' + userId + '/' + category + '/' + itemLabel + '/user-description';
     if (pathToData.indexOf('undefined') !== -1) {
-      log.error('catching undefined', pathToData);
+      log.error('16. catching undefined', pathToData);
     } else {
       firebase
         .database()
         .ref(pathToData)
         .set(description, error => {
           if (error) {
-            log.error('write failed', error);
+            log.error('17. write failed', error);
           } else {
-            log.debug('write successful3', description);
+            log.debug('18. write successful3', description);
           }
         });
     }
