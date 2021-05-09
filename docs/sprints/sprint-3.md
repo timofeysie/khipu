@@ -2,26 +2,53 @@
 
 Start: May 1st, 2021.
 
-Getting a head start on planning for the next sprint here.
-
 Goals:
 
-Either of these would be good.
+Finishing off everything not working from the last sprint.
 
-1. export the list
-2. order the list
+## Work log
 
-I really wanted to order the list first, but exporting is more helpful to the project in general. Most people would be using this app to generate content for whatever LMS/LRS they are using. If a school uses Canvas for it's LMS, and a custom backend LRS, then we should be able to export to those formats. Getting data back via an LRS would impact the order of the list, the app could also be used to substitute for a part of the ecosystem.
+1. First time going to a detail page, the user description is not filled
+2. Redirect to data uri value response error (Issue #57)
+3. Refactor the item-details-store and friends
+4. Use an observer instead of a complete callback for the router params
 
-Canvas and Moodle should all take class material in a tab or comma delineated format.
+### #1 First time going to a detail page, the user description is not filled
 
-A full workflow would be:
+This was an issue before. Not sure when it stopped working or if it was ever fixed.
 
-1. create a category
-2. edit the content for inclusion
-3. show the list with an order based viewing/testing
-4. see statistics for progress
+It's been brought forward from sprint 2 where it was #20.
 
-Before all this, probably the next sprint should be finishing off everything not working from the last sprint. Those tasks look like this:
+Was there a ticket for this?
 
-If this can all get sorted, then, yes, exporting might need to be next. It's actually a toss up between creating an order for the list export. Ordering just according to the number of detail views might be doable pretty quickly. But so would search.
+Ad Iram will never show it's user description in the details field.
+
+Firebase is not being consulted for Wikidata items.
+
+Adding more time to the timeout in the description.form.component works to let the description show up after it arrives. Tried changing the change detection strategy to on push but that didn't help get rid of the timeout hack.
+
+The order of execution then for "ad iram" for which there is no Wikipedia page is:
+
+1. 1. Wikidata qcode
+      item-details.store.ts:58 a {entities: {…}}
+      item-details.store.ts:65 itemDetails Ad iram
+      item-details.store.ts:88 b
+      item-details.store.ts:125 c {batchcomplete: "", query: {…}}
+      item-details.store.ts:144 d
+      logger.service.ts:107 [ErrorHandlerInterceptor] Request error HttpErrorResponse {headers: HttpHeaders, status: 300, statusText: "Multiple Choices", url: "https://radiant-springs-38893.herokuapp.com/api/detail/Ad%20iram/en/false", ok: false, …}
+      Show 319 more frames
+      item-details.store.ts:108 e Error, could not load details.
+      logger.service.ts:107 [RealtimeDbService] 14. routeToData items/X0YFaM8hXHdm89FWEQsj0Aqhcln1/fallacies/Ad iram
+      item-details.store.ts:170 existing item {item-details-viewed-count: 0, item-details-viewed-date: 1615885028509, uri: "", user-description: "accusing one's opponent of being angry or holding …isproves their argument or diminishes its weight.", user-description-viewed-count: 0, …}
+
+The HttpErrorResponse for one of the items calls needs to be shown to the user.
+
+```txt
+url: "https://radiant-springs-38893.herokuapp.com/api/detail/Ad%20iram/en/false"
+error: "Redirect to data uri value"
+ok: false
+status: 300
+statusText: "Multiple Choices"
+```
+
+There is nothing descriptive enough there, so [raise an issue](https://github.com/timofeysie/conchifolia/issues/13) with that project to get that changed.
