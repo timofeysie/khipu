@@ -259,12 +259,14 @@ export class RealtimeDbService {
       if (this.userId) {
         return this.userId;
       } else {
-        const id = firebase.auth().currentUser.uid;
-        if (id) {
-          this.userId = id;
-          return id;
-        } else {
-          return firebase.auth().currentUser.uid;
+        if (firebase.auth().currentUser) {
+          const id = firebase.auth().currentUser.uid;
+          if (id) {
+            this.userId = id;
+            return id;
+          } else {
+            return firebase.auth().currentUser.uid;
+          }
         }
       }
     });

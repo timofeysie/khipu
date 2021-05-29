@@ -1,8 +1,8 @@
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
-
 import { AuthenticationService } from './authentication.service';
 import { CredentialsService, Credentials } from './credentials.service';
 import { MockCredentialsService } from './credentials.service.mock';
+import { RealtimeDbService } from '@app/core/firebase/realtime-db.service';
 
 describe('AuthenticationService', () => {
   let authenticationService: AuthenticationService;
@@ -10,7 +10,11 @@ describe('AuthenticationService', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [{ provide: CredentialsService, useClass: MockCredentialsService }, AuthenticationService]
+      providers: [
+        { provide: CredentialsService, useClass: MockCredentialsService },
+        AuthenticationService,
+        RealtimeDbService
+      ]
     });
 
     authenticationService = TestBed.get(AuthenticationService);
@@ -29,7 +33,7 @@ describe('AuthenticationService', () => {
       tick();
 
       // Assert
-      request.subscribe(credentials => {
+      request.subscribe((credentials: Credentials) => {
         expect(credentials).toBeDefined();
         expect(credentials.token).toBeDefined();
       });
@@ -89,7 +93,8 @@ describe('AuthenticationService', () => {
   describe('logout', () => {
     it('should clear user authentication', fakeAsync(() => {
       // Arrange
-      const loginRequest = authenticationService.login({
+      const authenticationServiceNew = TestBed.get(AuthenticationService);
+      const loginRequest = authenticationServiceNew.login({
         username: 'toto',
         password: '123'
       });
@@ -99,7 +104,7 @@ describe('AuthenticationService', () => {
       loginRequest.subscribe(() => {
         expect(credentialsService.isAuthenticated()).toBe(true);
 
-        const request = authenticationService.logout();
+        const request = authenticationServiceNew.logout();
         tick();
 
         request.subscribe(() => {

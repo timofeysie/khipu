@@ -1,8 +1,7 @@
-import { LoadingController, Platform } from '@ionic/angular';
+import { Platform } from '@ionic/angular';
 import { Component, OnInit } from '@angular/core';
 import { environment } from '@env/environment';
 import { I18nService } from '@app/core';
-import { CheckForUpdateService } from './services/sw/check-for-update.service';
 import { SwUpdate } from '@angular/service-worker';
 
 @Component({
