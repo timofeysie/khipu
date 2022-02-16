@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import * as categories from '../../../../assets/categories.json';
 import { Observable } from 'rxjs';
-import { Category } from '@app/core/interfaces/categories.js';
+import { Category } from '@app/core/interfaces/categories';
 
 @Injectable()
 export class CategoriesEndpoint {

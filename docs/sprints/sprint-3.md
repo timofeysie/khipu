@@ -334,3 +334,145 @@ That was easy. Next up:
   ● ThemeComponent › should create
     TypeError: Cannot read property 'primary' of null
 ```
+
+After a commit and a bit of time later, this interesting cookie is on the bottom of the list:
+
+```txt
+ ● AuthenticationService › logout › should clear user authentication
+    The email address is badly formatted.
+      42 |       })
+      43 |       .catch((error: any) => {
+    > 44 |         throw new Error(error.message);
+      45 |       }
+      at src/app/core/authentication/authentication.service.ts:44:15
+```
+
+Another thing that might help with errors like this is following suggestion #2:
+
+```txt
+ ● ItemDetailsContainerComponent › should create
+
+    Template parse errors:
+    'ion-menu-button' is not a known element:
+    1. If 'ion-menu-button' is an Angular component, then verify that it is part of this module.
+    2. If 'ion-menu-button' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@NgModule.schemas' of this component to
+suppress this message.
+```
+
+I mean, we know that the app works, so it's just about the tests allowed to work.
+
+Actually, we have that imported into the app component. Maybe it needs to be added to all the specs? It was done two years ago, but I think the tests were passing about one year ago, so not sure if that's the fix.
+
+Adding IonicModule to the item-details-container.component.spec.ts didn't help.
+
+Trying to get the ItemDetailsContainerComponent test sorted, and all of a sudden, this failure:
+
+```txt
+Determining test suites to run...
+  ● Test suite failed to run
+    Configuration error:
+    Could not locate module @app/core/interfaces/categories.js mapped as:
+    C:\Users\timof\repos\timofeysie\khipu\src\app\core/interfaces/categories.js.
+    Please check your configuration for these entries:
+    {
+      "moduleNameMapper": {
+        "/@app\/(.*)/": "C:\Users\timof\repos\timofeysie\khipu\src\app\$1"
+      },
+      "resolver": null
+    }
+      at createNoMappedModuleFoundError (node_modules/jest-resolve/build/index.js:501:17)
+          at Array.reduce (<anonymous>)
+```
+
+It's all in scary red. I do see some of the other tests running, but the status at the end of the run is never shown. This was not an issue yesterday...
+
+It's strange, as there is a reversed slash in the path there:
+
+C:\Users\timof\repos\timofeysie\khipu\src\app\core/interfaces/categories.js.
+
+Trying to run the app results in this error:
+
+```txt
+10   activateUpdate = jasmine.createSpy('MockSwUpdate.activateUpdate').and.callFake(() => Promise.resolve());
+ERROR in src/app/features/options/services/sw/mock-sw-updated.ts:10:20 - error TS2304: Cannot find name 'jasmine'.
+                      ~~~~~~~
+src/app/features/options/services/sw/mock-sw-updated.ts:12:20 - error TS2304: Cannot find name 'jasmine'.
+12   checkForUpdate = jasmine.createSpy('MockSwUpdate.checkForUpdate').and.callFake(() => Promise.resolve());
+                      ~~~~~~~
+```
+
+We haven't even used that mock yet, so get rid of that. It's just an example that can be used if we are serious about testing the service worker capabilities, which we aren't at this point. So comment that out and the app builds. Now try the tests again.
+
+No dice clay. It's strange because almost nothing has changed since the tests were all running.
+
+I guess it was just a typo. Not sure why it didn't stop the test run previously.
+
+This was in the src\app\features\category-item-details\categories\categories.endpoint.ts file:
+
+```js
+import { Category } from '@app/core/interfaces/categories.js';
+```
+
+So now it's back to failures from the bottom of the list:
+
+```txt
+ FAIL  src/app/features/theme/theme.component.spec.ts
+  ● Console
+    console.log src/app/core/logger.service.ts:107
+      [ThemeService] null
+    console.log src/app/core/logger.service.ts:107
+      [ThemeService] save theme null
+    console.warn node_modules/@ionic/angular/dist/fesm5.cjs.js:5260
+      [DEPRECATION][Events]: The Events provider is deprecated and it will be removed in the next major release.
+        - Use "Observables" for a similar pub/sub architecture: https://angular.io/guide/observables
+        - Use "Redux" for advanced state management: https://ngrx.io
+  ● ThemeComponent › should create
+    TypeError: Cannot read property 'primary' of null
+```
+
+There has been a problem with the default theme being loaded for some time. But since that's just a nice to have feature, no one worried about it. Fixing that with a hack, there are still some issues with the tests:
+
+```txt
+  ● ThemeComponent › should create
+    Illegal state: Could not load the summary for directive ThemeComponent.
+      at syntaxError (../packages/compiler/src/util.ts:100:17)
+```
+
+After adding all the components from the theme.component to the spec, it's still failing with the same message shown above.
+
+Adding some components to the providers array seemed to fix the issues with the theme component. It's still confusing what should go in declarations vs imports vs providers in unit tests.
+
+During the search to fix this test, this came up:
+
+_Are Karma, Jasmine are dead? They are only good for testing whether or not a component creates. Everything else is much better tested using Cypress.io. Checking in code is delayed all because of nonsense like these errors. Even when I fix the immediate error, there are other layers of errors to come. Each one with ridiculous vague messages._
+
+_Using the native Angular Karma/Jasmine test schematics are painful and cost major amounts of time. It requires us to discover imports for every dependency in your component; even those that are 3,4,5 layers deep. Outbound/inbound HTML calls will not work due to how Karma works. To acheive some level of depth in the test we need to create lots of mockobjects, spies and spend too much time debugging why things don't work._
+
+That's nice. Too bad it's my job to worry about old unit tests. Next:
+
+```txt
+  ● OptionsComponent › should create
+    Unexpected value 'I18nService' declared by the module 'DynamicTestModule'. Please add a @Pipe/@Directive/@Component annotation.
+```
+
+Next, there are a lot of these:
+
+```txt
+ FAIL  src/app/core/authentication/authentication.service.spec.ts
+  ● AuthenticationService › login › should return credentials
+    The email address is badly formatted.
+      43 |       .catch((error: any) => {
+    > 44 |         throw new Error(error.message);
+         |               ^
+      45 |       });
+      at src/app/core/authentication/authentication.service.ts:44:15
+```
+
+I guess username: toto should be username: toto@toto.com?
+
+Then, we get these errors:
+
+```txt
+  ● AuthenticationService › logout › should clear user authentication
+    Cannot make XHRs from within a fake async test. Request URL: https://www.googleapis.com/identitytoolkit/v3/relyingparty/verifyPassword?key=AIzaSyBDeqGbiib0fVFoc2yWr9WVE4MV6isWQ9Y
+```

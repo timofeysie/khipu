@@ -13,3 +13,8 @@ export * from './logger.service';
 export * from './until-destroyed';
 export * from './theme.service';
 export * from './firebase/realtime-db.service';
+export * from './interfaces/alias';
+export * from './interfaces/categories';
+export * from './interfaces/item';
+export * from './interfaces/item-details';
+export * from './interfaces/item-meta-data';

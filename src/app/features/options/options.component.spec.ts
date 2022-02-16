@@ -1,7 +1,6 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { IonicModule } from '@ionic/angular';
-import { I18nService } from '@app/core';
 import { OptionsComponent } from './options.component';
 
 describe('OptionsComponent', () => {
@@ -12,7 +11,7 @@ describe('OptionsComponent', () => {
     TestBed.configureTestingModule({
       imports: [IonicModule.forRoot()],
       schemas: [CUSTOM_ELEMENTS_SCHEMA],
-      declarations: [OptionsComponent, I18nService]
+      declarations: [OptionsComponent]
     }).compileComponents();
   }));
 

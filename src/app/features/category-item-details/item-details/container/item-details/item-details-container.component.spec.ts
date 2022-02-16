@@ -1,7 +1,8 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
-// import { CategoriesContainerComponent } from './categories-container.component';
 import { ItemDetailsContainerComponent } from './item-details-container.component';
-// category-item-details\item-details\container\item-details\
+import { ItemDetailsComponent } from '../../components/item-details/item-details.component';
+import { IonicModule } from '@ionic/angular';
+import { I18nService } from '@app/core';
 
 describe('ItemDetailsContainerComponent', () => {
   let component: ItemDetailsContainerComponent;
@@ -9,6 +10,7 @@ describe('ItemDetailsContainerComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
+      imports: [IonicModule, I18nService, ItemDetailsComponent],
       declarations: [ItemDetailsContainerComponent]
     }).compileComponents();
   }));

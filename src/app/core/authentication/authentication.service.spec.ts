@@ -27,7 +27,7 @@ describe('AuthenticationService', () => {
     it('should return credentials', fakeAsync(() => {
       // Act
       const request = authenticationService.login({
-        username: 'toto',
+        username: 'toto@toto.com',
         password: '123'
       });
       tick();
@@ -41,10 +41,9 @@ describe('AuthenticationService', () => {
 
     it('should authenticate user', fakeAsync(() => {
       expect(credentialsService.isAuthenticated()).toBe(false);
-
       // Act
       const request = authenticationService.login({
-        username: 'toto',
+        username: 'toto@toto.com',
         password: '123'
       });
       tick();
@@ -61,7 +60,7 @@ describe('AuthenticationService', () => {
     it('should persist credentials for the session', fakeAsync(() => {
       // Act
       const request = authenticationService.login({
-        username: 'toto',
+        username: 'toto@toto.com',
         password: '123'
       });
       tick();
@@ -76,7 +75,7 @@ describe('AuthenticationService', () => {
     it('should persist credentials across sessions', fakeAsync(() => {
       // Act
       const request = authenticationService.login({
-        username: 'toto',
+        username: 'toto@toto.com',
         password: '123',
         remember: true
       });
@@ -95,7 +94,7 @@ describe('AuthenticationService', () => {
       // Arrange
       const authenticationServiceNew = TestBed.get(AuthenticationService);
       const loginRequest = authenticationServiceNew.login({
-        username: 'toto',
+        username: 'toto@toto.com',
         password: '123'
       });
       tick();

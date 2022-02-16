@@ -16,8 +16,19 @@ export class ThemeService {
     // storage.get('theme').then((cssText: any) => {
     //   this.setGlobalCSS(cssText);
     // });
-    const savedTheme = localStorage.getItem(themeKey);
-    log.debug(savedTheme);
+    let savedTheme = localStorage.getItem(themeKey);
+    log.debug('savedTheme', savedTheme);
+    if (!savedTheme) {
+      const defaultTheme = {
+        dark: '#F7F7FF',
+        light: '#495867',
+        medium: '#BCC2C7',
+        primary: '#8CBA80',
+        secondary: '#FCFF6C',
+        tertiary: '#FE5F55'
+      };
+      savedTheme = defaultTheme.toString();
+    }
     this.theme = savedTheme;
     this.setTheme(savedTheme);
   }
@@ -28,6 +39,7 @@ export class ThemeService {
     const cssText = CSSTextGenerator(_theme);
     this.setGlobalCSS(cssText);
     localStorage.setItem(themeKey, _theme);
+    console.log('theme set', _theme);
     this.theme = _theme;
   }
 

@@ -1,5 +1,9 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { HttpClientModule } from '@angular/common/http';
 import { CategoriesContainerComponent } from './categories-container.component';
+import { CategoryComponent } from '../../../../category-item-details/categories/components/categories-list/category.component';
+import { IonicModule } from '@ionic/angular';
+import { RouterModule } from '@angular/router';
 
 describe('CategoriesComponent', () => {
   let component: CategoriesContainerComponent;
@@ -7,7 +11,8 @@ describe('CategoriesComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [CategoriesContainerComponent]
+      imports: [IonicModule, RouterModule, HttpClientModule],
+      declarations: [CategoriesContainerComponent, CategoryComponent]
     }).compileComponents();
   }));
 
