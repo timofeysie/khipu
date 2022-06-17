@@ -71,7 +71,7 @@
     "@types/node": "^10.9.0",
     "@types/lodash": "^4.14.112",
     "codelyzer": "^5.1.0",
-    "electron": "^5.0.2",
+    "electron": "^15.5.5",
     "electron-packager": "^13.0.1",
     "electron-reload": "^1.4.0",
     "hads": "^1.7.0",
