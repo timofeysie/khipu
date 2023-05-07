@@ -47,7 +47,7 @@
     "angulartics2": "^7.2.4",
     "color": "^3.1.2",
     "firebase": "^8.1.2",
-    "firebase-tools": "^7.11.0",
+    "firebase-tools": "^11.30.0",
     "ionicons": "^5.5.1",
     "lodash": "^4.17.11",
     "moment": "^2.24.0",
